@@ -2,6 +2,7 @@
 import { Handle, Position } from '@vue-flow/core';
 
 // Define the interface for the node data
+
 interface NodeData {
   label: string;
   uuid: string;
@@ -11,15 +12,21 @@ interface NodeData {
   isSelected: boolean;
   errored: boolean;
   failed: boolean;
+  signal?: boolean;
 }
 
-// Define props with type
-defineProps<{ data: NodeData }>();
+const props = defineProps<{ data: NodeData }>();
 </script>
 
 <template>
   <div
-    :class="['custom-node', data.isSelected ? 'selected-node' : '', data.errored ? 'errored-node' : '', data.failed ? 'failed-node' : '']"
+    :class="[
+      'custom-node',
+      data.isSelected ? 'selected-node' : '',
+      data.errored ? 'errored-node' : '',
+      data.failed ? 'failed-node' : '',
+      data.signal ? 'signal-node' : '',
+    ]"
     role="button"
     tabindex="0"
   >
@@ -29,12 +36,11 @@ defineProps<{ data: NodeData }>();
       {{ data.is_unique ? 'Unique' : 'Not Unique' }}<br />
       Concurrency: {{ data.concurrency }}
     </q-tooltip>
-    <Handle type="target" :position="Position.Left" />
-    <Handle type="source" :position="Position.Right" />
+    <!-- Connection points (handles) are hidden -->
   </div>
 </template>
 
-<style scoped>
+<style>
 .custom-node {
   background: #7abfd2;
   color: white;
@@ -62,5 +68,14 @@ defineProps<{ data: NodeData }>();
 
 .failed-node {
   background: #f57741 !important;
+}
+.signal-node {
+  background: #2b9222 !important;
+  border-radius: 30px !important;
+  box-shadow: 0 2px 8px 0 rgba(141 140 140 / 0.66);
+  width: 50px !important;
+  height: 50px !important;
+  align-content: center !important;
+  word-wrap: break-word !important;
 }
 </style>

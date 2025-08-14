@@ -13,9 +13,6 @@
       <template #node-custom="props">
         <CustomNode :data="props.data" />
       </template>
-      <template #node-signalNode="props">
-        <CustomNode :data="props.data" class="signal-node" />
-      </template>
     </VueFlow>
   </div>
 </template>
@@ -170,7 +167,7 @@ function injectSignalNodes(items: any[]): any[] {
   if (task1) {
     result.push({
       id: 'signal-1',
-      type: 'signal',
+      signal: true,
       label: 'Signal 1',
       description: 'Signal node for Task 1',
       // No previousId, will connect as source
@@ -187,7 +184,7 @@ function injectSignalNodes(items: any[]): any[] {
   if (task7) {
     result.push({
       id: 'signal-2',
-      type: 'signal',
+      signal: true,
       label: 'Signal 2',
       description: 'Signal node for Task 7',
       previousId: task7.id,
@@ -233,11 +230,9 @@ function processFlowItems(items: FlowItem[] | any[]) {
 
   // Create nodes
   const newNodes: Node[] = itemsWithSignals.map((item: any) => {
-    // If item.type === 'signal', use signalNode type
-    const nodeType = item.type === 'signal' ? 'signalNode' : 'custom';
     return {
       id: getId(item),
-      type: nodeType,
+      type: 'custom',
       position: { x: 0, y: 0 },
       data: {
         label: getLabel(item),
@@ -248,6 +243,7 @@ function processFlowItems(items: FlowItem[] | any[]) {
         isSelected: item.isSelected || false,
         errored: item.errored || false,
         failed: item.failed || false,
+        signal: item.signal === true,
         item: item,
       },
     };
@@ -265,9 +261,9 @@ function processFlowItems(items: FlowItem[] | any[]) {
         id: `signal-1-${getId(item)}`,
         source: 'signal-1',
         target: getId(item),
-        type: 'signalEdge',
+        type: 'smoothstep',
         animated: true,
-        style: { stroke: '#e53935', strokeWidth: 3 },
+        style: { stroke: '#2b9222', strokeWidth: 3 },
       });
       return;
     }
@@ -281,9 +277,9 @@ function processFlowItems(items: FlowItem[] | any[]) {
           id: `${getId(task7)}-signal-2`,
           source: getId(task7),
           target: 'signal-2',
-          type: 'signalEdge',
+          type: 'smoothstep',
           animated: true,
-          style: { stroke: '#e53935', strokeWidth: 3 },
+          style: { stroke: '#2b9222', strokeWidth: 3 },
         });
       }
       return;
@@ -297,17 +293,16 @@ function processFlowItems(items: FlowItem[] | any[]) {
           (t: any) => getId(t) === previousId
         );
         if (previousItem) {
-          // If either source or target is a signal node, use red animated edge
           const isSignalEdge =
-            item.type === 'signal' || previousItem.type === 'signal';
+            item.signal === true || previousItem.signal === true;
           newEdges.push({
             id: `${previousId}-${getId(item)}`,
             source: previousId,
             target: getId(item),
-            type: isSignalEdge ? 'signalEdge' : 'default',
+            type: isSignalEdge ? 'smoothstep' : 'default',
             animated: isSignalEdge,
             style: isSignalEdge
-              ? { stroke: '#e53935', strokeWidth: 3 }
+              ? { stroke: '#2b9222', strokeWidth: 3 }
               : undefined,
           });
         }
@@ -465,11 +460,5 @@ watch(
 
 .error-node {
   background: #d37b7b !important;
-}
-
-.signal-node {
-  background: #e53935 !important;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px 0 rgba(229, 57, 53, 0.3);
 }
 </style>
