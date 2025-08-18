@@ -36,7 +36,14 @@ const props = defineProps<{ data: NodeData }>();
       {{ data.is_unique ? 'Unique' : 'Not Unique' }}<br />
       Concurrency: {{ data.concurrency }}
     </q-tooltip>
-    <!-- Connection points (handles) are hidden -->
+    <template v-if="data.signal">
+      <Handle type="target" :position="Position.Top" />
+      <Handle type="source" :position="Position.Bottom" />
+    </template>
+    <template v-else>
+      <Handle type="target" :position="Position.Left" />
+      <Handle type="source" :position="Position.Right" />
+    </template>
   </div>
 </template>
 

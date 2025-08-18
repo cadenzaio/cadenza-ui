@@ -304,6 +304,9 @@ onMounted(() => {
   const appStore = useAppStore();
   appStore.setCurrentSection('services');
 
+  tasksCurrentPage.value = 1; // Always start at page 1 for tasks
+  routinesCurrentPage.value = 1; // Always start at page 1 for routines
+
   const itemId: string = Array.isArray(route.params.id)
     ? route.params.id[0]
     : route.params.id;

@@ -249,6 +249,9 @@ function processFlowItems(items: FlowItem[] | any[]) {
     };
   });
 
+  // Only assign nodes if all have type 'custom'
+  const allCustom = newNodes.every((n) => n.type === 'custom');
+
   // Create edges based on previous item references
   const newEdges: Edge[] = [];
   itemsWithSignals.forEach((item: any) => {
@@ -320,8 +323,13 @@ function processFlowItems(items: FlowItem[] | any[]) {
   // Apply layout
   const layoutedNodes = createLayout(newNodes, newEdges);
 
-  nodes.value = layoutedNodes;
-  edges.value = newEdges;
+  if (allCustom) {
+    nodes.value = layoutedNodes;
+    edges.value = newEdges;
+  } else {
+    nodes.value = [];
+    edges.value = [];
+  }
 
   console.log('FlowMap: Applied layout, final nodes:', nodes.value.length);
 }

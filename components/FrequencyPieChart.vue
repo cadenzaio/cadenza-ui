@@ -1,11 +1,15 @@
 <template>
   <InfoCard class="custom-card">
-    <template #title>
-      Execution Frequency
-    </template>
+    <template #title> Execution Frequency </template>
     <template #info>
       <div>
-        <apexchart type="pie" :options="chartOptions" :series="series" width="600"></apexchart>
+        <apexchart
+          type="pie"
+          :options="chartOptions"
+          :series="series"
+          width="600"
+          :key="chartKey"
+        ></apexchart>
       </div>
     </template>
   </InfoCard>
@@ -16,32 +20,32 @@ import VueApexCharts from 'vue3-apexcharts';
 
 export default {
   components: {
-    apexchart: VueApexCharts
+    apexchart: VueApexCharts,
   },
   props: {
     values: {
       type: Array,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
       chartOptions: {
         chart: {
           type: 'pie',
-          height: 350
+          height: 350,
         },
         labels: [],
         colors: [],
         legend: {
-          show: false
+          show: false,
         },
         tooltip: {
           y: {
-            formatter: function(val) {
+            formatter: function (val) {
               return val + ' executions';
-            }
-          }
+            },
+          },
         },
         dataLabels: {
           enabled: true,
@@ -56,16 +60,22 @@ export default {
             foreColor: '#fff',
             padding: 4,
             opacity: 0.7,
-            borderColor: '#fff'
+            borderColor: '#fff',
           },
           style: {
             colors: ['rgb(200,200,200)'],
             fontSize: '14px',
-          }
-        }
+          },
+        },
       },
-      series: []
+      series: [],
     };
+  },
+  computed: {
+    chartKey() {
+      // Change key when values change to force full re-render
+      return JSON.stringify(this.values?.map((v) => v?.id || v?.name || v));
+    },
   },
   watch: {
     values: {
@@ -76,8 +86,8 @@ export default {
         } else {
           this.resetChart();
         }
-      }
-    }
+      },
+    },
   },
   methods: {
     updateChart(values) {
@@ -92,15 +102,33 @@ export default {
         return acc;
       }, {});
 
-      const sortedData = Object.values(groupedData).sort((a, b) => a.service.localeCompare(b.service));
+      const sortedData = Object.values(groupedData).sort((a, b) =>
+        a.service.localeCompare(b.service)
+      );
       const labels = [];
       const series = [];
       const colors = [];
       const predefinedColors = [
-        '#6b8fd4', '#c4a875', '#9b85c4', '#85c4a8', '#d49575',
-        '#7ba8d4', '#d4b895', '#b895d4', '#a8d4b5', '#e8a575',
-        '#5a7bc4', '#c4b885', '#8575c4', '#95c4a8', '#d4a575',
-        '#95b5e8', '#e8d4b5', '#d4b5e8', '#b5e8d4', '#f4c485'
+        '#6b8fd4',
+        '#85c4a8',
+        '#9b85c4',
+        '#d49575',
+        '#c4a875',
+        '#7ba8d4',
+        '#d4b895',
+        '#b895d4',
+        '#a8d4b5',
+        '#e8a575',
+        '#5a7bc4',
+        '#c4b885',
+        '#8575c4',
+        '#95c4a8',
+        '#d4a575',
+        '#95b5e8',
+        '#e8d4b5',
+        '#d4b5e8',
+        '#b5e8d4',
+        '#f4c485',
       ];
       let colorIndex = 0;
       const colorMap = {};
@@ -111,7 +139,8 @@ export default {
 
         const colorKey = item.service || `${item.name}-${colorIndex}`;
         if (!colorMap[colorKey]) {
-          colorMap[colorKey] = predefinedColors[colorIndex % predefinedColors.length];
+          colorMap[colorKey] =
+            predefinedColors[colorIndex % predefinedColors.length];
           colorIndex++;
         }
         colors.push(colorMap[colorKey]);
@@ -125,8 +154,8 @@ export default {
       this.chartOptions.labels = [];
       this.chartOptions.colors = [];
       this.series = [];
-    }
-  }
+    },
+  },
 };
 </script>
 

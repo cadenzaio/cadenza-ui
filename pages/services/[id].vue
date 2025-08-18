@@ -257,6 +257,8 @@ onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('services');
 
+  currentPage.value = 1; // Always start at page 1 on mount
+
   try {
     isLoading.value = true;
     error.value = null;

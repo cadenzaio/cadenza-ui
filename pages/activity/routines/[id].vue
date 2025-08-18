@@ -354,7 +354,7 @@
 </template>
 
 <script setup lang="ts">
-import { useFetch, useRoute } from '#app';
+import { useRoute } from '#app';
 import { ref, onMounted, watchEffect } from 'vue';
 import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
@@ -404,33 +404,7 @@ const dialogVisible = ref(false);
 const selectedOption = ref('routineMap');
 const routineMap = ref<any[]>([]);
 const routineMapLoading = ref(false);
-
-// Watch for changes in selectedItem and fetch routine map
-watchEffect(async () => {
-  if (selectedItem.value) {
-    try {
-      routineMapLoading.value = true;
-      console.log('Fetching routine map for:', selectedItem.value.uuid);
-      const tasks = await $fetch(
-        `/api/activity/tasks/tasksInRoutines?routineId=${selectedItem.value.uuid}`
-      );
-      console.log('Routine map response:', tasks);
-      routineMap.value = tasks || [];
-    } catch (error) {
-      console.error('Error fetching routine map:', error);
-      routineMap.value = [];
-    } finally {
-      routineMapLoading.value = false;
-    }
-  } else {
-    routineMap.value = [];
-    routineMapLoading.value = false;
-  }
-});
-
-const { data: Items, error } = await useFetch<SelectedItem[]>(
-  '/api/activity/routines/activeRoutines'
-);
+const error = ref<string | null>(null);
 const router = useRouter();
 
 function onTaskSelected(task: SelectedTask) {
@@ -482,13 +456,43 @@ const navigateToItem = (route: string) => {
   router.push(route);
 };
 
-onMounted(() => {
+onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('serviceActivity');
 
   const itemId = route.params.id as string;
-  selectedItem.value =
-    Items.value?.find((item: SelectedItem) => item.uuid === itemId) || null;
+  try {
+    // Fetch the specific routine by uuid using the new query param
+    const response = await fetch(
+      `/api/activity/routines/activeRoutines?uuid=${itemId}`
+    );
+    if (!response.ok) throw new Error('Failed to fetch routine');
+    const data = await response.json();
+    selectedItem.value = data || null;
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Unknown error';
+    selectedItem.value = null;
+  }
+
+  // Fetch the routine map for this routine
+  if (selectedItem.value) {
+    try {
+      routineMapLoading.value = true;
+      const tasks = await fetch(
+        `/api/activity/tasks/tasksInRoutines?routineId=${selectedItem.value.uuid}`
+      );
+      if (!tasks.ok) throw new Error('Failed to fetch routine map');
+      const tasksData = await tasks.json();
+      routineMap.value = tasksData || [];
+    } catch (error) {
+      routineMap.value = [];
+    } finally {
+      routineMapLoading.value = false;
+    }
+  } else {
+    routineMap.value = [];
+    routineMapLoading.value = false;
+  }
 });
 
 const showStopDialog = ref(false);

@@ -127,6 +127,7 @@
             :rows="routines"
             row-key="uuid"
             @inspect-row="inspectRoutine"
+            @inspect-row-in-new-tab="inspectInNewTab"
             @loadMoreData="loadMoreRoutines"
             :enableInfiniteScroll="true"
             :hasMoreData="hasMoreData"
@@ -259,6 +260,11 @@ function inspectRoutine(routine: any) {
   router.push(`/activity/routines/${routine.uuid}`);
 }
 
+function inspectInNewTab(routine: any) {
+  const url = `/activity/routines/${routine.uuid}`;
+  window.open(url, '_blank');
+}
+
 async function loadRoutines(isLoadMore = false) {
   const contractId = route.params.id;
 
@@ -321,6 +327,8 @@ onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('serviceActivity');
   const contractId = route.params.id;
+
+  currentPage.value = 1; // Always start at page 1 on mount
 
   isLoading.value = true;
   error.value = null;

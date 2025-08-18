@@ -651,6 +651,21 @@ const emit = defineEmits([
   'virtualScroll',
   'loadMoreData',
 ]);
+
+// Auto-load more data if filteredRows is less than page size and hasMoreData
+const PAGE_SIZE = 50;
+watch(
+  () => [filteredRows.value.length, props.hasMoreData, props.loadingMoreData],
+  async ([len, hasMore, loading]) => {
+    // Only trigger if not already loading, and infinite scroll is enabled
+    const rowCount = typeof len === 'number' ? len : 0;
+    if (rowCount < PAGE_SIZE && hasMore && !loading && props.enableInfiniteScroll) {
+      // Emit loadMoreData and wait for next tick to allow data to update
+      emit('loadMoreData');
+    }
+  },
+  { immediate: true }
+);
 function inspectRow(item: any) {
   emit('inspectRow', item);
 }

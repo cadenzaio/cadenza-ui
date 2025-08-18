@@ -124,6 +124,7 @@ async function loadMoreTasks() {
 onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('services');
-  await loadTasks();
+  currentPage.value = 1; // Always start at page 1 on mount
+  await loadTasks(false);
 });
 </script>

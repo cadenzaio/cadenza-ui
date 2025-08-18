@@ -4,13 +4,21 @@ import { removeMetaData } from '~/src/util';
 
 let client: pg.Client | null = null;
 
-// Get all routines
-async function getRoutines(page: number = 1, limit: number = 50) {
+// Get all routines or a single routine by uuid
+async function getRoutines({
+  uuid,
+  page = 1,
+  limit = 50,
+}: {
+  uuid?: string;
+  page?: number;
+  limit?: number;
+}) {
   if (!client) {
     client = await initializeClient();
   }
 
-  const query = `
+  let query = `
   SELECT
       re.uuid,
       re.description,
@@ -45,18 +53,22 @@ async function getRoutines(page: number = 1, limit: number = 50) {
     LEFT JOIN context ctx2 ON re.result_context_id = ctx2.uuid
   `;
 
-  const limitQuery = `LIMIT ${limit} OFFSET ${(page - 1) * limit}`;
+  let where = '';
+  let params: any[] = [];
+  if (uuid) {
+    where = 'WHERE re.uuid = $1';
+    params.push(uuid);
+  }
 
-  console.log(`Executing query: ${query} ${limitQuery}`);
+  const orderQuery = `ORDER BY re.created DESC`;
+  const limitQuery = uuid ? '' : `LIMIT ${limit} OFFSET ${(page - 1) * limit}`;
 
-  const orderQuery = `ORDER BY re.created DESC `;
-
-  const fullQuery = query + orderQuery + limitQuery;
+  const fullQuery = [query, where, orderQuery, limitQuery]
+    .filter(Boolean)
+    .join(' ');
 
   try {
-    const res = await client.query(fullQuery);
-
-    // Map the results - ensuring all fields needed by frontend are included
+    const res = await client.query(fullQuery, params);
     return res.rows.map((row) => ({
       id: row.uuid,
       name: row.description,
@@ -110,7 +122,8 @@ export default defineEventHandler(async (event) => {
     const contractId = urlParams.get('contractId') || undefined;
 
     try {
-      const data = await getRoutines(page, limit);
+      const uuid = urlParams.get('uuid') || undefined;
+      const data = await getRoutines({ uuid, page, limit });
 
       // If contractId is provided, filter and return mapped data for contract page
       if (contractId) {
@@ -156,6 +169,11 @@ export default defineEventHandler(async (event) => {
           routines,
           routineMap,
         };
+      }
+
+      // If uuid is provided, return the single routine (or null)
+      if (uuid) {
+        return data.length > 0 ? data[0] : null;
       }
 
       // Default response for other uses

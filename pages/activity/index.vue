@@ -161,6 +161,7 @@ async function loadMoreServers() {
 onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('serviceActivity');
+  currentPage.value = 1; // Always start at page 1 on mount
   await fetchServerStats();
 });
 </script>

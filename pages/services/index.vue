@@ -121,6 +121,7 @@ const navigateToItem = (route: string) => {
 onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('services');
-  await loadGraphs();
+  currentPage.value = 1; // Always start at page 1 on mount
+  await loadGraphs(false);
 });
 </script>
