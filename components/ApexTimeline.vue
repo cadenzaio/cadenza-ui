@@ -38,7 +38,7 @@ interface TimelineItem {
   isComplete: boolean;
   layer_index: number;
   description?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const props = defineProps<{
@@ -293,12 +293,20 @@ const getStatusClass = (item: TimelineItem) => {
   return 'running';
 };
 
-const onDataPointSelection = (event: any, chartContext: any, config: any) => {
+interface ApexDataPointSelectionConfig {
+  seriesIndex: number;
+  dataPointIndex: number;
+  [key: string]: unknown;
+}
+const onDataPointSelection = (
+  event: MouseEvent,
+  chartContext: unknown,
+  config: ApexDataPointSelectionConfig
+) => {
   const { seriesIndex, dataPointIndex } = config;
   const selectedData = chartSeries.value[0]?.data[dataPointIndex];
-
   if (selectedData && selectedData.meta) {
-    emit('task-selected', selectedData.meta);
+    emit('task-selected', selectedData.meta as TimelineItem);
   }
 };
 

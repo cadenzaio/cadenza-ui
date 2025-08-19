@@ -26,7 +26,7 @@ import { useFetch } from '#app';
 import { useRouter } from '#vue-router';
 import { useAppStore } from '@/stores/app';
 
-interface graphs {
+interface Graph {
   type: string;
   label: string;
   description: string;
@@ -36,10 +36,18 @@ interface graphs {
   uuid: string;
 }
 
-const layout = 'dashboard-layout';
-const selectedGraph = ref<graphs[] | undefined>(undefined);
+interface TableColumn {
+  name: string;
+  label: string;
+  field: string;
+  required: boolean;
+  sortable: boolean;
+}
 
-const columns = [
+const layout = 'dashboard-layout';
+const selectedGraph = ref<Graph[] | undefined>(undefined);
+
+const columns: TableColumn[] = [
   {
     name: 'label',
     label: 'Name',
@@ -56,14 +64,14 @@ const columns = [
   },
 ];
 
-const graphs = ref<graphs[]>([]);
+const graphs = ref<Graph[]>([]);
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
 
 const currentPage = ref(1);
 const pageSize = 50;
 
-async function loadGraphs(isLoadMore = false) {
+async function loadGraphs(isLoadMore = false): Promise<void> {
   try {
     if (isLoadMore) {
       loadingMoreData.value = true;
@@ -76,10 +84,14 @@ async function loadGraphs(isLoadMore = false) {
     if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();
 
-    const mappedData = data.map((r: any) => ({
+    const mappedData: Graph[] = data.map((r: any) => ({
       uuid: r.uuid,
       label: r.label,
       description: r.description,
+      type: r.type,
+      id: r.id,
+      executionId: r.executionId,
+      progress: r.progress,
     }));
 
     if (isLoadMore) {
@@ -105,12 +117,12 @@ async function loadMoreGraphs() {
 }
 
 const router = useRouter();
-function inspectGraphs(graph: graphs) {
+function inspectGraphs(graph: Graph): void {
   navigateToItem(`/services/${graph.uuid}`);
 }
 
-function inspectInNewTab(graphs: graphs) {
-  const url = `/services/${graphs.uuid}`;
+function inspectInNewTab(graph: Graph): void {
+  const url = `/services/${graph.uuid}`;
   window.open(url, '_blank');
 }
 const navigateToItem = (route: string) => {

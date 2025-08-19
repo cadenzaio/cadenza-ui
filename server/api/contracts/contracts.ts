@@ -4,6 +4,29 @@ import { getQuery } from 'h3';
 
 let client: pg.Client | null = null;
 
+// Type for contract row
+interface ContractRow {
+  uuid: string;
+  product: string;
+  agent_id: string;
+  agent_name: string;
+  label: string;
+  description: string;
+  issued_at: string | Date;
+  fulfilled: boolean;
+  referer: string;
+  input_context: Record<string, unknown>;
+  output_context: Record<string, unknown>;
+  created: string | Date;
+  fulfilled_at: string | Date | null;
+  result_context: string;
+  from_url: string;
+  headers: string;
+  method: string;
+  credentials: string;
+  mode: string;
+}
+
 // Get all contracts
 async function getContracts(uuid?: string, page?: number, limit?: number) {
   let query = `
@@ -43,14 +66,18 @@ async function getContracts(uuid?: string, page?: number, limit?: number) {
 
   const res = await client!.query(query, params);
 
-  return res.rows.map((row) => ({
+  return res.rows.map((row: ContractRow) => ({
     uuid: row.uuid,
     name: row.product,
     agent_id: row.agent_id,
     agent_name: row.agent_name,
     label: row.label,
     description: row.description,
-    issued: formatDate(row.issued_at),
+    issued: formatDate(
+      typeof row.issued_at === 'string'
+        ? row.issued_at
+        : row.issued_at.toISOString()
+    ),
     status: row.fulfilled ? 'check' : 'schedule',
     product: row.product,
     referer: row.referer,

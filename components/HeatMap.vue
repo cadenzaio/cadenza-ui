@@ -160,11 +160,27 @@
 </template>
 
 <script setup lang="ts">
-// Props
+// Types
 import { defineProps, defineEmits } from 'vue';
 interface RangeSection {
   from: number;
   to: number;
+}
+// Heatmap data row from API
+interface HeatmapRow {
+  date: string; // ISO date string
+  hour: number;
+  executions: number;
+  [key: string]: unknown;
+}
+// ApexCharts heatmap series data
+interface HeatmapSeriesData {
+  x: string;
+  y: number;
+}
+interface HeatmapSeries {
+  name: string;
+  data: HeatmapSeriesData[];
 }
 const props = defineProps({
   yearOptions: {
@@ -180,7 +196,7 @@ const props = defineProps({
     required: true,
   },
   rawHeatmapData: {
-    type: Array as () => Array<any>, // [{ date, hour, executions, ... }]
+    type: Array as () => Array<HeatmapRow>, // [{ date, hour, executions, ... }]
     required: false,
     default: () => [],
   },
@@ -194,8 +210,8 @@ const emit = defineEmits(['update:editableRanges']);
 
 const showMonthView = ref(false);
 const selectedMonthIndex = ref(0);
-const monthChartSeries = ref<any[]>([]);
-const chartSeries = ref<any[]>([]);
+const monthChartSeries = ref<HeatmapSeries[]>([]);
+const chartSeries = ref<HeatmapSeries[]>([]);
 
 // Pinia store for heatmap settings
 const heatmapSettingsStore = useHeatmapSettingsStore();
@@ -295,11 +311,11 @@ const monthChartOptions = computed(() => ({
 interface ApexDataPointSelectionConfig {
   seriesIndex: number;
   dataPointIndex: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 function onCellClick(
   event: MouseEvent,
-  chartContext: any,
+  chartContext: unknown,
   config: ApexDataPointSelectionConfig
 ) {
   // config contains seriesIndex (month), dataPointIndex (day-1)
@@ -404,10 +420,12 @@ const scaleToData = computed({
 
 function applyRanges() {
   // Copy to avoid mutating prop directly
-  const newRanges = JSON.parse(JSON.stringify(editableRanges.value));
+  const newRanges: RangeSection[] = JSON.parse(
+    JSON.stringify(editableRanges.value)
+  );
   if (scaleToData.value) {
-    const allData = chartSeries.value.flatMap((s: any) =>
-      s.data.map((d: any) => d.y)
+    const allData = chartSeries.value.flatMap((s: HeatmapSeries) =>
+      s.data.map((d: HeatmapSeriesData) => d.y)
     );
     let min = Math.min(...allData.filter((v: number) => v > 0));
     min = Math.max(min, 1); // Clamp min to at least 1
@@ -426,7 +444,7 @@ function applyRanges() {
     newRanges[0].from = 1;
     if (newRanges[0].to < 1) newRanges[0].to = 1;
   } else {
-    newRanges.forEach((range: any, idx: number) => {
+    newRanges.forEach((range: RangeSection, idx: number) => {
       if (idx === 0) {
         range.from = 1;
         if (range.to < 1) range.to = 1;
@@ -568,13 +586,15 @@ onMounted(() => {
 
 function buildMonthChartSeries(monthIdx: number, year: number) {
   // Filter rawHeatmapData for this month and year
-  const monthRows = (props.rawHeatmapData || []).filter((row) => {
-    const dateObj = new Date(row.date);
-    return dateObj.getMonth() === monthIdx && dateObj.getFullYear() === year;
-  });
+  const monthRows: HeatmapRow[] = (props.rawHeatmapData || []).filter(
+    (row: HeatmapRow) => {
+      const dateObj = new Date(row.date);
+      return dateObj.getMonth() === monthIdx && dateObj.getFullYear() === year;
+    }
+  );
   // Build: [{ name: day, data: [{ x: hour, y }] }]
   const dayMap: Record<number, Record<number, number>> = {};
-  monthRows.forEach((row) => {
+  monthRows.forEach((row: HeatmapRow) => {
     const dateObj = new Date(row.date);
     const day = dateObj.getDate();
     const hour = Number(row.hour);
@@ -583,7 +603,7 @@ function buildMonthChartSeries(monthIdx: number, year: number) {
     dayMap[day][hour] = executions;
   });
   // 31 days, 24 hours
-  const series = Array.from({ length: 31 }, (_, dayIdx) => {
+  const series: HeatmapSeries[] = Array.from({ length: 31 }, (_, dayIdx) => {
     const day = 31 - dayIdx; // y-axis: Day 31 at top
     return {
       name: `${day}`,
@@ -602,7 +622,7 @@ function buildYearChartSeries(year: number) {
   // Build a lookup: month -> day (1-31) -> executions sum for that day
   const byMonth: Record<string, Record<number, number>> = {};
   for (const m of monthNames) byMonth[m] = {};
-  (props.rawHeatmapData || []).forEach((row) => {
+  (props.rawHeatmapData || []).forEach((row: HeatmapRow) => {
     const dateObj = new Date(row.date);
     if (dateObj.getFullYear() !== year) return;
     const month = monthNames[dateObj.getMonth()];
@@ -612,7 +632,7 @@ function buildYearChartSeries(year: number) {
     byMonth[month][day] += executions;
   });
   // For each month, build 31 days
-  const series = monthNames.map((month) => ({
+  const series: HeatmapSeries[] = monthNames.map((month) => ({
     name: month,
     data: Array.from({ length: 31 }, (_, dayIdx) => {
       const day = dayIdx + 1;

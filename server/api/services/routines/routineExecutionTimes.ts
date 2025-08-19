@@ -10,8 +10,21 @@ async function getClient() {
   return client;
 }
 
+// Type for execution time row
+interface ExecutionTime {
+  date: string | Date;
+  hour: number;
+  executions: number;
+  total_execution_time: number;
+  slowest_time: number;
+  fastest_time: number;
+  average_time: number;
+}
+
 // Get RoutineExecutions by routine_id
-async function getRoutineExecutionTimes(routineId: string) {
+async function getRoutineExecutionTimes(
+  routineId: string
+): Promise<ExecutionTime[]> {
   const query = `
  SELECT
       MIN(re.created) as started,
@@ -31,15 +44,17 @@ async function getRoutineExecutionTimes(routineId: string) {
   try {
     const result = await client.query(query, [routineId]);
     // Map the results to match the expected ExecutionTime interface
-    return result.rows.map((row: any) => ({
-      date: row.date,
-      hour: parseInt(row.hour),
-      executions: parseInt(row.executions),
-      total_execution_time: parseFloat(row.total_execution_time),
-      slowest_time: parseFloat(row.slowest_time),
-      fastest_time: parseFloat(row.fastest_time),
-      average_time: parseFloat(row.average_time),
-    }));
+    return result.rows.map(
+      (row: any): ExecutionTime => ({
+        date: row.date,
+        hour: parseInt(row.hour),
+        executions: parseInt(row.executions),
+        total_execution_time: parseFloat(row.total_execution_time),
+        slowest_time: parseFloat(row.slowest_time),
+        fastest_time: parseFloat(row.fastest_time),
+        average_time: parseFloat(row.average_time),
+      })
+    );
   } catch (error) {
     console.error('Error executing query:', error);
     throw error;

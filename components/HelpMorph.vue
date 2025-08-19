@@ -118,17 +118,34 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 
-const nextMorphStep = {
+type MorphState = 'btn' | 'card1';
+
+interface TipPart {
+  text?: string;
+  link?: string;
+  class?: string;
+  style?: string;
+  icon?: string;
+  color?: string;
+  size?: string;
+  btn?: boolean;
+}
+interface Tip {
+  title: string;
+  body?: string | TipPart[];
+  list?: TipPart[];
+}
+
+const nextMorphStep: Record<MorphState, MorphState> = {
   btn: 'card1',
   card1: 'btn',
 };
 
-// Define tips for each route or page
-const tipsByRoute = {
+const tipsByRoute: Record<string, Tip> = {
   '/': {
     title: 'Welcome!',
     body: [
@@ -160,7 +177,7 @@ const tipsByRoute = {
   '/activity': {
     title: 'Service Activity',
     body: [
-      'Monitor all service activity here. For more help, visit the ',
+      { text: 'Monitor all service activity here. For more help, visit the ' },
       {
         link: '/help/terms',
         text: 'Terminology Page',
@@ -714,44 +731,35 @@ const tipsByRoute = {
   },
 };
 
-export default {
-  setup() {
-    const morphGroupModel = ref('btn');
-    const route = useRoute();
+const morphGroupModel = ref<MorphState>('btn');
+const route = useRoute();
 
-    // Find the best matching tip for the current route
-    const currentTip = computed(() => {
-      if (tipsByRoute[route.path]) return tipsByRoute[route.path];
-      for (const key in tipsByRoute) {
-        if (key.includes('[id]')) {
-          const pattern = new RegExp('^' + key.replace('[id]', '[^/]+') + '$');
-          if (pattern.test(route.path)) return tipsByRoute[key];
-        }
-      }
-      const base = '/' + route.path.split('/')[1];
-      if (tipsByRoute[base]) return tipsByRoute[base];
-      return {
-        title: 'No tips for this page',
-        body: [
-          { text: 'For more help, visit the ' },
-          {
-            text: 'Help UI page',
-            link: '/help/terms',
-            class: 'text-primary',
-            style: 'text-decoration: underline;',
-          },
-          { text: '.' },
-        ],
-      };
-    });
-
-    return {
-      morphGroupModel,
-      nextMorph() {
-        morphGroupModel.value = nextMorphStep[morphGroupModel.value];
+const currentTip = computed<Tip>(() => {
+  if (tipsByRoute[route.path]) return tipsByRoute[route.path];
+  for (const key in tipsByRoute) {
+    if (key.includes('[id]')) {
+      const pattern = new RegExp('^' + key.replace('[id]', '[^/]+') + '$');
+      if (pattern.test(route.path)) return tipsByRoute[key];
+    }
+  }
+  const base = '/' + route.path.split('/')[1];
+  if (tipsByRoute[base]) return tipsByRoute[base];
+  return {
+    title: 'No tips for this page',
+    body: [
+      { text: 'For more help, visit the ' },
+      {
+        text: 'Help UI page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
       },
-      currentTip,
-    };
-  },
-};
+      { text: '.' },
+    ],
+  };
+});
+
+function nextMorph() {
+  morphGroupModel.value = nextMorphStep[morphGroupModel.value];
+}
 </script>

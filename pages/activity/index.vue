@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useAppStore } from '~/stores/app';
 import { useRouter } from '#vue-router';
 import ServerMap from '~/components/serverMap.vue';
@@ -65,7 +65,16 @@ const currentPage = ref(1);
 const pageSize = 50;
 const loading = ref(false);
 const error = ref<string | null>(null);
-const columns = [
+
+interface TableColumn {
+  name: string;
+  label: string;
+  field: string;
+  required: boolean;
+  sortable: boolean;
+}
+
+const columns: TableColumn[] = [
   {
     name: 'graph',
     label: 'Service',
@@ -100,10 +109,10 @@ interface Server {
   modified: string;
 }
 
-function inspectServer(server: Server) {
+function inspectServer(server: Server): void {
   navigateToItem(`/activity/services/${server.uuid}`);
 }
-function inspectInNewTab(server: Server) {
+function inspectInNewTab(server: Server): void {
   const url = `/activity/services/${server.uuid}`;
   window.open(url, '_blank');
 }

@@ -296,7 +296,7 @@
               :color="inspectButtonColor"
               icon="arrow_outward"
               label="Inspect"
-              @click="inspectRow(selectedRow)"
+              @click="selectedRow && inspectRow(selectedRow)"
             />
             <q-btn
               flat
@@ -399,6 +399,7 @@
 <script setup lang="ts">
 import { useRouter } from '#vue-router';
 import { ref, computed, watch } from 'vue';
+import type { PropType } from 'vue';
 const router = useRouter();
 const appStore = useAppStore();
 const inspectButtonColor = computed(() =>
@@ -409,28 +410,31 @@ const inspectButtonColor = computed(() =>
     : 'secondary'
 );
 
+// Generic type for table rows
+type TableRow = Record<string, unknown>;
+
+interface TableColumn {
+  name: string;
+  label: string;
+  field: string | ((row: TableRow) => unknown);
+  required?: boolean;
+  align?: 'right' | 'left' | 'center';
+  sortable?: boolean;
+  sort?: (a: unknown, b: unknown, rowA: TableRow, rowB: TableRow) => number;
+  headerClasses?: string;
+}
+
 const props = defineProps({
   title: {
     type: String,
     default: undefined,
   },
   rows: {
-    type: Array,
+    type: Array as PropType<TableRow[]>,
     required: true,
   },
   columns: {
-    type: Array as PropType<
-      Array<{
-        name: string;
-        label: string;
-        field: string | ((row: any) => any);
-        required?: boolean;
-        align?: 'right' | 'left' | 'center';
-        sortable?: boolean;
-        sort?: (a: any, b: any, rowA: any, rowB: any) => number;
-        headerClasses?: string;
-      }>
-    >,
+    type: Array as PropType<TableColumn[]>,
     default: undefined,
   },
   rowKey: {
@@ -591,28 +595,14 @@ const filteredRows = computed(() => {
           rows.slice(0, 3).map((row) => (row as any).status)
         );
 
-        rows = rows.filter((row) => {
-          const typedRow = row as Record<string, any>;
-          const status = typedRow.status;
-
-          // Handle the case where selectedStatuses might contain objects instead of strings
+        rows = rows.filter((row: TableRow) => {
+          const status = row.status as string;
           const selectedValues = selectedStatuses.value.map((item) =>
-            typeof item === 'string' ? item : (item as any).value || item
+            typeof item === 'string'
+              ? item
+              : (item as { value?: string }).value || item
           );
-
-          console.log(
-            'Checking row with status:',
-            status,
-            'against selected values:',
-            selectedValues
-          );
-
-          // Check if status matches any selected status
-          if (selectedValues.includes(status)) {
-            return true;
-          }
-
-          return false;
+          return selectedValues.includes(status);
         });
 
         console.log('Filtered rows count:', rows.length);
@@ -623,10 +613,10 @@ const filteredRows = computed(() => {
   // Apply text filter
   if (filter.value) {
     rows = rows.filter(
-      (row) =>
+      (row: TableRow) =>
         typeof row === 'object' &&
         row !== null &&
-        Object.values(row as Record<string, unknown>).some(
+        Object.values(row).some(
           (val) => val && fuzzyMatch(val.toString(), filter.value)
         )
     );
@@ -634,10 +624,8 @@ const filteredRows = computed(() => {
 
   // Apply date range filter on started field only if started column exists
   if (hasStartedColumn.value && (startDate.value || endDate.value)) {
-    rows = rows.filter((row) => {
-      const typedRow = row as Record<string, any>;
-      const startedValue = typedRow.started;
-
+    rows = rows.filter((row: TableRow) => {
+      const startedValue = row.started as string;
       return isDateInRange(startedValue, startDate.value, endDate.value);
     });
   }
@@ -659,17 +647,22 @@ watch(
   async ([len, hasMore, loading]) => {
     // Only trigger if not already loading, and infinite scroll is enabled
     const rowCount = typeof len === 'number' ? len : 0;
-    if (rowCount < PAGE_SIZE && hasMore && !loading && props.enableInfiniteScroll) {
+    if (
+      rowCount < PAGE_SIZE &&
+      hasMore &&
+      !loading &&
+      props.enableInfiniteScroll
+    ) {
       // Emit loadMoreData and wait for next tick to allow data to update
       emit('loadMoreData');
     }
   },
   { immediate: true }
 );
-function inspectRow(item: any) {
+function inspectRow(item: TableRow) {
   emit('inspectRow', item);
 }
-function inspectRowInNewTab(item: any) {
+function inspectRowInNewTab(item: TableRow) {
   emit('inspectRowInNewTab', item);
 }
 const navigateToItem = (route: string) => {
@@ -733,9 +726,9 @@ function onVirtualScroll(details: any) {
 const showStopDialog = ref(false);
 const showGenerateDialog = ref(false);
 const showDetailsDialog = ref(false);
-const selectedRow = ref<any>(null);
+const selectedRow = ref<TableRow | null>(null);
 
-function showRowDetails(row: any) {
+function showRowDetails(row: TableRow) {
   selectedRow.value = row;
   showDetailsDialog.value = true;
 }

@@ -37,7 +37,7 @@ interface FlowItem {
     previousTaskExecutionId: string;
     previousTaskName: string;
   }>;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const props = defineProps<{
@@ -56,20 +56,26 @@ const router = useRouter();
 
 const nodes = ref<Node[]>([]);
 const edges = ref<Edge[]>([]);
-const vueFlowInstance = ref<any>(null);
+const vueFlowInstance = ref<InstanceType<typeof VueFlow> | null>(null);
 
 // Helper functions to get field values with fallbacks
-const getId = (item: any): string => {
+const getId = (item: FlowItem): string => {
   const idField = props.idField || 'id';
-  return item[idField] || item.uuid || item.id;
+  return (item[idField] as string) || (item['uuid'] as string) || item.id;
 };
 
-const getLabel = (item: any): string => {
+const getLabel = (item: FlowItem): string => {
   const labelField = props.labelField || 'label';
-  return item[labelField] || item.label || item.name || item.id || item.uuid;
+  return (
+    (item[labelField] as string) ||
+    item.label ||
+    item.name ||
+    item.id ||
+    (item['uuid'] as string)
+  );
 };
 
-const getPreviousIds = (item: any): string[] => {
+const getPreviousIds = (item: FlowItem): string[] => {
   const previousField = props.previousField || 'previousId';
 
   // Debug logging for Task 6 specifically
@@ -93,14 +99,14 @@ const getPreviousIds = (item: any): string[] => {
       item.previousExecutions
     );
     return item.previousExecutions
-      .map((exec: any) => exec.previousTaskExecutionId)
-      .filter((id: any) => id != null);
+      .map((exec) => exec.previousTaskExecutionId)
+      .filter((id) => id != null);
   }
 
   // Check for array fields from the individual task execution endpoint
   const possibleArrayFields = [
     item.previousTaskExecutionId,
-    item.previousTaskExecutionIds,
+    (item as any).previousTaskExecutionIds,
     item[previousField],
   ];
 
@@ -119,7 +125,7 @@ const getPreviousIds = (item: any): string[] => {
   // Fallback to single value for backward compatibility
   const singleValue =
     item[previousField] || item.previousTaskExecutionId || item.previousId;
-  return singleValue ? [singleValue] : [];
+  return singleValue ? [singleValue as string] : [];
 };
 
 // Function to create layout using dagre
@@ -153,7 +159,7 @@ function createLayout(nodes: Node[], edges: Edge[]) {
 // Function to convert items to nodes and edges
 // TEMPORARY: Inject signal nodes for demo
 // --- BEGIN: TEMPORARY SIGNAL NODE INJECTION ---
-function injectSignalNodes(items: any[]): any[] {
+function injectSignalNodes(items: FlowItem[]): FlowItem[] {
   const result = [...items];
   // Find Task 1 and Task 7
   const task1 = items.find(
@@ -194,7 +200,7 @@ function injectSignalNodes(items: any[]): any[] {
 }
 
 // --- BEGIN: TEMPORARY SIGNAL NODE INJECTION ---
-function processFlowItems(items: FlowItem[] | any[]) {
+function processFlowItems(items: FlowItem[]) {
   // To revert to the original, comment out this function and uncomment the old version below.
   console.log('FlowMap: Processing flow items:', items);
 
@@ -229,7 +235,7 @@ function processFlowItems(items: FlowItem[] | any[]) {
   }
 
   // Create nodes
-  const newNodes: Node[] = itemsWithSignals.map((item: any) => {
+  const newNodes: Node[] = itemsWithSignals.map((item: FlowItem) => {
     return {
       id: getId(item),
       type: 'custom',
@@ -254,11 +260,11 @@ function processFlowItems(items: FlowItem[] | any[]) {
 
   // Create edges based on previous item references
   const newEdges: Edge[] = [];
-  itemsWithSignals.forEach((item: any) => {
+  itemsWithSignals.forEach((item: FlowItem) => {
     // Special: for Task 1, connect signal-1 -> Task 1
     if (
       (item.name === 'Task 1' || item.label === 'Task 1') &&
-      item._signalInjected
+      (item as any)._signalInjected
     ) {
       newEdges.push({
         id: `signal-1-${getId(item)}`,
@@ -273,7 +279,7 @@ function processFlowItems(items: FlowItem[] | any[]) {
     // For signal-2, connect Task 7 -> signal-2
     if (item.id === 'signal-2') {
       const task7 = itemsWithSignals.find(
-        (t: any) => t.name === 'Task 7' || t.label === 'Task 7'
+        (t: FlowItem) => t.name === 'Task 7' || t.label === 'Task 7'
       );
       if (task7) {
         newEdges.push({
@@ -293,7 +299,7 @@ function processFlowItems(items: FlowItem[] | any[]) {
     previousIds.forEach((previousId: string) => {
       if (previousId) {
         const previousItem = itemsWithSignals.find(
-          (t: any) => getId(t) === previousId
+          (t: FlowItem) => getId(t) === previousId
         );
         if (previousItem) {
           const isSignalEdge =
@@ -436,10 +442,11 @@ function processFlowItems(items: FlowItem[] | any[]) {
 */
 
 // Handle node click
-function onNodeClick(event: any) {
+import type { NodeMouseEvent } from '@vue-flow/core';
+function onNodeClick(event: NodeMouseEvent) {
   const clickedNode = event.node;
   if (clickedNode?.data?.item) {
-    emit('item-selected', clickedNode.data.item);
+    emit('item-selected', clickedNode.data.item as FlowItem);
   }
 }
 

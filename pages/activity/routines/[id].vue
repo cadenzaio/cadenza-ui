@@ -165,7 +165,7 @@
                     )
                   "
                 >
-                  Server id:
+                  Service id:
                   <span class="text-primary cursor-pointer">{{
                     selectedItem?.serverName
                   }}</span>
@@ -187,11 +187,11 @@
                   class="q-mx-md q-my-sm"
                   @click="
                     navigateToItem(
-                      `/agents/contracts/${selectedItem?.contract_id}`
+                      `/activity/contracts/${selectedItem?.contract_id}`
                     )
                   "
                 >
-                  <span class="text-secondary cursor-pointer">Contract</span>
+                  <span class="text-warning cursor-pointer">Contract</span>
                 </div>
               </div>
             </template>

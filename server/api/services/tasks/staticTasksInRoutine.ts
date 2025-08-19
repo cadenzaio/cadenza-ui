@@ -3,8 +3,19 @@ import { initializeClient } from '~/server/api/utils';
 
 let client: pg.Client | null = null;
 
+// Type for routine task row
+interface RoutineTask {
+  uuid: string;
+  label: string;
+  layer_index: number;
+  previousTaskExecutionId: string | null;
+  description: string;
+  is_unique: boolean;
+  concurrency: number;
+}
+
 // Get all routines
-async function getRoutineMap(routineId: string) {
+async function getRoutineMap(routineId: string): Promise<RoutineTask[]> {
   const query = `
 SELECT
     ttrm.routine_id,
@@ -24,15 +35,17 @@ Where routine_id = $1 ;
   const result = await client!.query(query, [routineId]);
 
   // Map the results to match the expected format (restore to original)
-  return result.rows.map((task: any) => ({
-    uuid: task.uuid,
-    label: task.name,
-    layer_index: task.layer_index,
-    previousTaskExecutionId: task.previous_task_execution_id,
-    description: task.description,
-    is_unique: task.is_unique,
-    concurrency: task.concurrency,
-  }));
+  return result.rows.map(
+    (task: any): RoutineTask => ({
+      uuid: task.uuid,
+      label: task.name,
+      layer_index: task.layer_index,
+      previousTaskExecutionId: task.previous_task_execution_id,
+      description: task.description,
+      is_unique: task.is_unique,
+      concurrency: task.concurrency,
+    })
+  );
 }
 
 // Event handler

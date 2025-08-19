@@ -2,6 +2,11 @@ import pg from 'pg';
 import { initializeClient } from '~/server/api/utils';
 import { removeMetaData } from '~/src/util';
 
+/**
+ * Represents a generic context object for task execution.
+ */
+type TaskContext = Record<string, unknown>;
+
 let client: pg.Client | null = null;
 
 /**
@@ -28,8 +33,8 @@ interface TaskExecutionRow {
   contract_id: string;
   context_id: string | null;
   result_context_id: string | null;
-  input_context: any;
-  output_context: any;
+  input_context: TaskContext;
+  output_context: TaskContext;
   name: string;
   description: string;
   is_unique: boolean;
@@ -54,8 +59,8 @@ interface TaskExecutionResponse {
   scheduled: Date;
   started: Date | null;
   ended: Date | null;
-  inputContext: any;
-  outputContext: any;
+  inputContext: TaskContext;
+  outputContext: TaskContext;
   inputContextId: string | null;
   outputContextId: string | null;
   name: string;

@@ -16,69 +16,64 @@
   </InfoCard>
 </template>
 
-<script>
-import { colors } from 'quasar';
+<script setup lang="ts">
+import { computed } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
+import InfoCard from './InfoCard.vue';
 
-export default {
-  components: {
-    apexchart: VueApexCharts,
-  },
-  props: {
-    series: {
-      type: Array,
-      required: true,
+// ApexCharts series type for area chart
+interface AreaSeries {
+  name: string;
+  data: [number, number][] | { x: number | string | Date; y: number }[];
+}
+
+const props = defineProps<{
+  series: AreaSeries[];
+}>();
+
+const chartOptions = computed(() => ({
+  chart: {
+    type: 'area',
+    height: 350,
+    width: '100%',
+    stacked: false,
+    events: {
+      selection: function () {},
     },
   },
-  data() {
-    return {
-      chartOptions: {
-        chart: {
-          type: 'area',
-          height: 350,
-          width: '100%',
-          stacked: false,
-          events: {
-            selection: function (chart, e) {},
-          },
-        },
-        colors: ['#008FFB', '#00E396', '#CED4DC'],
-        dataLabels: {
-          enabled: false,
-        },
-        stroke: {
-          curve: 'straight',
-        },
-        fill: {
-          type: 'gradient',
-          gradient: {
-            opacityFrom: 0.6,
-            opacityTo: 0.8,
-          },
-        },
-        legend: {
-          position: 'top',
-          horizontalAlign: 'left',
-        },
-        xaxis: {
-          type: 'datetime',
-          title: {
-            text: 'Date',
-          },
-        },
-        yaxis: {
-          title: {
-            text: 'Execution Time (seconds)',
-          },
-          labels: {
-            formatter: function (value) {
-              return value.toFixed(2); // Format to 2 decimal places
-            },
-          },
-        },
-      },
-    };
+  colors: ['#008FFB', '#00E396', '#CED4DC'],
+  dataLabels: {
+    enabled: false,
   },
-  // No methods or mounted needed; data is passed as a prop
-};
+  stroke: {
+    curve: 'straight',
+  },
+  fill: {
+    type: 'gradient',
+    gradient: {
+      opacityFrom: 0.6,
+      opacityTo: 0.8,
+    },
+  },
+  legend: {
+    position: 'top',
+    horizontalAlign: 'left',
+  },
+  xaxis: {
+    type: 'datetime',
+    title: {
+      text: 'Date',
+    },
+  },
+  yaxis: {
+    title: {
+      text: 'Execution Time (seconds)',
+    },
+    labels: {
+      formatter: function (value: number) {
+        return value.toFixed(2); // Format to 2 decimal places
+      },
+    },
+  },
+}));
 </script>

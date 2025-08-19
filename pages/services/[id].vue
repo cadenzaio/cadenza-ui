@@ -114,11 +114,11 @@ const columns = [
 ];
 
 function inspectServer(server: Server) {
-  navigateToItem(`/activity/servers/${server.uuid}`);
+  navigateToItem(`/activity/services/${server.uuid}`);
 }
 
 function inspectInNewTab(server: Server) {
-  const url = `/activity/servers/${server.uuid}`;
+  const url = `/activity/services/${server.uuid}`;
   window.open(url, '_blank');
 }
 

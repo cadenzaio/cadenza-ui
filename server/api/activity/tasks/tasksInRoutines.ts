@@ -18,6 +18,72 @@ function stringToUnitInterval(str: string): number {
   return hash / 0xffffffff;
 }
 
+// Types for task rows and mapped objects
+interface TaskRow {
+  uuid: string;
+  routine_execution_id: string;
+  task_id: string;
+  context_id: string | null;
+  result_context_id: string | null;
+  is_running: boolean;
+  is_complete: boolean;
+  errored: boolean;
+  failed: boolean;
+  progress: number;
+  scheduled: Date;
+  started: Date | null;
+  ended: Date | null;
+  name: string;
+  description: string;
+  layer_index: number;
+  processing_graph: string;
+  is_unique: boolean;
+  context_uuid: string | null;
+  result_context_uuid: string | null;
+  input_context: Record<string, unknown>;
+  output_context: Record<string, unknown>;
+  server_id?: string;
+}
+
+interface PreviousTaskRow {
+  task_execution_id: string;
+  previous_task_execution_id: string;
+  prev_uuid: string;
+  previous_task_name: string;
+}
+
+interface RoutineMapNode {
+  label: string;
+  uuid: string;
+  taskId: string;
+  contextId: string | null;
+  resultContextId: string | null;
+  isRunning: boolean;
+  isComplete: boolean;
+  errored: boolean;
+  failed: boolean;
+  progress: string;
+  scheduled: Date;
+  started: Date | null;
+  ended: Date | null;
+  previousExecutions: Array<{
+    previousTaskExecutionId: string;
+    previousTaskName: string;
+  }>;
+  previousTaskExecutionId: string | null;
+  previous_task_name: string | null;
+  name: string;
+  description: string;
+  serverName: string;
+  isUnique: boolean;
+  serverId?: string;
+  inputContext: Record<string, unknown>;
+  outputContext: Record<string, unknown>;
+  layer_index: number;
+  splitGroupId: number;
+  isSelected: boolean;
+}
+
 // Get all routines with full mapping
 async function getRoutineMap(
   routineId: string,
@@ -89,7 +155,7 @@ async function getRoutineMap(
     }>
   >();
 
-  previousTasksResult.rows.forEach((row: any) => {
+  previousTasksResult.rows.forEach((row: PreviousTaskRow) => {
     if (!previousTasksMap.has(row.task_execution_id)) {
       previousTasksMap.set(row.task_execution_id, []);
     }
@@ -102,7 +168,7 @@ async function getRoutineMap(
   });
 
   // Map the raw data to the expected frontend format
-  const map = taskResult.rows.map((task: any) => {
+  const map: RoutineMapNode[] = taskResult.rows.map((task: TaskRow) => {
     // Generate a split group ID based on the task name
     const taskNameCodeNumber = stringToUnitInterval(task.name || '');
 
@@ -153,9 +219,9 @@ async function getRoutineMap(
   // Process splitGroupId mapping
   const splitGroupIndices = new Map<string, number>();
   let index = 0;
-  map.forEach((node: any) => {
+  map.forEach((node) => {
     if (splitGroupIndices.has(node.splitGroupId.toString())) {
-      node.splitGroupId = splitGroupIndices.get(node.splitGroupId.toString());
+      node.splitGroupId = splitGroupIndices.get(node.splitGroupId.toString())!;
     } else {
       splitGroupIndices.set(node.splitGroupId.toString(), index);
       node.splitGroupId = index;
@@ -167,7 +233,7 @@ async function getRoutineMap(
   });
 
   // Sort by splitGroupId and return
-  return map.sort((a: any, b: any) => a.splitGroupId - b.splitGroupId);
+  return map.sort((a, b) => a.splitGroupId - b.splitGroupId);
 }
 
 // Event handler

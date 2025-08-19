@@ -18,7 +18,7 @@
               </li>
               <li>Description: {{ serverData?.description }}</li>
               <li
-                class="text-secondary cursor-pointer"
+                class="text-primary cursor-pointer"
                 @click="
                   navigateToItem(
                     `/services/${encodeURIComponent(
@@ -27,7 +27,7 @@
                   )
                 "
               >
-                Contract
+                Service
               </li>
             </ul>
           </template>
@@ -54,9 +54,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from '#app';
 import { useRouter } from '#vue-router';
 
-const route = ref(useRoute());
-const router = useRouter();
-const serverData = ref<{
+interface ServerData {
   address?: string;
   port?: number;
   is_active?: boolean;
@@ -64,9 +62,13 @@ const serverData = ref<{
   label?: string;
   processing_graph: string;
   description: string;
-} | null>(null);
+}
 
-const navigateToItem = (route: string) => {
+const route = ref(useRoute());
+const router = useRouter();
+const serverData = ref<ServerData | null>(null);
+
+const navigateToItem = (route: string): void => {
   router.push(route);
 };
 

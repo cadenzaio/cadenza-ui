@@ -10,8 +10,18 @@ async function getClient() {
   return client;
 }
 
+// Type for task execution time row
+interface TaskExecutionTimeRow {
+  started: string | Date;
+  hour: number;
+  date: string | Date;
+  slowest_time: number;
+  fastest_time: number;
+  average_time: number;
+}
+
 // Get TaskExecutions by task_id
-async function getTaskMap(taskId: string) {
+async function getTaskMap(taskId: string): Promise<TaskExecutionTimeRow[]> {
   const query = `
  SELECT
       MIN(te.started) as started,
@@ -28,7 +38,7 @@ async function getTaskMap(taskId: string) {
   const client = await getClient();
   try {
     const result = await client.query(query, [taskId]);
-    return result.rows;
+    return result.rows as TaskExecutionTimeRow[];
   } catch (error) {
     console.error('Error executing query:', error);
     throw error;
@@ -51,11 +61,11 @@ export default defineEventHandler(async (event) => {
         return { series: [] };
       }
       // Map to chart series format
-      const seriesData = rows.map((item: any) => ({
+      const seriesData = rows.map((item: TaskExecutionTimeRow) => ({
         date: new Date(item.started).toISOString(),
-        fastest: parseFloat(item.fastest_time),
-        average: parseFloat(item.average_time),
-        slowest: parseFloat(item.slowest_time),
+        fastest: parseFloat(item.fastest_time as unknown as string),
+        average: parseFloat(item.average_time as unknown as string),
+        slowest: parseFloat(item.slowest_time as unknown as string),
       }));
       return {
         series: [

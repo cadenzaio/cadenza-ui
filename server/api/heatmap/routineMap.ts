@@ -34,9 +34,28 @@ async function getRoutineMap() {
   }
 }
 
-// Transform DB rows to HeatMap series format
-function transformToHeatMapSeries(rows: any[]): any {
-  // Group by month name, then by day
+// Types for heatmap data
+interface HeatmapRow {
+  date: string | Date;
+  hour: number;
+  executions: number;
+  errors: number;
+}
+
+interface HeatmapDayData {
+  x: string;
+  y: number;
+}
+
+interface HeatmapSeries {
+  name: string;
+  data: HeatmapDayData[];
+}
+
+function transformToHeatMapSeries(rows: HeatmapRow[]): {
+  series: HeatmapSeries[];
+  monthNames: string[];
+} {
   const monthNames = [
     'Jan',
     'Feb',
@@ -51,7 +70,6 @@ function transformToHeatMapSeries(rows: any[]): any {
     'Nov',
     'Dec',
   ];
-  // Build a lookup: month -> day (1-31) -> hour (0-23) -> executions
   const byMonth: Record<string, Record<number, Record<number, number>>> = {};
   for (const m of monthNames) byMonth[m] = {};
 
@@ -65,12 +83,10 @@ function transformToHeatMapSeries(rows: any[]): any {
     byMonth[month][day][hour] = executions;
   });
 
-  // For each month, build 31 days, sum executions over all hours for each day
-  const series = monthNames.map((month) => ({
+  const series: HeatmapSeries[] = monthNames.map((month) => ({
     name: month,
     data: Array.from({ length: 31 }, (_, dayIdx) => {
       const day = dayIdx + 1;
-      // Sum executions for all hours in this day
       const hours = byMonth[month][day] || {};
       const y = Object.values(hours).reduce(
         (sum, v) => sum + (typeof v === 'number' ? v : 0),
