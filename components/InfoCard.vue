@@ -11,15 +11,13 @@
   </q-card>
 </template>
 
-<script setup lang="ts">
-
-</script>
+<script setup lang="ts"></script>
 
 <style>
 .custom-card {
   border-radius: 20px !important;
   min-width: 25dvw;
   max-width: 45dvw;
-  max-height: 60dvh;
+  max-height: 80dvh;
 }
 </style>
