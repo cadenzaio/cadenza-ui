@@ -187,10 +187,6 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
     list: [
-      { icon: 'check', color: 'green', text: '- Complete' },
-      { icon: 'play_arrow', color: 'blue', text: '- Running' },
-      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
-      { icon: 'close', color: 'red', text: '- Failed' },
       { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
       {
         btn: true,
@@ -245,6 +241,40 @@ const tipsByRoute: Record<string, Tip> = {
     body: [
       {
         text: 'View and manage all routine executions. For more help, visit the ',
+      },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+    list: [
+      { icon: 'check', color: 'green', text: '- Complete' },
+      { icon: 'play_arrow', color: 'blue', text: '- Running' },
+      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
+      { icon: 'close', color: 'red', text: '- Failed' },
+      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
+      {
+        btn: true,
+        icon: 'refresh',
+        color: 'secondary',
+        text: '- Generate a contract',
+      },
+      {
+        btn: true,
+        icon: 'arrow_outward',
+        color: 'orange',
+        text: '- Inspect item',
+      },
+    ],
+  },
+  '/activity/signals': {
+    title: 'Signal Executions',
+    body: [
+      {
+        text: 'View and manage all signal executions. For more help, visit the ',
       },
       {
         text: 'Terminology Page',
@@ -332,11 +362,7 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
     list: [
-      { icon: 'check', color: 'green', text: '- Complete' },
-      { icon: 'play_arrow', color: 'blue', text: '- Running' },
-      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
-      { icon: 'close', color: 'red', text: '- Failed' },
-      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
+      { icon: 'fiber_manual_record', color: 'green', text: '- Unique' },
       {
         btn: true,
         icon: 'refresh',
@@ -346,7 +372,7 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'arrow_outward',
-        color: 'orange',
+        color: 'primary',
         text: '- Inspect item',
       },
     ],
@@ -364,11 +390,6 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
     list: [
-      { icon: 'check', color: 'green', text: '- Complete' },
-      { icon: 'play_arrow', color: 'blue', text: '- Running' },
-      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
-      { icon: 'close', color: 'red', text: '- Failed' },
-      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
       {
         btn: true,
         icon: 'refresh',
@@ -378,7 +399,7 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'arrow_outward',
-        color: 'orange',
+        color: 'primary',
         text: '- Inspect item',
       },
     ],

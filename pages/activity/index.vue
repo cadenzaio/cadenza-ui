@@ -3,7 +3,13 @@
     <NuxtLayout name="dashboard-main-layout">
       <template #title> Service Activity </template>
       <div class="row q-mx-md">
-        <ServerMap @node-selected="onServerSelected" class="q-mx-md" />
+        <ServerMap
+          :nodes="mapNodes"
+          :edges="mapEdges"
+          :loading="mapLoading"
+          @node-selected="onServerSelected"
+          class="q-mx-md"
+        />
         <Table
           :columns="columns"
           :rows="servers"
@@ -50,14 +56,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAppStore } from '~/stores/app';
 import { useRouter } from '#vue-router';
+import dagre from 'dagre';
 import ServerMap from '~/components/serverMap.vue';
+import type { Node, Edge, Position } from '@vue-flow/core';
 
+// Table and dialog state
 const router = useRouter();
 const dialogVisible = ref(false);
-const selectedServer = ref<Server | undefined>(undefined);
+const selectedServer = ref<Server | any>(undefined);
 const servers = ref<Server[]>([]);
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
@@ -167,17 +176,100 @@ async function loadMoreServers() {
   await fetchServerStats(true);
 }
 
-onMounted(async () => {
+// ServerMap data
+const mapNodes = ref<Node[]>([]);
+const mapEdges = ref<Edge[]>([]);
+const mapLoading = ref(false);
+
+function layoutGraph(nodes: Node[], edges: Edge[]) {
+  const g = new dagre.graphlib.Graph();
+  g.setGraph({
+    rankdir: 'LR',
+    ranksep: 200,
+    nodesep: 5,
+    edgesep: 1,
+    align: 'DL',
+  });
+  g.setDefaultEdgeLabel(() => ({}));
+  nodes.forEach((node) => {
+    g.setNode(node.id, { width: node.width || 5, height: node.height || 30 });
+  });
+  edges.forEach((edge) => {
+    g.setEdge(edge.source, edge.target);
+  });
+  dagre.layout(g);
+  return nodes.map((node) => {
+    const nodeWithPos = g.node(node.id);
+    return {
+      ...node,
+      position: { x: nodeWithPos.x, y: nodeWithPos.y },
+    };
+  });
+}
+
+async function fetchServerMap() {
+  mapLoading.value = true;
+  try {
+    const serverMap = await $fetch('/api/activity/serverMap');
+    if (serverMap && serverMap.length > 0) {
+      const activeServers = serverMap.filter((server: any) => server.is_active);
+      const uniqueServers = new Map();
+      activeServers.forEach((server: any) => {
+        uniqueServers.set(server.server_id, server);
+      });
+      const nodes: Node[] = [];
+      uniqueServers.forEach((server: any, serverId: string) => {
+        nodes.push({
+          id: serverId,
+          position: { x: 0, y: 0 },
+          sourcePosition: 'right' as Position,
+          targetPosition: 'left' as Position,
+          data: { label: server.processing_graph },
+          type: 'default',
+          style: {
+            background: '#7abfd2',
+            color: 'white',
+            border: '1px solid #333',
+            borderRadius: '4px',
+            padding: '5px',
+            width: '100px',
+            height: '25px',
+          },
+        });
+      });
+      const edges: Edge[] = [];
+      activeServers.forEach((server: any) => {
+        if (server.client_id && uniqueServers.has(server.client_id)) {
+          edges.push({
+            id: `e${server.server_id}-${server.client_id}`,
+            source: server.client_id,
+            target: server.server_id,
+            animated: false,
+            style: { stroke: '#333' },
+          });
+        }
+      });
+      mapNodes.value = layoutGraph(nodes, edges);
+      mapEdges.value = edges;
+    } else {
+      mapNodes.value = [];
+      mapEdges.value = [];
+    }
+  } catch (error) {
+    mapNodes.value = [];
+    mapEdges.value = [];
+    // Optionally log error
+  } finally {
+    mapLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  fetchServerMap();
+  // Also fetch table data
   const appStore = useAppStore();
   appStore.setCurrentSection('serviceActivity');
-  currentPage.value = 1; // Always start at page 1 on mount
-  await fetchServerStats();
+  currentPage.value = 1;
+  fetchServerStats();
 });
 </script>
-<style scoped>
-.my-card {
-  min-width: 50dvw;
-  max-width: 500px;
-  border-radius: 15px;
-}
-</style>

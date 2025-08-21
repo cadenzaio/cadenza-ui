@@ -155,9 +155,10 @@
               </template>
               <template v-else-if="col.name === 'unique'">
                 <q-icon
+                  v-if="props.row[col.name]"
                   size="sm"
-                  :name="props.row[col.name] ? 'check' : 'close'"
-                  :color="props.row[col.name] ? 'green' : 'red'"
+                  name="fiber_manual_record"
+                  color="green"
                 />
               </template>
               <template v-else>
@@ -182,7 +183,7 @@
               <q-btn
                 v-if="!hideGenerateContractButton"
                 size="sm"
-                color="secondary"
+                color="warning"
                 round
                 icon="refresh"
                 class="q-ma-xs"
@@ -407,6 +408,8 @@ const inspectButtonColor = computed(() =>
     ? 'primary'
     : appStore.currentSection === 'serviceActivity'
     ? 'warning'
+    : appStore.currentSection === 'meta'
+    ? 'accent'
     : 'secondary'
 );
 
