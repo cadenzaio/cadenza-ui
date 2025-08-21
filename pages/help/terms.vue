@@ -61,6 +61,14 @@
                   Failed
                 </li>
                 <li>
+                  <q-icon
+                    size="sm"
+                    name="fiber_manual_record"
+                    color="green"
+                    class="q-ma-xs"
+                  />- Unique
+                </li>
+                <li>
                   <q-btn
                     round
                     size="sm"
@@ -113,10 +121,6 @@
               <p>Here are some key terms used throughout the site:</p>
               <ul>
                 <li>
-                  <span class="text-secondary">Contract</span> - A
-                  implamentation of a service on a server
-                </li>
-                <li>
                   <span class="text-secondary">Agent</span> - The owner assinged
                   to a contract
                 </li>
@@ -139,6 +143,10 @@
                 <li>
                   <span class="text-warning">Context</span> - the state of the
                   data being processed before or after
+                </li>
+                <li>
+                  <span class="text-warning">Contract</span> - A implementation
+                  of a service on a server
                 </li>
                 <li><span class="text-accent">Meta</span> - Meta data</li>
               </ul>

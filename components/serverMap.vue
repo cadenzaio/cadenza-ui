@@ -13,6 +13,7 @@
       fit-view-on-init
       contenteditable="false"
       :nodes-draggable="false"
+      v-bind="$attrs"
     />
   </div>
 </template>

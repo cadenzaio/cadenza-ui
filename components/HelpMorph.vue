@@ -191,13 +191,13 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'refresh',
-        color: 'secondary',
+        color: 'warning',
         text: '- Generate a contract',
       },
       {
         btn: true,
         icon: 'arrow_outward',
-        color: 'orange',
+        color: 'warning',
         text: '- Inspect item',
       },
     ],
@@ -225,13 +225,13 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'refresh',
-        color: 'secondary',
+        color: 'warning',
         text: '- Generate a contract',
       },
       {
         btn: true,
         icon: 'arrow_outward',
-        color: 'orange',
+        color: 'warning',
         text: '- Inspect item',
       },
     ],
@@ -259,13 +259,13 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'refresh',
-        color: 'secondary',
+        color: 'warning',
         text: '- Generate a contract',
       },
       {
         btn: true,
         icon: 'arrow_outward',
-        color: 'orange',
+        color: 'warning',
         text: '- Inspect item',
       },
     ],
@@ -293,13 +293,13 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'refresh',
-        color: 'secondary',
+        color: 'warning',
         text: '- Generate a contract',
       },
       {
         btn: true,
         icon: 'arrow_outward',
-        color: 'orange',
+        color: 'warning',
         text: '- Inspect item',
       },
     ],
@@ -338,13 +338,13 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'refresh',
-        color: 'secondary',
+        color: 'warning',
         text: '- Generate a contract',
       },
       {
         btn: true,
         icon: 'arrow_outward',
-        color: 'orange',
+        color: 'warning',
         text: '- Inspect item',
       },
     ],
@@ -366,7 +366,7 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'refresh',
-        color: 'secondary',
+        color: 'warning',
         text: '- Generate a contract',
       },
       {
@@ -393,7 +393,7 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'refresh',
-        color: 'secondary',
+        color: 'warning',
         text: '- Generate a contract',
       },
       {
@@ -425,13 +425,13 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'refresh',
-        color: 'secondary',
+        color: 'warning',
         text: '- Generate a contract',
       },
       {
         btn: true,
         icon: 'arrow_outward',
-        color: 'orange',
+        color: 'warning',
         text: '- Inspect item',
       },
     ],
@@ -457,13 +457,13 @@ const tipsByRoute: Record<string, Tip> = {
       {
         btn: true,
         icon: 'refresh',
-        color: 'secondary',
+        color: 'warning',
         text: '- Generate a contract',
       },
       {
         btn: true,
         icon: 'arrow_outward',
-        color: 'orange',
+        color: 'warning',
         text: '- Inspect item',
       },
     ],
@@ -624,6 +624,184 @@ const tipsByRoute: Record<string, Tip> = {
       {
         text: 'Terminology Page',
         link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+  },
+  // Meta pages
+  '/meta': {
+    title: 'Meta Overview',
+    body: [
+      {
+        text: 'View and manage meta information for routines, tasks, and signals. For more help, visit the ',
+      },
+      {
+        link: '/help/terms',
+        text: 'Terminology Page',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+    list: [
+      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
+      {
+        btn: true,
+        icon: 'refresh',
+        color: 'warning',
+        text: '- Generate a contract',
+      },
+      {
+        btn: true,
+        icon: 'arrow_outward',
+        color: 'warning',
+        text: '- Inspect item',
+      },
+    ],
+  },
+  '/meta/routines': {
+    title: 'Meta Routine Executions',
+    body: [
+      {
+        text: 'Browse and inspect all meta routine executions. For more help, visit the ',
+      },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+    list: [
+      { icon: 'check', color: 'green', text: '- Complete' },
+      { icon: 'play_arrow', color: 'blue', text: '- Running' },
+      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
+      { icon: 'close', color: 'red', text: '- Failed' },
+      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
+      {
+        btn: true,
+        icon: 'refresh',
+        color: 'warning',
+        text: '- Generate a contract',
+      },
+      {
+        btn: true,
+        icon: 'arrow_outward',
+        color: 'warning',
+        text: '- Inspect item',
+      },
+    ],
+  },
+  '/meta/routines/[id]': {
+    title: 'Meta Routine Execution Details',
+    body: [
+      {
+        text: 'Detailed information about a meta routine execution. For more help, visit the ',
+      },
+      {
+        text: 'FAQ',
+        link: '/help/faq',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+  },
+  '/meta/tasks': {
+    title: 'Meta Task Executions',
+    body: [
+      {
+        text: 'Browse and inspect all meta task executions. For more help, visit the ',
+      },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+    list: [
+      { icon: 'check', color: 'green', text: '- Complete' },
+      { icon: 'play_arrow', color: 'blue', text: '- Running' },
+      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
+      { icon: 'close', color: 'red', text: '- Failed' },
+      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
+      {
+        btn: true,
+        icon: 'refresh',
+        color: 'warning',
+        text: '- Generate a contract',
+      },
+      {
+        btn: true,
+        icon: 'arrow_outward',
+        color: 'warning',
+        text: '- Inspect item',
+      },
+    ],
+  },
+  '/meta/tasks/[id]': {
+    title: 'Meta Task Execution Details',
+    body: [
+      {
+        text: 'Detailed information about a meta task execution. For more help, visit the ',
+      },
+      {
+        text: 'FAQ',
+        link: '/help/faq',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+  },
+  '/meta/signals': {
+    title: 'Meta Signal Executions',
+    body: [
+      {
+        text: 'Browse and inspect all meta signal executions. For more help, visit the ',
+      },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+    list: [
+      { icon: 'check', color: 'green', text: '- Complete' },
+      { icon: 'play_arrow', color: 'blue', text: '- Running' },
+      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
+      { icon: 'close', color: 'red', text: '- Failed' },
+      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
+      {
+        btn: true,
+        icon: 'refresh',
+        color: 'warning',
+        text: '- Generate a contract',
+      },
+      {
+        btn: true,
+        icon: 'arrow_outward',
+        color: 'warning',
+        text: '- Inspect item',
+      },
+    ],
+  },
+  '/meta/signals/[id]': {
+    title: 'Meta Signal Execution Details',
+    body: [
+      {
+        text: 'Detailed information about a meta signal execution. For more help, visit the ',
+      },
+      {
+        text: 'FAQ',
+        link: '/help/faq',
         class: 'text-primary',
         style: 'text-decoration: underline;',
       },
