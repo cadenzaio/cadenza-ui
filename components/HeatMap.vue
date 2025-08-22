@@ -1,5 +1,5 @@
 <template>
-  <div class="heatmap-container">
+  <q-card class="heatmap-container">
     <div v-show="!showMonthView">
       <apexchart
         type="heatmap"
@@ -26,89 +26,6 @@
           @click="incrementYear"
         />
       </div>
-      <q-dialog v-model="showDialog">
-        <q-card>
-          <q-card-section>
-            <div class="text-h6">Adjust Heatmap Ranges</div>
-            <div class="color-bar-container">
-              <div class="color-bar">
-                <div
-                  v-for="(range, idx) in editableRanges"
-                  :key="idx"
-                  class="color-bar-section"
-                  :style="{
-                    background: colorBarColors[idx],
-                    width: colorBarWidths[idx] + '%',
-                  }"
-                ></div>
-              </div>
-              <div class="color-bar-labels">
-                <span
-                  v-for="(range, idx) in editableRanges.slice(0, -1)"
-                  :key="idx"
-                  class="color-bar-label"
-                >
-                  {{ ['Low', 'Medium', 'High', 'Extreme'][idx] }}
-                </span>
-              </div>
-            </div>
-            <div class="range-inputs-horizontal">
-              <div
-                v-for="(range, idx) in editableRanges.slice(0, -1)"
-                :key="idx"
-                class="range-input-horizontal"
-              >
-                <div class="text-caption q-mb-xs">
-                  {{ ['Low', 'Medium', 'High'][idx] }}: {{ range.from }} to
-                  {{ range.to }}
-                </div>
-                <q-input
-                  v-model.number="range.to"
-                  :label="`Max value for ${['Low', 'Medium', 'High'][idx]}`"
-                  type="number"
-                  :min="range.from"
-                  :max="
-                    idx < editableRanges.length - 1
-                      ? editableRanges[idx + 1].to - 1
-                      : undefined
-                  "
-                  :disable="false"
-                  @update:model-value="
-                    (val) =>
-                      handleMaxChange(
-                        Number(val) || editableRanges[idx].from,
-                        idx
-                      )
-                  "
-                  dense
-                  outlined
-                  class="range-input"
-                />
-                <div
-                  v-if="idx < editableRanges.length - 1"
-                  class="text-caption q-mt-xs"
-                >
-                  {{ ['Medium', 'High', 'Extreme'][idx] }} starts at
-                  {{ range.to + 1 }}
-                </div>
-              </div>
-            </div>
-
-            <q-toggle
-              v-model="scaleToData"
-              label="Scale to Data (Equal Sections)"
-            />
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn
-              color="primary"
-              label="OK"
-              @click="applyRanges"
-              v-close-popup
-            />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
     </div>
     <div v-show="showMonthView">
       <apexchart
@@ -156,7 +73,82 @@
         </div>
       </div>
     </div>
-  </div>
+  </q-card>
+  <q-dialog v-model="showDialog">
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Adjust Heatmap Ranges</div>
+        <div class="color-bar-container">
+          <div class="color-bar">
+            <div
+              v-for="(range, idx) in editableRanges"
+              :key="idx"
+              class="color-bar-section"
+              :style="{
+                background: colorBarColors[idx],
+                width: colorBarWidths[idx] + '%',
+              }"
+            ></div>
+          </div>
+          <div class="color-bar-labels">
+            <span
+              v-for="(range, idx) in editableRanges.slice(0, -1)"
+              :key="idx"
+              class="color-bar-label"
+            >
+              {{ ['Low', 'Medium', 'High', 'Extreme'][idx] }}
+            </span>
+          </div>
+        </div>
+        <div class="range-inputs-horizontal">
+          <div
+            v-for="(range, idx) in editableRanges.slice(0, -1)"
+            :key="idx"
+            class="range-input-horizontal"
+          >
+            <div class="text-caption q-mb-xs">
+              {{ ['Low', 'Medium', 'High'][idx] }}: {{ range.from }} to
+              {{ range.to }}
+            </div>
+            <q-input
+              v-model.number="range.to"
+              :label="`Max value for ${['Low', 'Medium', 'High'][idx]}`"
+              type="number"
+              :min="range.from"
+              :max="
+                idx < editableRanges.length - 1
+                  ? editableRanges[idx + 1].to - 1
+                  : undefined
+              "
+              :disable="false"
+              @update:model-value="
+                (val) =>
+                  handleMaxChange(Number(val) || editableRanges[idx].from, idx)
+              "
+              dense
+              outlined
+              class="range-input"
+            />
+            <div
+              v-if="idx < editableRanges.length - 1"
+              class="text-caption q-mt-xs"
+            >
+              {{ ['Medium', 'High', 'Extreme'][idx] }} starts at
+              {{ range.to + 1 }}
+            </div>
+          </div>
+        </div>
+
+        <q-toggle
+          v-model="scaleToData"
+          label="Scale to Data (Equal Sections)"
+        />
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn color="primary" label="OK" @click="applyRanges" v-close-popup />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
@@ -259,52 +251,58 @@ function getMonthColorScaleRanges() {
   ];
 }
 
-const monthChartOptions = computed(() => ({
-  chart: {
-    height: 500,
-    type: 'heatmap',
-    background: 'transparent',
-  },
-  plotOptions: {
-    heatmap: {
-      shadeIntensity: 0.5,
-      radius: 0,
-      enableShades: true,
-      colorScale: {
-        ranges: getMonthColorScaleRanges(),
+const modeColor = computed(() => (isDarkMode.value ? '#e0e0e0' : '#20242c'));
+
+const monthChartOptions = computed(() => {
+  const xCategories = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+  const yCategories = Array.from({ length: 31 }, (_, i) => `Day ${31 - i}`);
+  return {
+    chart: {
+      height: 500,
+      type: 'heatmap',
+      background: 'transparent',
+    },
+    plotOptions: {
+      heatmap: {
+        shadeIntensity: 0.5,
+        radius: 0,
+        enableShades: true,
+        colorScale: {
+          ranges: getMonthColorScaleRanges(),
+        },
       },
     },
-  },
-  dataLabels: { enabled: false },
-  stroke: { width: 1 },
-  title: {
-    text: 'Day/Hour HeatMap',
-    style: { color: labelStyle.color },
-  },
-  xaxis: {
-    categories: Array.from({ length: 24 }, (_, i) => `${i}:00`),
-    labels: { style: { colors: labelStyle.colors } },
-  },
-  yaxis: {
-    categories: Array.from({ length: 31 }, (_, i) => `Day ${31 - i}`),
-    labels: { style: { colors: labelStyle.colors } },
-  },
-  tooltip: {
-    enabled: true,
-    custom: ({
-      series,
-      seriesIndex,
-      dataPointIndex,
-    }: {
-      series: number[][];
-      seriesIndex: number;
-      dataPointIndex: number;
-    }) => {
-      const value = series[seriesIndex][dataPointIndex];
-      return `<div style='font-size:16px;padding:4px;color:#000;'>${value}</div>`;
+    dataLabels: { enabled: false },
+    stroke: { width: 1 },
+    title: {
+      text: `${selectedMonth.value} ${selectedYear.value} HeatMap`,
+      style: { color: modeColor.value },
     },
-  },
-}));
+    xaxis: {
+      categories: xCategories,
+      labels: { style: { colors: modeColor.value } },
+    },
+    yaxis: {
+      categories: yCategories,
+      labels: { style: { colors: modeColor.value } },
+    },
+    tooltip: {
+      enabled: true,
+      custom: ({
+        series,
+        seriesIndex,
+        dataPointIndex,
+      }: {
+        series: number[][];
+        seriesIndex: number;
+        dataPointIndex: number;
+      }) => {
+        const value = series[seriesIndex][dataPointIndex];
+        return `<div style='font-size:16px;padding:4px;color:#000;'>${value}</div>`;
+      },
+    },
+  };
+});
 
 // Remove generateMonthData, use prop
 
@@ -343,6 +341,7 @@ function onCellClick(
 import VueApexCharts from 'vue3-apexcharts';
 import { ref, computed, watch, nextTick } from 'vue';
 import { useAppStore } from '@/stores/app';
+import { storeToRefs } from 'pinia';
 import { ref as qRef } from 'vue';
 
 function generateData(
@@ -388,9 +387,14 @@ function handleMaxChange(val: number, idx: number) {
 }
 // Use prop for chartSeries
 
+// Use app store for dark mode
+const appStore = useAppStore();
+const { isDarkMode } = storeToRefs(appStore);
+
+const getLabelColor = () => (isDarkMode.value ? '#e0e0e0' : '#20242c');
+
 const labelStyle = {
-  color: '#7E7878',
-  colors: Array(props.monthNames.length).fill('#7E7878'),
+  color: getLabelColor(),
 };
 
 const showDialog = qRef(false);
@@ -430,19 +434,31 @@ function applyRanges() {
     let min = Math.min(...allData.filter((v: number) => v > 0));
     min = Math.max(min, 1); // Clamp min to at least 1
     const max = Math.max(...allData);
-    const sectionCount = newRanges.length;
-    const sectionSize = Math.floor((max - min + 1) / sectionCount);
-    for (let idx = 0; idx < sectionCount; idx++) {
-      newRanges[idx].from = min + idx * sectionSize;
-      if (idx === sectionCount - 1) {
-        newRanges[idx].to = max;
-      } else {
-        newRanges[idx].to = min + (idx + 1) * sectionSize - 1;
+    if (max < 4) {
+      // Set ranges as: low 1-1, medium 2-2, high 3-3, extreme 4-infinity
+      newRanges[0].from = 1;
+      newRanges[0].to = 1;
+      newRanges[1].from = 2;
+      newRanges[1].to = 2;
+      newRanges[2].from = 3;
+      newRanges[2].to = 3;
+      newRanges[3].from = 4;
+      newRanges[3].to = Infinity;
+    } else {
+      const sectionCount = newRanges.length;
+      const sectionSize = Math.floor((max - min + 1) / sectionCount);
+      for (let idx = 0; idx < sectionCount; idx++) {
+        newRanges[idx].from = min + idx * sectionSize;
+        if (idx === sectionCount - 1) {
+          newRanges[idx].to = max;
+        } else {
+          newRanges[idx].to = min + (idx + 1) * sectionSize - 1;
+        }
       }
+      // Ensure first range starts at 1
+      newRanges[0].from = 1;
+      if (newRanges[0].to < 1) newRanges[0].to = 1;
     }
-    // Ensure first range starts at 1
-    newRanges[0].from = 1;
-    if (newRanges[0].to < 1) newRanges[0].to = 1;
   } else {
     newRanges.forEach((range: RangeSection, idx: number) => {
       if (idx === 0) {
@@ -512,22 +528,22 @@ const chartOptions = computed(() => ({
     width: 1,
   },
   title: {
-    text: 'Yearly HeatMap',
-    style: { color: labelStyle.color },
+    text: `${selectedYear.value} HeatMap`,
+    style: { color: modeColor.value },
   },
   xaxis: {
     labels: {
-      style: { colors: labelStyle.colors },
+      style: { colors: modeColor.value },
     },
   },
   yaxis: {
     labels: {
-      style: { colors: labelStyle.colors },
+      style: { colors: modeColor.value },
     },
   },
   legend: {
     labels: {
-      colors: labelStyle.colors,
+      colors: modeColor.value,
     },
   },
   tooltip: {
@@ -755,10 +771,8 @@ function handleBackToYearView() {
 <style>
 .heatmap-container {
   border-radius: 20px;
-  background-color: #d0cece62;
   padding: 30px;
   margin: 20px;
-  box-shadow: 6px 6px 12px rgba(136, 134, 134, 0.6);
   position: relative;
 }
 .heatmap-header-bottom {

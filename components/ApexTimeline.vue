@@ -1,5 +1,5 @@
 <template>
-  <div class="apex-timeline-container">
+  <q-card class="apex-timeline-container">
     <div v-if="loading" class="loading-state">
       <q-spinner-dots size="48px" color="primary" />
       <p class="text-grey-6">Loading timeline data...</p>
@@ -19,12 +19,17 @@
         Task execution data will appear here when available
       </p>
     </div>
-  </div>
+  </q-card>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
+import { storeToRefs } from 'pinia';
+import { useAppStore } from '../stores/app';
+// Access dark mode from app store
+const appStore = useAppStore();
+const { isDarkMode } = storeToRefs(appStore);
 
 interface TimelineItem {
   label: string;
@@ -122,133 +127,197 @@ const chartSeries = computed(() => {
   ];
 });
 
-const chartOptions = computed(() => ({
-  chart: {
-    type: 'rangeBar',
-    height: Math.max(400, props.itemMap.length * 40 + 100),
-    background: '#b1b3b479',
-    toolbar: {
-      show: true,
-      tools: {
-        download: true,
-        selection: false,
-        zoom: false,
-        zoomin: false,
-        zoomout: false,
-        pan: false,
-        reset: false,
+const chartOptions = computed(() => {
+  // Colors for labels
+  const labelColor = isDarkMode.value ? '#e0e0e0' : '#20242c';
+  const xLabelColor = isDarkMode.value ? '#e0e0e0' : '#20242c';
+  return {
+    chart: {
+      type: 'rangeBar',
+      height: Math.max(400, props.itemMap.length * 40 + 100),
+
+      toolbar: {
+        show: true,
+        tools: {
+          download: true,
+          selection: false,
+          zoom: false,
+          zoomin: false,
+          zoomout: false,
+          pan: false,
+          reset: false,
+        },
+      },
+      animations: {
+        enabled: true,
+        easing: 'easeinout',
+        speed: 800,
+      },
+      zoom: {
+        enabled: false,
       },
     },
-    animations: {
+    plotOptions: {
+      bar: {
+        horizontal: true,
+        barHeight: '70%',
+        rangeBarGroupRows: false,
+        rangeBarOverlap: false,
+        distributed: true,
+      },
+    },
+    dataLabels: {
       enabled: true,
-      easing: 'easeinout',
-      speed: 800,
-    },
-    zoom: {
-      enabled: false,
-    },
-  },
-  plotOptions: {
-    bar: {
-      horizontal: true,
-      barHeight: '70%',
-      rangeBarGroupRows: false,
-      rangeBarOverlap: false,
-      distributed: true,
-    },
-  },
-  dataLabels: {
-    enabled: true,
-    formatter: function (val: any, opts: any) {
-      const start = new Date(val[0]);
-      const end = new Date(val[1]);
-      const duration = (end.getTime() - start.getTime()) / 1000;
+      formatter: function (val: any, opts: any) {
+        const start = new Date(val[0]);
+        const end = new Date(val[1]);
+        const duration = (end.getTime() - start.getTime()) / 1000;
 
-      if (duration < 60) {
-        return `${duration.toFixed(1)}s`;
-      } else if (duration < 3600) {
-        return `${(duration / 60).toFixed(1)}m`;
-      } else {
-        return `${(duration / 3600).toFixed(1)}h`;
+        if (duration < 60) {
+          return `${duration.toFixed(1)}s`;
+        } else if (duration < 3600) {
+          return `${(duration / 60).toFixed(1)}m`;
+        } else {
+          return `${(duration / 3600).toFixed(1)}h`;
+        }
+      },
+      style: {
+        colors: ['#fff'],
+        fontSize: '11px',
+        fontWeight: 'bold',
+      },
+    },
+    xaxis: (() => {
+      // Calculate min and max for x-axis to always show the full second
+      let minX, maxX;
+      if (props.itemMap && props.itemMap.length > 0) {
+        minX = Math.min(
+          ...props.itemMap.map((item) => new Date(item.started).getTime())
+        );
+        maxX = Math.max(
+          ...props.itemMap.map((item) =>
+            item.ended ? new Date(item.ended).getTime() : Date.now()
+          )
+        );
+        minX = Math.floor(minX / 1000) * 1000;
+        maxX = Math.ceil(maxX / 1000) * 1000;
+        if (maxX - minX < 1000) {
+          maxX = minX + 1000;
+        }
       }
+      return {
+        type: 'datetime',
+        min: minX,
+        max: maxX,
+        labels: {
+          datetimeUTC: false,
+          format: 'HH:mm:ss',
+          style: {
+            fontSize: '12px',
+            colors: [xLabelColor],
+          },
+        },
+        axisBorder: {
+          show: true,
+        },
+        axisTicks: {
+          show: true,
+        },
+      };
+    })(),
+    // Add vertical markers at every 0.5 second between minX and maxX
+    annotations: (() => {
+      let minX, maxX;
+      if (props.itemMap && props.itemMap.length > 0) {
+        minX = Math.min(
+          ...props.itemMap.map((item) => new Date(item.started).getTime())
+        );
+        maxX = Math.max(
+          ...props.itemMap.map((item) =>
+            item.ended ? new Date(item.ended).getTime() : Date.now()
+          )
+        );
+        minX = Math.floor(minX / 1000) * 1000;
+        maxX = Math.ceil(maxX / 1000) * 1000;
+        if (maxX - minX < 1000) {
+          maxX = minX + 1000;
+        }
+        const markers = [];
+        for (let t = minX + 500; t < maxX; t += 1000) {
+          markers.push({
+            x: t,
+            borderColor: '#bbb',
+            strokeDashArray: 4,
+            label: {
+              style: {
+                color: '#bbb',
+                fontSize: '10px',
+                background: 'transparent',
+              },
+              orientation: 'horizontal',
+              offsetY: 10,
+            },
+          });
+        }
+        return { xaxis: markers };
+      }
+      return { xaxis: [] };
+    })(),
+    yaxis: {
+      labels: {
+        style: {
+          fontSize: '11px',
+          fontWeight: '500',
+          colors: [labelColor],
+        },
+        maxWidth: 200,
+      },
     },
-    style: {
-      colors: ['#fff'],
-      fontSize: '11px',
-      fontWeight: 'bold',
+    grid: {
+      show: true,
+      borderColor: '#e0e0e0',
+      strokeDashArray: 2,
+      position: 'back',
+      xaxis: {
+        lines: {
+          show: true,
+        },
+      },
+      yaxis: {
+        lines: {
+          show: true,
+        },
+      },
+      row: {
+        colors: ['#f8f9fa', 'transparent'],
+        opacity: 0.3,
+      },
     },
-  },
-  xaxis: {
-    type: 'datetime',
-    labels: {
-      datetimeUTC: false,
-      format: 'HH:mm:ss',
+    legend: {
+      show: false,
+    },
+    tooltip: {
+      enabled: true,
+      shared: false,
+      intersect: true,
+      followCursor: true,
       style: {
         fontSize: '12px',
       },
-    },
-    axisBorder: {
-      show: true,
-    },
-    axisTicks: {
-      show: true,
-    },
-  },
-  yaxis: {
-    labels: {
-      style: {
-        fontSize: '11px',
-        fontWeight: '500',
-        colors: ['#20242cff'],
-      },
-      maxWidth: 200,
-    },
-  },
-  grid: {
-    show: true,
-    borderColor: '#e0e0e0',
-    strokeDashArray: 2,
-    position: 'back',
-    xaxis: {
-      lines: {
-        show: true,
-      },
-    },
-    yaxis: {
-      lines: {
-        show: true,
-      },
-    },
-    row: {
-      colors: ['#f8f9fa', 'transparent'],
-      opacity: 0.3,
-    },
-  },
-  legend: {
-    show: false,
-  },
-  tooltip: {
-    enabled: true,
-    shared: false,
-    intersect: true,
-    followCursor: true,
-    style: {
-      fontSize: '12px',
-    },
-    custom: function ({ series, seriesIndex, dataPointIndex, w }: any) {
-      const data = w.config.series[seriesIndex].data[dataPointIndex];
-      const item = data.meta;
-      const start = new Date(data.y[0]);
-      const end = new Date(data.y[1]);
-      const duration = (end.getTime() - start.getTime()) / 1000;
+      custom: function ({ series, seriesIndex, dataPointIndex, w }: any) {
+        const data = w.config.series[seriesIndex].data[dataPointIndex];
+        const item = data.meta;
+        const start = new Date(data.y[0]);
+        const end = new Date(data.y[1]);
+        const duration = (end.getTime() - start.getTime()) / 1000;
 
-      const formatDuration = (seconds: number) => {
-        if (seconds < 60) return `${seconds.toFixed(1)}s`;
-        if (seconds < 3600) return `${(seconds / 60).toFixed(1)}m`;
-        return `${(seconds / 3600).toFixed(1)}h`;
-      };
+        const formatDuration = (seconds: number) => {
+          if (seconds < 60) return `${seconds.toFixed(1)}s`;
+          if (seconds < 3600) return `${(seconds / 60).toFixed(1)}m`;
+          return `${(seconds / 3600).toFixed(1)}h`;
+        };
 
-      return `
+        return `
         <div class="apex-tooltip">
           <div class="tooltip-title">${item.name || item.label}</div>
           <div class="tooltip-content">
@@ -272,13 +341,14 @@ const chartOptions = computed(() => ({
           </div>
         </div>
       `;
+      },
     },
-  },
-  stroke: {
-    width: 1,
-    colors: ['#fff'],
-  },
-}));
+    stroke: {
+      width: 1,
+      colors: ['#fff'],
+    },
+  };
+});
 
 const getStatusText = (item: TimelineItem) => {
   if (item.errored) return 'Error';
@@ -321,6 +391,7 @@ watch(
 
 <style scoped>
 .apex-timeline-container {
+  border-radius: 20px !important;
   width: 100%;
   max-width: 85dvw;
   min-height: 400px;

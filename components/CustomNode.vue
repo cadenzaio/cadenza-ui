@@ -17,6 +17,46 @@ interface NodeData {
 }
 
 const props = defineProps<{ data: NodeData }>();
+import { computed } from 'vue';
+import { useAppStore } from '~/stores/app';
+import { colors } from 'quasar';
+
+const appStore = useAppStore();
+const currentSection = appStore.currentSection;
+
+const nodeBg = computed(() => {
+  switch (currentSection) {
+    case 'services':
+      return colors.changeAlpha(colors.getPaletteColor('primary'), 0.6);
+    case 'serviceActivity':
+      return colors.changeAlpha(colors.getPaletteColor('warning'), 0.6);
+    case 'contracts':
+      return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.6);
+    case 'meta':
+      return colors.changeAlpha(colors.getPaletteColor('accent'), 0.6);
+    case 'help':
+      return colors.changeAlpha(colors.getPaletteColor('grey-8'), 0.6);
+    default:
+      return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.6);
+  }
+});
+
+const nodeSelectedBg = computed(() => {
+  switch (currentSection) {
+    case 'services':
+      return colors.getPaletteColor('primary');
+    case 'serviceActivity':
+      return colors.getPaletteColor('warning');
+    case 'contracts':
+      return colors.getPaletteColor('secondary');
+    case 'meta':
+      return colors.getPaletteColor('accent');
+    case 'help':
+      return colors.getPaletteColor('grey-8');
+    default:
+      return colors.getPaletteColor('secondary');
+  }
+});
 </script>
 
 <template>
@@ -29,6 +69,9 @@ const props = defineProps<{ data: NodeData }>();
       data.signal ? 'signal-node' : '',
       data.meta ? 'meta-node' : '',
     ]"
+    :style="
+      data.isSelected ? { background: nodeSelectedBg } : { background: nodeBg }
+    "
     role="button"
     tabindex="0"
   >
@@ -55,12 +98,17 @@ const props = defineProps<{ data: NodeData }>();
 </template>
 
 <style>
+/* Hide all vue-flow handles */
+.vue-flow__handle {
+  opacity: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
 .vue-flow__node {
   background: none !important;
   border: none !important;
 }
 .custom-node {
-  background: #7abfd2;
   color: white;
   border-radius: 4px;
   padding: 5px;
@@ -69,49 +117,44 @@ const props = defineProps<{ data: NodeData }>();
   cursor: pointer;
   font-size: 0.6em;
   overflow-wrap: break-word;
+  box-shadow: 2px 6px 6px rgba(139, 136, 136, 0.66);
+  transition: background 0.2s;
 }
-
 .custom-node:hover {
-  background: #6aa8b8;
+  filter: brightness(0.95);
 }
-
 .selected-node {
-  background: #f5b041 !important;
-  box-shadow: 6px 6px #3332313b !important;
+  box-shadow: 6px 6px #7473737a !important;
 }
-
 .errored-node {
   background: #d37b7b !important;
 }
-
 .failed-node {
   background: #f57741 !important;
 }
 .signal-node {
   background: #2b9222 !important;
   border-radius: 30px !important;
-  box-shadow: 0 2px 8px 0 rgba(141 140 140 / 0.66);
+  box-shadow: 2px 6px 6px rgba(139, 136, 136, 0.66);
   width: 50px !important;
   height: 50px !important;
   align-content: center !important;
+  transition: background 0.2s;
   word-wrap: break-word !important;
 }
-
 .meta-node {
   background: #ab0ac0 !important;
-  width: 30px !important;
-  height: 30px !important;
-  border-radius: 0 !important;
-  box-shadow: 0 2px 8px 0 rgba(141 140 140 / 0.66);
+  width: 20px !important;
+  height: 20px !important;
+  box-shadow: 0 2px 8px 0 rgba(141, 140, 140, 0.66);
   transform: rotate(45deg);
   display: flex;
-  align-items: center;
+  align-items: bottom;
   justify-content: center;
   position: relative;
   margin: 0 auto;
   overflow: visible;
 }
-
 .meta-label {
   display: inline-block;
   transform: rotate(-45deg);
