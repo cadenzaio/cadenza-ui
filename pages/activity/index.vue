@@ -9,6 +9,7 @@
           :loading="mapLoading"
           @node-selected="onServerSelected"
           class="q-mx-md"
+          :nodeTypes="{ customNode: CustomNode }"
         />
         <Table
           :columns="columns"
@@ -57,6 +58,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import CustomNode from '~/components/CustomNode.vue';
 import { useAppStore } from '~/stores/app';
 import { useRouter } from '#vue-router';
 import dagre from 'dagre';
@@ -225,16 +227,7 @@ async function fetchServerMap() {
           sourcePosition: 'right' as Position,
           targetPosition: 'left' as Position,
           data: { label: server.processing_graph },
-          type: 'default',
-          style: {
-            background: '#7abfd2',
-            color: 'white',
-            border: '1px solid #333',
-            borderRadius: '4px',
-            padding: '5px',
-            width: '100px',
-            height: '25px',
-          },
+          type: 'customNode',
         });
       });
       const edges: Edge[] = [];

@@ -463,6 +463,10 @@ watch(
 </script>
 
 <style>
+.vue-flow__node {
+  background: none !important;
+  border: none !important;
+}
 .vue-flow-container {
   position: relative;
   min-width: 50dvw;
