@@ -7,15 +7,17 @@
       <div class="q-gutter-xs flex-grow-1" style="overflow: auto">
         <q-breadcrumbs
           separator="/"
-          class="text-orange transparent-background q-py-xs q-px-md"
-          active-color="primary"
+          :style="{ backgroundColor: breadcrumbBg, borderRadius: '20px' }"
+          class="q-py-xs q-px-md"
+          :active-color="breadcrumbActiveColor"
         >
-          <q-breadcrumbs-el :to="'/'" icon="home" />
+          <q-breadcrumbs-el :to="'/'" icon="home" class="homeIcon" />
           <q-breadcrumbs-el
             v-for="(breadcrumb, index) in breadcrumbs"
             :key="index"
             :to="breadcrumb.to"
             :label="breadcrumb.label"
+            :color="breadcrumbActiveColor"
             :class="{ 'active-breadcrumb': index === breadcrumbs.length - 1 }"
           />
         </q-breadcrumbs>
@@ -37,12 +39,20 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { useAppStore } from '~/stores/app';
+import { colors, useQuasar } from 'quasar';
 
 const route = useRoute();
+const appStore = useAppStore();
+const currentSection = computed(() => appStore.currentSection);
+
+let $q;
+if (process.client) {
+  $q = useQuasar();
+}
 
 const breadcrumbs = computed(() => {
   const pathArray = route.path.split('/').filter((segment) => segment);
-
   return pathArray.map((segment, index) => {
     const cleanSegment = decodeURIComponent(segment.replace('-sub', ''));
     return {
@@ -74,12 +84,49 @@ function formatBreadcrumbLabel(segment) {
   }
   return segment.charAt(0).toLowerCase() + segment.slice(1).replace(/-/g, ' ');
 }
+
+const breadcrumbBg = computed(() => {
+  switch (currentSection.value) {
+    case 'services':
+      return colors.changeAlpha(colors.getPaletteColor('primary'), 0.1);
+    case 'serviceActivity':
+      return colors.changeAlpha(colors.getPaletteColor('warning'), 0.1);
+    case 'contracts':
+      return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.1);
+    case 'meta':
+      return colors.changeAlpha(colors.getPaletteColor('accent'), 0.1);
+    case 'help':
+      return colors.changeAlpha(colors.getPaletteColor('grey-8'), 0.1);
+    default:
+      return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.1);
+  }
+});
+
+const breadcrumbActiveColor = computed(() => {
+  switch (currentSection.value) {
+    case 'services':
+      return 'primary';
+    case 'serviceActivity':
+      return 'warning';
+    case 'contracts':
+      return 'secondary';
+    case 'meta':
+      return 'accent';
+    case 'help':
+      return 'grey-8';
+    default:
+      return 'secondary';
+  }
+});
 </script>
 
 <style scoped>
-.transparent-background {
-  background-color: rgba(221, 240, 248, 0.425) !important;
-  box-shadow: none !important;
-  border-radius: 20px !important;
+/* Removed .transparent-background, now handled inline */
+.active-breadcrumb {
+  font-weight: bold;
+  text-decoration: underline;
+}
+.homeIcon {
+  color: #259f93 !important;
 }
 </style>

@@ -44,6 +44,8 @@ interface TableColumn {
   sortable: boolean;
 }
 
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+
 const layout = 'dashboard-layout';
 const selectedGraph = ref<Graph[] | undefined>(undefined);
 
@@ -121,9 +123,10 @@ function inspectGraphs(graph: Graph): void {
   navigateToItem(`/services/${graph.uuid}`);
 }
 
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 function inspectInNewTab(graph: Graph): void {
-  const url = `/services/${graph.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/services/${graph.uuid}`);
 }
 const navigateToItem = (route: string) => {
   router.push(route);

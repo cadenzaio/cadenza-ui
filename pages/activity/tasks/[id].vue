@@ -81,6 +81,9 @@
                   v-for="(id, index) in taskExecution.previousTaskExecutionId"
                   :key="index"
                   @click="navigateToItem(`/activity/tasks/${id}`)"
+                  @contextmenu.prevent="
+                    openLinkInNewTab(`/activity/tasks/${id}`)
+                  "
                 >
                   Previous {{ taskExecution.previousTaskNames[index] }}
                 </div>
@@ -93,6 +96,9 @@
                   v-for="(id, index) in taskExecution.nextTaskExecutionId"
                   :key="index"
                   @click="navigateToItem(`/activity/tasks/${id}`)"
+                  @contextmenu.prevent="
+                    openLinkInNewTab(`/activity/tasks/${id}`)
+                  "
                 >
                   Next {{ taskExecution.nextTaskNames[index] }}
                 </div>
@@ -101,6 +107,11 @@
                 class="q-mx-md q-my-sm cursor-pointer text-warning"
                 @click="
                   navigateToItem(
+                    `/activity/routines/${taskExecution.routineExecutionId}`
+                  )
+                "
+                @contextmenu.prevent="
+                  openLinkInNewTab(
                     `/activity/routines/${taskExecution.routineExecutionId}`
                   )
                 "
@@ -114,6 +125,9 @@
                 @click="
                   navigateToItem(`/services/tasks/${taskExecution.taskId}`)
                 "
+                @contextmenu.prevent="
+                  openLinkInNewTab(`/services/tasks/${taskExecution.taskId}`)
+                "
               >
                 Task: {{ taskExecution.name }}
               </div>
@@ -121,16 +135,26 @@
               <div
                 class="q-mx-md q-my-sm cursor-pointer text-primary"
                 @click="navigateToItem(`/services/${taskExecution.serverName}`)"
+                @contextmenu.prevent="
+                  openLinkInNewTab(`/services/${taskExecution.serverName}`)
+                "
               >
                 Server: {{ taskExecution.serverName }}
               </div>
               <div
                 class="q-mx-md q-my-sm"
                 @click="
-                  navigateToItem(`/contracts/${taskExecution?.contract_id}`)
+                  navigateToItem(
+                    `/activity/contracts/${taskExecution?.contract_id}`
+                  )
+                "
+                @contextmenu.prevent="
+                  openLinkInNewTab(
+                    `/activity/contracts/${taskExecution?.contract_id}`
+                  )
                 "
               >
-                <span class="text-secondary cursor-pointer">Contract</span>
+                <span class="text-warning cursor-pointer">Contract</span>
               </div>
             </div>
           </template>
@@ -192,6 +216,8 @@
 </template>
 
 <script setup lang="ts">
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
 import { useFetch, useRoute } from '#app';
 import { ref, onMounted } from 'vue';
 import { useRouter } from '#vue-router';

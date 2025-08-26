@@ -33,10 +33,15 @@
                 @click="
                   navigateToItem(`/services/${selectedItem?.processing_graph}`)
                 "
+                @contextmenu.prevent="
+                  openLinkInNewTab(
+                    `/services/${selectedItem?.processing_graph}`
+                  )
+                "
               >
-                <span class="text-primary cursor-pointer">{{
-                  selectedItem?.processing_graph
-                }}</span>
+                <span class="text-primary cursor-pointer">
+                  {{ selectedItem?.processing_graph }}
+                </span>
               </div>
               <div class="q-mx-md q-my-sm">
                 Created:
@@ -97,6 +102,8 @@ import { useAppStore } from '~/stores/app';
 import InfoCard from '~/components/InfoCard.vue';
 import FlowMap from '~/components/FlowMap.vue';
 import HeatMap from '~/components/HeatMap.vue';
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 interface Item {
   type: string;
@@ -233,11 +240,13 @@ const pageSize = 50;
 const router = useRouter();
 
 function inspectRoutine(routine: Routine) {
+  // Left click: navigate, right click: open in new tab
+  // (Assume this is called from a row or button, so add @contextmenu in template where used)
   navigateToItem(`/activity/routines/${routine.id}`);
 }
 
 function inspectInNewTab(routine: Routine) {
-  window.open(`/activity/routines/${routine.id}`, '_blank');
+  openLinkInNewTab(`/activity/routines/${routine.id}`);
 }
 
 const navigateToItem = (route: string) => {
@@ -247,6 +256,8 @@ const navigateToItem = (route: string) => {
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
   if (task.uuid) {
+    // Left click: navigate, right click: open in new tab
+    // (Assume this is called from a row or button, so add @contextmenu in template where used)
     navigateToItem(`/services/tasks/${task.uuid}`);
   }
 }

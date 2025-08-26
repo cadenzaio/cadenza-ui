@@ -96,9 +96,11 @@ const router = useRouter();
 function inspectTask(task: task) {
   navigateToItem(`/meta/tasks/${task.uuid}`);
 }
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 function inspectInNewTab(task: task) {
-  const url = `/meta/tasks/${task.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/meta/tasks/${task.uuid}`);
 }
 
 const navigateToItem = (route: string) => {

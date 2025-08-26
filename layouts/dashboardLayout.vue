@@ -4,14 +4,41 @@
       <q-toolbar :class="['navContainer', toolbarClass, 'flex']">
         <q-img src="/local_1.svg" class="logo" style="z-index: 500" />
         <div v-if="appStore.isLoggedIn" class="flex items-center">
-          <q-btn flat to="/" @click="setSection('home')"> Home </q-btn>
-          <q-btn flat to="/services" @click="() => setSection('services')">
+          <q-tooltip
+            v-if="showTooltip"
+            anchor="top middle"
+            self="bottom middle"
+            :offset="[0, 10]"
+          >
+            Right click to open in new tab
+          </q-tooltip>
+          <q-btn
+            flat
+            to="/"
+            @click="setSection('home')"
+            @contextmenu.prevent="openLinkInNewTab('/')"
+            @mouseover="showTooltip = true"
+            @mouseleave="showTooltip = false"
+          >
+            Home
+          </q-btn>
+          <q-btn
+            flat
+            to="/services"
+            @click="() => setSection('services')"
+            @contextmenu.prevent="openLinkInNewTab('/services')"
+            @mouseover="showTooltip = true"
+            @mouseleave="showTooltip = false"
+          >
             Services
           </q-btn>
           <q-btn
             flat
             to="/activity"
             @click="() => setSection('serviceActivity')"
+            @contextmenu.prevent="openLinkInNewTab('/activity')"
+            @mouseover="showTooltip = true"
+            @mouseleave="showTooltip = false"
           >
             Service Activity
           </q-btn>
@@ -57,7 +84,24 @@
           to="/services"
           hide-expand-icon
           @click="() => setSection('services', true)"
+          @contextmenu.prevent="openLinkInNewTab('/services')"
         >
+          <template #header>
+            <div
+              style="width: 100%"
+              @contextmenu.prevent="openLinkInNewTab('/services')"
+              @mouseover="showTooltip = true"
+              @mouseleave="showTooltip = false"
+            >
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span class="text-primary">Services</span>
+            </div>
+          </template>
           <q-item>
             <q-btn
               flat
@@ -65,7 +109,18 @@
               to="/services/routines"
               @click="() => setSection('services', true)"
             >
-              Routines
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/services/routines')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Routines</span
+              >
             </q-btn>
           </q-item>
           <q-item>
@@ -75,7 +130,18 @@
               to="/services/tasks"
               @click="() => setSection('services', true)"
             >
-              Tasks
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/services/tasks')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Tasks</span
+              >
             </q-btn>
           </q-item>
           <q-item>
@@ -85,7 +151,18 @@
               to="/services/signals"
               @click="() => setSection('services', true)"
             >
-              Signals
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/services/signals')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Signals</span
+              >
             </q-btn>
           </q-item>
         </q-expansion-item>
@@ -97,7 +174,24 @@
           to="/activity"
           hide-expand-icon
           @click="() => setSection('serviceActivity', true)"
+          @contextmenu.prevent="openLinkInNewTab('/activity')"
         >
+          <template #header>
+            <div
+              style="width: 100%"
+              @contextmenu.prevent="openLinkInNewTab('/activity')"
+              @mouseover="showTooltip = true"
+              @mouseleave="showTooltip = false"
+            >
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span class="text-warning">Service Activity</span>
+            </div>
+          </template>
           <q-item>
             <q-btn
               flat
@@ -105,7 +199,18 @@
               to="/activity/contracts"
               @click="() => setSection('serviceActivity', true)"
             >
-              Contracts
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/activity/contracts')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Contracts</span
+              >
             </q-btn>
           </q-item>
           <q-item>
@@ -115,7 +220,18 @@
               to="/activity/routines"
               @click="() => setSection('serviceActivity', true)"
             >
-              Routines
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/activity/routines')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Routines</span
+              >
             </q-btn>
           </q-item>
           <q-item>
@@ -125,7 +241,18 @@
               to="/activity/tasks"
               @click="() => setSection('serviceActivity', true)"
             >
-              Tasks
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/activity/tasks')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Tasks</span
+              >
             </q-btn>
           </q-item>
           <q-item>
@@ -135,7 +262,18 @@
               to="/activity/signals"
               @click="() => setSection('serviceActivity', true)"
             >
-              Signals
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/activity/signals')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Signals</span
+              >
             </q-btn>
           </q-item>
         </q-expansion-item>
@@ -147,7 +285,24 @@
           to="/meta"
           hide-expand-icon
           @click="() => setSection('meta', true)"
+          @contextmenu.prevent="openLinkInNewTab('/meta')"
         >
+          <template #header>
+            <div
+              style="width: 100%"
+              @contextmenu.prevent="openLinkInNewTab('/meta')"
+              @mouseover="showTooltip = true"
+              @mouseleave="showTooltip = false"
+            >
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span class="text-accent">Meta</span>
+            </div>
+          </template>
           <q-item>
             <q-btn
               flat
@@ -155,7 +310,18 @@
               to="/meta/routines"
               @click="() => setSection('meta', true)"
             >
-              Routines
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/meta/routines')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Routines</span
+              >
             </q-btn>
           </q-item>
           <q-item>
@@ -165,7 +331,18 @@
               to="/meta/tasks"
               @click="() => setSection('meta', true)"
             >
-              Tasks
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/meta/tasks')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Tasks</span
+              >
             </q-btn>
           </q-item>
           <q-item>
@@ -175,7 +352,18 @@
               to="/meta/signals"
               @click="() => setSection('meta', true)"
             >
-              Signals
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/meta/signals')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Signals</span
+              >
             </q-btn>
           </q-item>
         </q-expansion-item>
@@ -191,7 +379,24 @@
           @click="() => setSection('help', true)"
           @mouseenter="showHelp = true"
           @mouseleave="showHelp = false"
+          @contextmenu.prevent="openLinkInNewTab('/help')"
         >
+          <template #header>
+            <div
+              style="width: 100%"
+              @contextmenu.prevent="openLinkInNewTab('/help')"
+              @mouseover="showTooltip = true"
+              @mouseleave="showTooltip = false"
+            >
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span class="text-grey-8">Help</span>
+            </div>
+          </template>
           <q-item>
             <q-btn
               flat
@@ -200,7 +405,18 @@
               @click="() => setSection('help', true)"
               class="left-no-wrap-btn"
             >
-              Processing Graph
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/help/processingGraph')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Processing Graph</span
+              >
             </q-btn>
           </q-item>
           <q-item>
@@ -210,7 +426,18 @@
               to="/help/terms"
               @click="() => setSection('help', true)"
             >
-              UI
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/help/terms')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >UI</span
+              >
             </q-btn>
           </q-item>
           <q-item>
@@ -220,7 +447,18 @@
               to="/help/faq"
               @click="() => setSection('help', true)"
             >
-              FAQ
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/help/faq')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >FAQ</span
+              >
             </q-btn>
           </q-item>
         </q-expansion-item>
@@ -235,6 +473,12 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router';
+const showTooltip = ref(false);
+const router = process.client ? useRouter() : null;
+
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { colors, useQuasar } from 'quasar';
 import { storeToRefs } from 'pinia';

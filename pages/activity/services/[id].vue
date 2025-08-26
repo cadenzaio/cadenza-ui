@@ -26,6 +26,13 @@
                     )}`
                   )
                 "
+                @contextmenu.prevent="
+                  openLinkInNewTab(
+                    `/services/${encodeURIComponent(
+                      serverData?.processing_graph || ''
+                    )}`
+                  )
+                "
               >
                 Service
               </li>
@@ -50,6 +57,8 @@
 </template>
 
 <script setup lang="ts">
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
 import { ref, onMounted } from 'vue';
 import { useRoute } from '#app';
 import { useRouter } from '#vue-router';

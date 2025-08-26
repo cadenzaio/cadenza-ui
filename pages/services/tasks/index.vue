@@ -77,9 +77,11 @@ const router = useRouter();
 function inspectTasks(tasks: tasks) {
   navigateToItem(`/services/tasks/${tasks.uuid}`);
 }
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 function inspectInNewTab(tasks: tasks) {
-  const url = `/services/tasks/${tasks.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/services/tasks/${tasks.uuid}`);
 }
 
 const navigateToItem = (route: string) => {

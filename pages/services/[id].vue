@@ -53,6 +53,20 @@
           :hasMoreData="hasMoreData"
           :loadingMoreData="loadingMoreData"
         >
+          <template #body="props">
+            <tr
+              v-for="row in props.rows"
+              :key="row.uuid"
+              @click="inspectServer(row)"
+              @contextmenu.prevent="
+                openLinkInNewTab(`/activity/services/${row.uuid}`)
+              "
+            >
+              <td v-for="col in props.cols" :key="col.name">
+                {{ row[col.field] }}
+              </td>
+            </tr>
+          </template>
           <template #title> Instances of This Service </template>
         </Table>
       </div>
@@ -117,9 +131,11 @@ function inspectServer(server: Server) {
   navigateToItem(`/activity/services/${server.uuid}`);
 }
 
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 function inspectInNewTab(server: Server) {
-  const url = `/activity/services/${server.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/activity/services/${server.uuid}`);
 }
 
 function onServerSelected(server: any) {

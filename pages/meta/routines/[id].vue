@@ -73,7 +73,9 @@
                 <Timeline
                   v-else
                   :itemMap="routineMap"
-                  @task-selected="onTaskSelected"
+                  @task-selected="
+                    (task) => onTaskSelected(mapTaskToSelectedTask(task))
+                  "
                 />
               </div>
             </transition>
@@ -151,6 +153,11 @@
                       `/services/routines/${selectedItem?.routineId}`
                     )
                   "
+                  @contextmenu.prevent="
+                    openLinkInNewTab(
+                      `/services/routines/${selectedItem?.routineId}`
+                    )
+                  "
                 >
                   Routine id:
                   <span class="text-primary cursor-pointer">{{
@@ -161,6 +168,11 @@
                   class="q-mx-md q-my-sm"
                   @click="
                     navigateToItem(
+                      `/services/${selectedItem?.serverName?.split('@')[0]}`
+                    )
+                  "
+                  @contextmenu.prevent="
+                    openLinkInNewTab(
                       `/services/${selectedItem?.serverName?.split('@')[0]}`
                     )
                   "
@@ -178,6 +190,11 @@
                       `/activity/routines/${selectedItem?.previousRoutineExecution}`
                     )
                   "
+                  @contextmenu.prevent="
+                    openLinkInNewTab(
+                      `/activity/routines/${selectedItem?.previousRoutineExecution}`
+                    )
+                  "
                 >
                   Previous routine:<span class="text-warning cursor-pointer">
                     {{ selectedItem?.previousRoutineName }}</span
@@ -187,6 +204,11 @@
                   class="q-mx-md q-my-sm"
                   @click="
                     navigateToItem(
+                      `/activity/contracts/${selectedItem?.contract_id}`
+                    )
+                  "
+                  @contextmenu.prevent="
+                    openLinkInNewTab(
                       `/activity/contracts/${selectedItem?.contract_id}`
                     )
                   "
@@ -211,6 +233,9 @@
                     class="q-mx-md q-my-sm"
                     @click="
                       navigateToItem(`/activity/tasks/${selectedTask?.uuid}`)
+                    "
+                    @contextmenu.prevent="
+                      openLinkInNewTab(`/activity/tasks/${selectedTask?.uuid}`)
                     "
                   >
                     Execution id:
@@ -265,6 +290,11 @@
                         `/activity/tasks/${selectedTask?.previousTaskExecutionId}`
                       )
                     "
+                    @contextmenu.prevent="
+                      openLinkInNewTab(
+                        `/activity/tasks/${selectedTask?.previousTaskExecutionId}`
+                      )
+                    "
                   >
                     Previous task:
                     <span class="text-warning cursor-pointer">{{
@@ -277,6 +307,11 @@
                     @click="
                       navigateToItem(`/services/tasks/${selectedTask?.taskId}`)
                     "
+                    @contextmenu.prevent="
+                      openLinkInNewTab(
+                        `/services/tasks/${selectedTask?.taskId}`
+                      )
+                    "
                   >
                     Task id:
                     <span class="text-primary cursor-pointer">{{
@@ -287,6 +322,11 @@
                     class="q-mx-md q-my-sm"
                     @click="
                       navigateToItem(
+                        `/services/${selectedItem?.serverName?.split('@')[0]}`
+                      )
+                    "
+                    @contextmenu.prevent="
+                      openLinkInNewTab(
                         `/services/${selectedItem?.serverName?.split('@')[0]}`
                       )
                     "
@@ -354,6 +394,8 @@
 </template>
 
 <script setup lang="ts">
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
 import { useRoute } from '#app';
 import { ref, onMounted, watchEffect } from 'vue';
 import { useRouter } from '#vue-router';
@@ -409,6 +451,11 @@ const router = useRouter();
 
 function onTaskSelected(task: SelectedTask) {
   selectedTask.value = task;
+  // Set isSelected for nodes in routineMap
+  routineMap.value = routineMap.value.map((t) => ({
+    ...t,
+    isSelected: t.uuid === task.uuid, // or t.id === task.id depending on your id field
+  }));
   dialogVisible.value = true;
 }
 
@@ -544,11 +591,11 @@ watch(selectedTask, async (newVal, oldVal) => {
 }
 @keyframes flash-fade {
   0% {
-    box-shadow: #e6cb47 0px 0px 30px;
+    box-shadow: #eb0feb 0px 0px 30px;
     border-radius: 20px;
   }
   60% {
-    box-shadow: #e6cb47 0px 0px 15px;
+    box-shadow: #eb0feb 0px 0px 15px;
     border-radius: 20px;
   }
   100% {

@@ -29,6 +29,11 @@
                 @click="
                   navigateToItem(`/services/${selectedItem?.processing_graph}`)
                 "
+                @contextmenu.prevent="
+                  openLinkInNewTab(
+                    `/services/${selectedItem?.processing_graph}`
+                  )
+                "
               >
                 <span class="text-primary cursor-pointer">{{
                   selectedItem?.processing_graph
@@ -143,7 +148,7 @@ interface ExecutionTime {
 const layout = 'dashboard-layout';
 const selectedItem = ref<Item | null>(null);
 const executionTimeSeries = ref<
-  { name: string; data: (string | number)[][] }[]
+  { name: string; data: { x: string | number | Date; y: number }[] }[]
 >([]);
 const route = useRoute();
 interface HeatmapData {
@@ -176,7 +181,25 @@ if (executionError.value) {
   !('error' in executionData.value) &&
   executionData.value.series
 ) {
-  executionTimeSeries.value = executionData.value.series;
+  // Convert each series' data to the correct format
+  executionTimeSeries.value = executionData.value.series.map(
+    (series: { name: string; data: (string | number)[][] }) => ({
+      name: series.name,
+      data: Array.isArray(series.data)
+        ? series.data
+            .filter(
+              (point: (string | number)[]) =>
+                Array.isArray(point) &&
+                point.length === 2 &&
+                typeof point[1] === 'number'
+            )
+            .map((point: (string | number)[]) => ({
+              x: point[0],
+              y: point[1] as number,
+            }))
+        : [],
+    })
+  );
 }
 
 interface Task {
@@ -238,28 +261,34 @@ const tasks = ref<any[]>([]);
 const routines = ref<any[]>([]);
 
 // Task map for FlowMap - shows static task flow within a routine (service view)
-const taskMap = computedAsync(async () => {
-  if (!selectedItem.value || !routines.value || routines.value.length === 0)
-    return [];
+const taskMap = ref<any[]>([]);
 
+async function updateTaskMap() {
+  if (!selectedItem.value || !routines.value || routines.value.length === 0) {
+    taskMap.value = [];
+    return;
+  }
   try {
-    // Get the static task structure for the first routine that uses this task
     const firstRoutine = routines.value[0];
     const response = await $fetch(
       `/api/services/tasks/staticTasksInRoutine?routineId=${firstRoutine.uuid}`
     );
-
-    // The backend now returns the mapped structure, so just add isSelected here
     const itemsArray = Array.isArray(response) ? response : [];
-    return itemsArray.map((item: any) => ({
+    // Set isSelected on the correct node (by uuid or taskId)
+    taskMap.value = itemsArray.map((item: any) => ({
       ...item,
-      isSelected: selectedItem.value && item.taskId === selectedItem.value.uuid,
+      isSelected:
+        selectedItem.value &&
+        (item.taskId === selectedItem.value.uuid ||
+          item.uuid === selectedItem.value.uuid),
     }));
   } catch (error) {
     console.error('Error fetching task map:', error);
-    return [];
+    taskMap.value = [];
   }
-});
+}
+
+watch([selectedItem, routines], updateTaskMap, { immediate: true });
 
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
@@ -282,9 +311,11 @@ function inspectTask(task: Task) {
   navigateToItem(`/activity/tasks/${task.uuid}`);
 }
 
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 function inspectInNewTab(task: Task) {
-  const url = `/activity/tasks/${task.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/activity/tasks/${task.uuid}`);
 }
 
 function inspectRoutine(routine: Routine) {
@@ -292,8 +323,7 @@ function inspectRoutine(routine: Routine) {
 }
 
 function inspectRoutineInNewTab(routine: Routine) {
-  const url = `/services/routines/${routine.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/services/routines/${routine.uuid}`);
 }
 
 const navigateToItem = (route: string) => {

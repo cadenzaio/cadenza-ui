@@ -162,9 +162,11 @@ const router = useRouter();
 function inspectSignal(signal: Signal) {
   navigateToItem(`/services/signals/${signal.uuid}`);
 }
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 function inspectInNewTab(signal: Signal) {
-  const url = `/services/signals/${signal.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/services/signals/${signal.uuid}`);
 }
 
 const navigateToItem = (route: string) => {

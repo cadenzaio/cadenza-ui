@@ -65,9 +65,11 @@ const router = useRouter();
 function inspectRoutines(routines: routines) {
   navigateToItem(`/services/routines/${routines.uuid}`);
 }
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 function inspectInNewTab(routine: routines) {
-  const url = `/services/routines/${routine.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/services/routines/${routine.uuid}`);
 }
 
 const navigateToItem = (route: string) => {

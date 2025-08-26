@@ -97,9 +97,11 @@ const router = useRouter();
 function inspectRoutine(routine: Routine) {
   navigateToItem(`/meta/routines/${routine.uuid}`);
 }
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 function inspectInNewTab(routine: Routine) {
-  const url = `/meta/routines/${routine.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/meta/routines/${routine.uuid}`);
 }
 
 const navigateToItem = (route: string) => {

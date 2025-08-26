@@ -81,9 +81,11 @@ const router = useRouter();
 function inspectContracts(contracts: contracts) {
   navigateToItem(`contracts/${contracts.uuid}`);
 }
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 function inspectInNewTab(contracts: contracts) {
-  const url = `/contracts/${contracts.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/activity/contracts/${contracts.uuid}`);
 }
 
 const navigateToItem = (route: string) => {
