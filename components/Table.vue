@@ -23,52 +23,50 @@
       >
         <template v-slot:top-right>
           <div class="row q-gutter-sm">
-            <q-select
-              v-if="hasStatusColumn"
-              v-model="selectedStatuses"
-              :options="statusOptions"
-              option-value="value"
-              option-label="label"
-              label="Filter by Status"
-              multiple
-              dense
-              outlined
-              hide-selected
-              style="min-width: 200px"
-              @update:model-value="updateStatusFilter"
-            >
-              <template v-slot:prepend>
-                <q-icon name="filter_list" />
-              </template>
-              <template
-                v-slot:option="{ itemProps, opt, selected, toggleOption }"
+            <div v-if="hasStatusColumn" style="width: 220px; height: 60px">
+              <q-select
+                filled
+                v-model="selectedStatuses"
+                :options="statusOptions"
+                label="Filter by Status"
+                multiple
+                emit-value
+                map-options
+                style="width: 220px; height: 60px"
+                @update:model-value="updateStatusFilter"
+                :display-value="''"
               >
-                <q-item v-bind="itemProps">
-                  <q-item-section side>
-                    <q-checkbox
-                      :model-value="selected"
-                      @update:model-value="toggleOption"
-                    />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>
-                      <q-icon
-                        size="sm"
-                        :name="opt.icon"
-                        :color="opt.color"
-                        class="q-mr-sm"
+                <template
+                  v-slot:option="{ itemProps, opt, selected, toggleOption }"
+                >
+                  <q-item v-bind="itemProps">
+                    <q-item-section>
+                      <q-item-label>
+                        <q-icon
+                          size="sm"
+                          :name="opt.icon"
+                          :color="opt.color"
+                          class="q-mr-sm"
+                        />
+                        <span v-html="opt.label" />
+                      </q-item-label>
+                    </q-item-section>
+                    <q-item-section side>
+                      <q-toggle
+                        :model-value="selected"
+                        @update:model-value="toggleOption(opt)"
                       />
-                      {{ opt.label }}
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
+                    </q-item-section>
+                  </q-item>
+                </template>
+              </q-select>
+            </div>
 
             <!-- Date Range Filter -->
             <div
               v-if="hasStartedColumn"
               class="row q-gutter-xs items-center date-range-filter"
+              style="width: 220px; height: 60px"
             >
               <q-btn
                 flat
@@ -76,7 +74,7 @@
                 icon="date_range"
                 :label="dateRangeLabel"
                 @click="showDateRangeDialog = true"
-                style="min-width: 180px"
+                style="width: 220px; height: 60px"
               />
 
               <q-btn
@@ -98,6 +96,8 @@
               debounce="300"
               v-model="filter"
               placeholder="Search"
+              style="width: 220px"
+              class="filter-input-height"
             >
               <template v-slot:append>
                 <q-icon name="search" />
@@ -613,16 +613,26 @@ const filteredRows = computed(() => {
     }
   }
 
-  // Apply text filter
+  // Apply text filter: if filter is more than 5 characters, search by uuid, else by name
   if (filter.value) {
-    rows = rows.filter(
-      (row: TableRow) =>
-        typeof row === 'object' &&
-        row !== null &&
-        Object.values(row).some(
-          (val) => val && fuzzyMatch(val.toString(), filter.value)
-        )
-    );
+    rows = rows.filter((row: TableRow) => {
+      if (typeof row !== 'object' || row === null) return false;
+      if (filter.value.length > 5) {
+        // Search by uuid if filter is more than 5 characters
+        const uuidValue = row.uuid;
+        return (
+          uuidValue &&
+          uuidValue
+            .toString()
+            .toLowerCase()
+            .includes(filter.value.toLowerCase())
+        );
+      } else {
+        // Otherwise, search by name (fuzzy)
+        const nameValue = row.name;
+        return nameValue && fuzzyMatch(nameValue.toString(), filter.value);
+      }
+    });
   }
 
   // Apply date range filter on started field only if started column exists
@@ -867,5 +877,26 @@ defineExpose({
   outline-offset: -1px;
   border-radius: 4px;
   padding: 0px 4px;
+}
+
+/* ...existing code... */
+.filter-input-height {
+  height: 60px;
+}
+.filter-input-height :deep(.q-field__control) {
+  min-height: 60px;
+  height: 60px;
+}
+.filter-input-height :deep(.q-field__native) {
+  min-height: 60px;
+  height: 60px;
+  line-height: 60px;
+}
+.filter-input-height :deep(input) {
+  min-height: 60px;
+  height: 60px;
+  line-height: 60px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 </style>
