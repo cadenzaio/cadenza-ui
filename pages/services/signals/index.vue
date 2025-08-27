@@ -105,7 +105,7 @@ async function loadSignals(isLoadMore = false) {
         started: '2025-08-21T10:00:00Z',
         ended: '2025-08-21T10:00:01Z',
         duration: 1,
-        uuid: 'svc-sig-1',
+        uuid: 'sig-1',
       },
       {
         name: 'Signal 2',
@@ -114,7 +114,7 @@ async function loadSignals(isLoadMore = false) {
         started: '2025-08-21T09:55:00Z',
         ended: '2025-08-21T09:55:05Z',
         duration: 5,
-        uuid: 'svc-sig-2',
+        uuid: 'sig-2',
       },
       {
         name: 'Signal 3',
@@ -123,7 +123,7 @@ async function loadSignals(isLoadMore = false) {
         started: '2025-08-21T09:50:00Z',
         ended: '',
         duration: 0,
-        uuid: 'svc-sig-3',
+        uuid: 'sig-3',
       },
       {
         name: 'Signal 4',
@@ -132,7 +132,7 @@ async function loadSignals(isLoadMore = false) {
         started: '2025-08-21T11:00:00Z',
         ended: '',
         duration: 0,
-        uuid: 'svc-sig-4',
+        uuid: 'sig-4',
       },
     ];
 

@@ -237,6 +237,7 @@ async function fetchTaskExecution() {
     const result = await $fetch(
       `/api/activity/tasks/taskExecution?id=${taskExecutionId.value}`
     );
+    console.log('API fetch result (taskExecution):', result);
     if (result) {
       taskExecution.value = result;
     }
@@ -272,6 +273,7 @@ const taskMap = computedAsync(async () => {
       const tasks = await $fetch(
         `/api/activity/tasks/tasksInRoutines?routineId=${taskExecution.value.routineExecutionId}&selectedTaskId=${taskExecution.value.uuid}&selectionType=execution`
       );
+      console.log('API fetch result (tasksInRoutines):', tasks);
       return (tasks || []).map((task: any) => ({
         ...task,
         id: task.uuid,

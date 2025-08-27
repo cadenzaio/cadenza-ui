@@ -12,17 +12,22 @@ interface NodeData {
   isSelected: boolean;
   errored: boolean;
   failed: boolean;
+  isRunning?: boolean;
+  isScheduled?: boolean;
   signal?: boolean;
   meta?: boolean;
 }
 
 const props = defineProps<{ data: NodeData }>();
+console.log('CustomNode.vue received prop:', props.data);
+
 import { computed } from 'vue';
 import { useAppStore } from '~/stores/app';
-import { colors } from 'quasar';
+import { colors, useQuasar } from 'quasar';
 
 const appStore = useAppStore();
 const currentSection = appStore.currentSection;
+const $q = useQuasar();
 
 const nodeBg = computed(() => {
   switch (currentSection) {
@@ -57,6 +62,10 @@ const nodeSelectedBg = computed(() => {
       return colors.getPaletteColor('secondary');
   }
 });
+
+const nodeSelectedBorder = computed(() =>
+  $q.dark.isActive ? '2px solid #fff' : '2px solid #222'
+);
 </script>
 
 <template>
@@ -66,11 +75,15 @@ const nodeSelectedBg = computed(() => {
       data.isSelected ? 'selected-node' : '',
       data.errored ? 'errored-node' : '',
       data.failed ? 'failed-node' : '',
+      data.isRunning ? 'running-node' : '',
+      data.isScheduled ? 'scheduled-node' : '',
       data.signal ? 'signal-node' : '',
       data.meta ? 'meta-node' : '',
     ]"
     :style="
-      data.isSelected ? { background: nodeSelectedBg } : { background: nodeBg }
+      data.isSelected
+        ? { background: nodeSelectedBg, border: nodeSelectedBorder }
+        : { background: nodeBg, border: 'none' }
     "
     role="button"
     tabindex="0"
@@ -80,6 +93,38 @@ const nodeSelectedBg = computed(() => {
     }}</span>
     <template v-else>
       {{ data.label || data.uuid }}
+      <!-- <q-spinner
+        v-if="data.isRunning"
+        size="16px"
+        color="white"
+        class="q-ml-sm"
+      />
+      <q-spinner-dots
+        v-if="data.isRunning"
+        size="16px"
+        color="white"
+        class="q-ml-sm"
+      />
+      <q-spinner-facebook
+        v-if="data.isRunning"
+        size="16px"
+        color="white"
+        class="q-ml-sm"
+      />
+      <q-spinner-gears
+        v-if="data.isRunning"
+        size="16px"
+        color="white"
+        class="q-ml-sm"
+      /> -->
+      <q-linear-progress
+        v-if="data.isRunning"
+        dark
+        rounded
+        indeterminate
+        color="white"
+        class="q-mt-xs"
+      />
     </template>
     <q-tooltip>
       Description: {{ data.description }}<br />
@@ -98,7 +143,6 @@ const nodeSelectedBg = computed(() => {
 </template>
 
 <style>
-/* Hide all vue-flow handles */
 .vue-flow__handle {
   opacity: 0 !important;
   background: transparent !important;
@@ -124,7 +168,6 @@ const nodeSelectedBg = computed(() => {
   filter: brightness(0.95);
 }
 .selected-node {
-  box-shadow: 6px 6px #7473737a !important;
 }
 .errored-node {
   background: #d37b7b !important;
@@ -132,14 +175,18 @@ const nodeSelectedBg = computed(() => {
 .failed-node {
   background: #f57741 !important;
 }
+.running-node {
+}
+.scheduled-node {
+  background: rgba(139, 139, 136, 0.6) !important;
+}
 .signal-node {
-  background: #2b9222 !important;
+  background: rgba(43, 146, 34, 0.6) !important;
   border-radius: 30px !important;
   box-shadow: 2px 6px 6px rgba(139, 136, 136, 0.66);
   width: 50px !important;
   height: 50px !important;
   align-content: center !important;
-  transition: background 0.2s;
   word-wrap: break-word !important;
 }
 .meta-node {

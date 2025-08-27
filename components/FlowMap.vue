@@ -236,22 +236,26 @@ function processFlowItems(items: FlowItem[]) {
 
   // Create nodes
   const newNodes: Node[] = itemsWithSignals.map((item: FlowItem) => {
+    const nodeData = {
+      label: getLabel(item),
+      uuid: getId(item),
+      description: item.description || '',
+      is_unique: item.isUnique || item.is_unique || false,
+      concurrency: 1,
+      isSelected: item.isSelected || false,
+      errored: item.errored ?? false,
+      failed: item.failed ?? false,
+      isRunning: item.is_running ?? false,
+      isScheduled: item.is_scheduled ?? false,
+      signal: item.signal === true,
+      item: item,
+    };
+    console.log('Node data:', nodeData);
     return {
       id: getId(item),
       type: 'custom',
       position: { x: 0, y: 0 },
-      data: {
-        label: getLabel(item),
-        uuid: getId(item),
-        description: item.description || '',
-        is_unique: item.isUnique || item.is_unique || false,
-        concurrency: 1,
-        isSelected: item.isSelected || false,
-        errored: item.errored || false,
-        failed: item.failed || false,
-        signal: item.signal === true,
-        item: item,
-      },
+      data: nodeData,
     };
   });
 

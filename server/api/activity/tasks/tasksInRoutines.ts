@@ -27,6 +27,7 @@ interface TaskRow {
   result_context_id: string | null;
   is_running: boolean;
   is_complete: boolean;
+  is_scheduled: boolean;
   errored: boolean;
   failed: boolean;
   progress: number;
@@ -100,6 +101,7 @@ async function getRoutineMap(
         te.result_context_id,
         te.is_running,
         te.is_complete,
+        te.is_scheduled,
         te.errored,
         te.failed,
         te.progress,
@@ -182,11 +184,14 @@ async function getRoutineMap(
       contextId: task.context_uuid,
       resultContextId: task.result_context_uuid,
       isRunning: task.is_running,
+      is_running: task.is_running, // snake_case for frontend compatibility
       isComplete: task.is_complete,
+      is_complete: task.is_complete, // snake_case for frontend compatibility
       errored: task.errored,
       failed: task.failed,
       progress: (task.progress * 100).toFixed(0),
       scheduled: task.scheduled,
+      is_scheduled: task.is_scheduled, // use boolean from DB
       started: task.started,
       ended: task.ended,
       previousExecutions: previousExecutions,
