@@ -276,7 +276,7 @@ function processFlowItems(items: FlowItem[]) {
         target: getId(item),
         type: 'smoothstep',
         animated: true,
-        style: { stroke: '#2b9222', strokeWidth: 3 },
+        style: { stroke: '#2b9222', strokeWidth: 1 },
       });
       return;
     }
@@ -292,7 +292,7 @@ function processFlowItems(items: FlowItem[]) {
           target: 'signal-2',
           type: 'smoothstep',
           animated: true,
-          style: { stroke: '#2b9222', strokeWidth: 3 },
+          style: { stroke: '#2b9222', strokeWidth: 1 },
         });
       }
       return;
@@ -315,7 +315,7 @@ function processFlowItems(items: FlowItem[]) {
             type: isSignalEdge ? 'smoothstep' : 'default',
             animated: isSignalEdge,
             style: isSignalEdge
-              ? { stroke: '#2b9222', strokeWidth: 3 }
+              ? { stroke: '#2b9222', strokeWidth: 1 }
               : undefined,
           });
         }

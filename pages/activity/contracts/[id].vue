@@ -179,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useFetch, useRoute } from '#app';
 import { useRouter } from '#vue-router';
 // import ContractHeatMap from '~/components/ContractHeatMap.vue';
@@ -265,102 +265,125 @@ function inspectInNewTab(routine: any) {
   window.open(url, '_blank');
 }
 
+const isRoutinesLoading = ref(false);
 async function loadRoutines(isLoadMore = false) {
+  if (isRoutinesLoading.value) {
+    console.log('[loadRoutines] Prevented concurrent load');
+    return;
+  }
+  isRoutinesLoading.value = true;
   const contractId = route.params.id;
-
   try {
     if (isLoadMore) {
       loadingMoreData.value = true;
       currentPage.value++;
+    } else {
+      currentPage.value = 1;
     }
-
     console.log(
-      `Fetching routines for contractId: ${contractId}, page: ${currentPage.value}`
+      `[loadRoutines] Fetching routines for contractId: ${contractId}, page: ${currentPage.value}`
     );
-
     const routinesResponse = await fetch(
       `/api/activity/routines/activeRoutines?contractId=${contractId}&page=${currentPage.value}&limit=${pageSize}`
     );
     if (!routinesResponse.ok) {
-      console.error(
-        'Routines response not ok:',
-        routinesResponse.status,
-        routinesResponse.statusText
-      );
-      throw new Error(`Failed to fetch routines: ${routinesResponse.status}`);
+      const errMsg = `[loadRoutines] Routines response not ok: ${routinesResponse.status} ${routinesResponse.statusText}`;
+      console.error(errMsg);
+      error.value = errMsg;
+      throw new Error(errMsg);
     }
     const routinesData = await routinesResponse.json();
-    console.log('Routines data received:', routinesData);
-
+    console.log('[loadRoutines] Routines data received:', routinesData);
     if (isLoadMore) {
       routines.value = [...routines.value, ...(routinesData.routines || [])];
     } else {
       routines.value = routinesData.routines || [];
     }
-
+    // Debug: log all unique status values
+    const allStatuses = (routines.value || []).map((r) => r.status);
+    const uniqueStatuses = Array.from(new Set(allStatuses));
+    console.log('[DEBUG] Unique routine status values:', uniqueStatuses);
     routineMap.value = routinesData.routineMap || [];
     hasMoreData.value = (routinesData.routines || []).length === pageSize;
   } catch (err) {
-    console.error('Error loading routines:', err);
+    console.error('[loadRoutines] Error loading routines:', err);
     hasMoreData.value = false;
+    if (!error.value) {
+      error.value = err instanceof Error ? err.message : String(err);
+    }
   } finally {
     if (isLoadMore) {
       loadingMoreData.value = false;
     }
+    isRoutinesLoading.value = false;
   }
 }
 
 async function loadMoreRoutines() {
-  await loadRoutines(true);
+  if (!isRoutinesLoading.value && hasMoreData.value) {
+    await loadRoutines(true);
+  }
 }
 
-function onTaskSelected(task: any) {
-  // Handle task selection
-}
+function onTaskSelected(task: any) {}
 
 function confirmGenerate() {
   showGenerateDialog.value = false;
-  // Add logic to handle generating the contract
 }
 
-onMounted(async () => {
-  const appStore = useAppStore();
-  appStore.setCurrentSection('serviceActivity');
-  const contractId = route.params.id;
-
-  currentPage.value = 1; // Always start at page 1 on mount
-
-  isLoading.value = true;
-  error.value = null;
-
+async function fetchContractContext(contractId: string) {
   try {
-    // Load first page of routines
-    await loadRoutines(false);
-
-    // Fetch contract context from /api/contracts?uuid=...
-    console.log('Fetching contract context for contractId:', contractId);
+    console.log(
+      '[fetchContractContext] Fetching contract context for contractId:',
+      contractId
+    );
     const contractRes = await fetch(
       `/api/contracts/contracts?uuid=${contractId}`
     );
     if (contractRes.ok) {
       const contractData = await contractRes.json();
-      console.log('Contract data received:', contractData);
+      console.log(
+        '[fetchContractContext] Contract data received:',
+        contractData
+      );
       contractContext.value = contractData.contracts?.[0] || null;
     } else {
-      console.error(
-        'Contract response not ok:',
-        contractRes.status,
-        contractRes.statusText
-      );
+      const errMsg = `[fetchContractContext] Contract response not ok: ${contractRes.status} ${contractRes.statusText}`;
+      console.error(errMsg);
+      error.value = errMsg;
     }
   } catch (err) {
-    console.error('Error in onMounted:', err);
-    error.value =
-      err instanceof Error ? err.message : 'An unknown error occurred';
-  } finally {
-    isLoading.value = false;
+    console.error(
+      '[fetchContractContext] Error fetching contract context:',
+      err
+    );
+    error.value = err instanceof Error ? err.message : String(err);
   }
-});
+}
+
+async function loadAllData() {
+  let contractId = route.params.id;
+  if (Array.isArray(contractId)) contractId = contractId[0];
+  isLoading.value = true;
+  error.value = null;
+  await loadRoutines(false);
+  await fetchContractContext(contractId);
+  isLoading.value = false;
+}
+
+onMounted(loadAllData);
+
+watch(
+  () => route.params.id,
+  (newId, oldId) => {
+    if (newId !== oldId) {
+      console.log(
+        `[watch] contractId changed from ${oldId} to ${newId}, reloading data.`
+      );
+      loadAllData();
+    }
+  }
+);
 </script>
 
 <style scoped>

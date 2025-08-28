@@ -83,7 +83,15 @@ const nodeSelectedBorder = computed(() =>
     :style="
       data.isSelected
         ? { background: nodeSelectedBg, border: nodeSelectedBorder }
-        : { background: nodeBg, border: 'none' }
+        : {
+            background: nodeBg,
+            border: 'none',
+            boxShadow: `2px 6px 6px ${
+              typeof nodeSelectedBg === 'string'
+                ? nodeSelectedBg
+                : nodeSelectedBg
+            }`,
+          }
     "
     role="button"
     tabindex="0"
@@ -161,33 +169,35 @@ const nodeSelectedBorder = computed(() =>
   cursor: pointer;
   font-size: 0.6em;
   overflow-wrap: break-word;
-  box-shadow: 2px 6px 6px rgba(139, 136, 136, 0.66);
+
   transition: background 0.2s;
 }
 .custom-node:hover {
   filter: brightness(0.95);
 }
 .selected-node {
+  box-shadow: 2px 6px 6px rgba(139, 136, 136, 0.66) !important;
 }
 .errored-node {
   background: #d37b7b !important;
+  box-shadow: 2px 6px 6px #ff000069 !important;
 }
 .failed-node {
-  background: #f57741 !important;
+  background: #d37b7b !important;
 }
 .running-node {
+  box-shadow: 2px 6px 6px rgba(139, 136, 136, 0.66);
 }
 .scheduled-node {
   background: rgba(139, 139, 136, 0.6) !important;
+  box-shadow: 2px 6px 6px rgba(139, 136, 136, 0.66) !important;
 }
 .signal-node {
-  background: rgba(43, 146, 34, 0.6) !important;
-  border-radius: 30px !important;
-  box-shadow: 2px 6px 6px rgba(139, 136, 136, 0.66);
-  width: 50px !important;
-  height: 50px !important;
+  background: rgba(43, 146, 34, 0) !important;
+  box-shadow: none !important;
   align-content: center !important;
   word-wrap: break-word !important;
+  color: #08c011 !important;
 }
 .meta-node {
   background: #ab0ac0 !important;

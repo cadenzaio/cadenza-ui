@@ -658,7 +658,6 @@ const PAGE_SIZE = 50;
 watch(
   () => [filteredRows.value.length, props.hasMoreData, props.loadingMoreData],
   async ([len, hasMore, loading]) => {
-    // Only trigger if not already loading, and infinite scroll is enabled
     const rowCount = typeof len === 'number' ? len : 0;
     if (
       rowCount < PAGE_SIZE &&
@@ -666,7 +665,6 @@ watch(
       !loading &&
       props.enableInfiniteScroll
     ) {
-      // Emit loadMoreData and wait for next tick to allow data to update
       emit('loadMoreData');
     }
   },
@@ -714,13 +712,7 @@ const virtualScrollStickyEnd = computed(() => props.virtualScrollStickyEnd);
 
 // Virtual scroll event handler
 function onVirtualScroll(details: any) {
-  // Handle virtual scroll events
-  console.log('Virtual scroll:', details);
-
-  // Emit virtual scroll event for parent
   emit('virtualScroll', details);
-
-  // Check for infinite scroll trigger
   if (
     props.enableInfiniteScroll &&
     props.hasMoreData &&
@@ -728,8 +720,6 @@ function onVirtualScroll(details: any) {
   ) {
     const { to, direction } = details;
     const totalRows = filteredRows.value.length;
-
-    // Trigger load more when scrolling down and near the end (within 10 items)
     if (direction === 'increase' && to >= totalRows - 10) {
       emit('loadMoreData');
     }
@@ -748,12 +738,10 @@ function showRowDetails(row: TableRow) {
 
 function confirmStop() {
   showStopDialog.value = false;
-  // Add logic to handle stopping the process
 }
 
 function confirmGenerate() {
   showGenerateDialog.value = false;
-  // Add logic to handle generating the contract
 }
 
 defineExpose({
