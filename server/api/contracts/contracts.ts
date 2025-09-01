@@ -8,8 +8,6 @@ let client: pg.Client | null = null;
 interface ContractRow {
   uuid: string;
   product: string;
-  agent_id: string;
-  agent_name: string;
   label: string;
   description: string;
   issued_at: string | Date;
@@ -30,11 +28,10 @@ interface ContractRow {
 // Get all contracts
 async function getContracts(uuid?: string, page?: number, limit?: number) {
   let query = `
-    SELECT contract.*, agent.name AS agent_name,
+    SELECT contract.*,
       ctx_in.context AS input_context,
       ctx_out.context AS output_context
     FROM contract
-    LEFT JOIN agent ON contract.agent_id = agent.uuid
     LEFT JOIN context AS ctx_in ON contract.context = ctx_in.uuid
     LEFT JOIN context AS ctx_out ON contract.result_context = ctx_out.uuid
   `;
@@ -69,8 +66,6 @@ async function getContracts(uuid?: string, page?: number, limit?: number) {
   return res.rows.map((row: ContractRow) => ({
     uuid: row.uuid,
     name: row.product,
-    agent_id: row.agent_id,
-    agent_name: row.agent_name,
     label: row.label,
     description: row.description,
     issued: formatDate(

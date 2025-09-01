@@ -82,14 +82,18 @@ const nodeSelectedBorder = computed(() =>
     ]"
     :style="
       data.isSelected
-        ? { background: nodeSelectedBg, border: nodeSelectedBorder }
+        ? {
+            background: nodeSelectedBg,
+            border: nodeSelectedBorder,
+            boxShadow: `2px 6px 6px ${
+              typeof nodeBg === 'string' ? nodeBg : nodeBg
+            }`,
+          }
         : {
-            background: nodeBg,
+            background: nodeSelectedBg,
             border: 'none',
             boxShadow: `2px 6px 6px ${
-              typeof nodeSelectedBg === 'string'
-                ? nodeSelectedBg
-                : nodeSelectedBg
+              typeof nodeBg === 'string' ? nodeBg : nodeBg
             }`,
           }
     "
@@ -101,30 +105,6 @@ const nodeSelectedBorder = computed(() =>
     }}</span>
     <template v-else>
       {{ data.label || data.uuid }}
-      <!-- <q-spinner
-        v-if="data.isRunning"
-        size="16px"
-        color="white"
-        class="q-ml-sm"
-      />
-      <q-spinner-dots
-        v-if="data.isRunning"
-        size="16px"
-        color="white"
-        class="q-ml-sm"
-      />
-      <q-spinner-facebook
-        v-if="data.isRunning"
-        size="16px"
-        color="white"
-        class="q-ml-sm"
-      />
-      <q-spinner-gears
-        v-if="data.isRunning"
-        size="16px"
-        color="white"
-        class="q-ml-sm"
-      /> -->
       <q-linear-progress
         v-if="data.isRunning"
         dark
@@ -176,7 +156,6 @@ const nodeSelectedBorder = computed(() =>
   filter: brightness(0.95);
 }
 .selected-node {
-  box-shadow: 2px 6px 6px rgba(139, 136, 136, 0.66) !important;
 }
 .errored-node {
   background: #d37b7b !important;
@@ -190,7 +169,7 @@ const nodeSelectedBorder = computed(() =>
 }
 .scheduled-node {
   background: rgba(139, 139, 136, 0.6) !important;
-  box-shadow: 2px 6px 6px rgba(139, 136, 136, 0.66) !important;
+  box-shadow: 2px 6px 6px rgba(189 188 188 / 0.66) !important;
 }
 .signal-node {
   background: rgba(43, 146, 34, 0) !important;

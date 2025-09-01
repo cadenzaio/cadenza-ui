@@ -78,26 +78,8 @@ const getLabel = (item: FlowItem): string => {
 const getPreviousIds = (item: FlowItem): string[] => {
   const previousField = props.previousField || 'previousId';
 
-  // Debug logging for Task 6 specifically
-  if (item.label === 'Task 6' || item.name === 'Task 6') {
-    console.log('FlowMap: Debugging actual Task 6:', item);
-    console.log('FlowMap: Task 6 previousExecutions:', item.previousExecutions);
-    console.log(
-      'FlowMap: Task 6 previousTaskExecutionId:',
-      item.previousTaskExecutionId
-    );
-    console.log('FlowMap: Task 6 previousField value:', item[previousField]);
-    console.log('FlowMap: All item properties:', Object.keys(item));
-  }
-
   // First check for the proper previousExecutions array (from tasksInRoutines endpoint)
   if (item.previousExecutions && Array.isArray(item.previousExecutions)) {
-    console.log(
-      'FlowMap: Found previousExecutions array for',
-      getLabel(item),
-      ':',
-      item.previousExecutions
-    );
     return item.previousExecutions
       .map((exec) => exec.previousTaskExecutionId)
       .filter((id) => id != null);
@@ -112,12 +94,6 @@ const getPreviousIds = (item: FlowItem): string[] => {
 
   for (const arrayField of possibleArrayFields) {
     if (Array.isArray(arrayField)) {
-      console.log(
-        'FlowMap: Found array field for',
-        getLabel(item),
-        ':',
-        arrayField
-      );
       return arrayField.filter((id) => id != null);
     }
   }
@@ -201,11 +177,7 @@ function injectSignalNodes(items: FlowItem[]): FlowItem[] {
 
 // --- BEGIN: TEMPORARY SIGNAL NODE INJECTION ---
 function processFlowItems(items: FlowItem[]) {
-  // To revert to the original, comment out this function and uncomment the old version below.
-  console.log('FlowMap: Processing flow items:', items);
-
   if (!items || items.length === 0) {
-    console.log('FlowMap: No items data, clearing nodes and edges');
     nodes.value = [];
     edges.value = [];
     return;
@@ -213,26 +185,6 @@ function processFlowItems(items: FlowItem[]) {
 
   // TEMP: inject signal nodes for demo
   const itemsWithSignals = injectSignalNodes(items);
-
-  // Debug: log the structure of the first item to understand the API response
-  if (itemsWithSignals.length > 0) {
-    console.log('FlowMap: Sample item structure:', itemsWithSignals[0]);
-    console.log('FlowMap: Sample item keys:', Object.keys(itemsWithSignals[0]));
-
-    // Look for Task 6 in the dataset and log its specific structure
-    const task6 = itemsWithSignals.find((item) => item.label === 'Task 6');
-    if (task6) {
-      console.log('FlowMap: Task 6 full object:', task6);
-      console.log(
-        'FlowMap: Task 6 previousTaskExecutionId type:',
-        typeof task6.previousTaskExecutionId
-      );
-      console.log(
-        'FlowMap: Task 6 previousTaskExecutionId value:',
-        task6.previousTaskExecutionId
-      );
-    }
-  }
 
   // Create nodes
   const newNodes: Node[] = itemsWithSignals.map((item: FlowItem) => {
@@ -250,7 +202,6 @@ function processFlowItems(items: FlowItem[]) {
       signal: item.signal === true,
       item: item,
     };
-    console.log('Node data:', nodeData);
     return {
       id: getId(item),
       type: 'custom',
@@ -322,14 +273,6 @@ function processFlowItems(items: FlowItem[]) {
       }
     });
   });
-
-  console.log(
-    'FlowMap: Created nodes:',
-    newNodes.length,
-    'edges:',
-    newEdges.length
-  );
-
   // Apply layout
   const layoutedNodes = createLayout(newNodes, newEdges);
 
@@ -340,8 +283,6 @@ function processFlowItems(items: FlowItem[]) {
     nodes.value = [];
     edges.value = [];
   }
-
-  console.log('FlowMap: Applied layout, final nodes:', nodes.value.length);
 }
 // --- END: TEMPORARY SIGNAL NODE INJECTION ---
 //------------------------------------------------------------------------------
@@ -458,8 +399,6 @@ function onNodeClick(event: NodeMouseEvent) {
 watch(
   () => props.items,
   (newItems) => {
-    console.log('FlowMap: Received items data:', newItems);
-    console.log('FlowMap: Data length:', newItems?.length || 0);
     processFlowItems(newItems);
   },
   { immediate: true, deep: true }
@@ -467,10 +406,6 @@ watch(
 </script>
 
 <style>
-.vue-flow__node {
-  background: none !important;
-  border: none !important;
-}
 .vue-flow-container {
   position: relative;
   min-width: 50dvw;
@@ -479,9 +414,5 @@ watch(
   box-shadow: 0 1px 6px 0 rgba(105, 105, 105, 0.5);
   border-radius: 20px;
   margin: 10px;
-}
-
-.error-node {
-  background: #d37b7b !important;
 }
 </style>
