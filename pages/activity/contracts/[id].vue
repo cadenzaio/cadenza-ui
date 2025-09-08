@@ -31,7 +31,12 @@
             :duration="{ enter: 500, leave: 300 }"
           >
             <div v-show="selectedOption === 'routineMap'">
-              <flowMap :items="routineMap" @item-selected="onTaskSelected" />
+              <NestedFlowMap
+                v-if="nodes.length > 0"
+                :nodes="nodes"
+                :edges="edges"
+              />
+              <!-- <flowMap :items="routineMap" @item-selected="onTaskSelected" /> -->
             </div>
           </transition>
           <transition
@@ -182,8 +187,8 @@
 import { ref, onMounted, watch } from 'vue';
 import { useFetch, useRoute } from '#app';
 import { useRouter } from '#vue-router';
-// import ContractHeatMap from '~/components/ContractHeatMap.vue';
-// import ApexTimeline from '~/components/ApexTimeline.vue';
+import NestedFlowMap from '~/components/NestedFlowMap.vue';
+import { Style } from '#components';
 
 function formatDate(date: string) {
   const datetime = new Date(date);
@@ -203,6 +208,9 @@ const router = useRouter();
 const route = useRoute();
 const selectedOption = ref('routineMap');
 const routineMap = ref([]);
+
+const nodes = ref<any[]>([]);
+const edges = ref<any[]>([]);
 
 const columns = [
   {
@@ -347,6 +355,71 @@ async function fetchContractContext(contractId: string) {
         contractData
       );
       contractContext.value = contractData.contracts?.[0] || null;
+
+      // Build nodes and edges for NestedFlowMap (without contract node)
+      const contract = contractData.contracts?.[0];
+      const routines = contractData.routines || [];
+      const servers = contractData.servers || [];
+      const tasks = contractData.tasks || [];
+
+      // Service nodes (no parentNode: contract)
+      const serviceNodes = servers.map((srv: any) => ({
+        id: srv.uuid,
+        type: 'custom',
+        nodeType: 'service',
+        data: { label: srv.processing_graph, isParent: true },
+        // No parentNode
+        extent: 'parent',
+        expandParent: true,
+      }));
+
+      // Routine nodes (parentNode: server)
+      const routineNodes = routines.map((routine: any) => ({
+        id: routine.uuid,
+        type: 'custom',
+        nodeType: 'routine',
+        data: { label: routine.description, isParent: true },
+        parentNode: routine.server_id,
+        extent: 'parent',
+        expandParent: true,
+      }));
+
+      // Task nodes (parentNode: routine)
+      const taskNodes = tasks.map((task: any) => ({
+        id: task.uuid,
+        type: 'custom',
+        nodeType: 'task',
+        data: { label: task.task_name },
+        parentNode: task.routine_execution_id,
+        extent: 'parent',
+        expandParent: true,
+        style: { margin: '50px', padding: '10px' },
+      }));
+
+      // Build edges using previous_task_execution_id
+      const edgesFromPrevious: any[] = [];
+      tasks.forEach((task: any) => {
+        if (Array.isArray(task.previous_task_execution_id)) {
+          task.previous_task_execution_id.forEach((prevId: string) => {
+            if (prevId) {
+              edgesFromPrevious.push({
+                id: `e${prevId}-${task.uuid}`,
+                source: prevId,
+                target: task.uuid,
+              });
+            }
+          });
+        } else if (task.previous_task_execution_id) {
+          edgesFromPrevious.push({
+            id: `e${task.previous_task_execution_id}-${task.uuid}`,
+            source: task.previous_task_execution_id,
+            target: task.uuid,
+          });
+        }
+      });
+      // Only keep task-to-task edges
+      nodes.value = [...serviceNodes, ...routineNodes, ...taskNodes];
+      edges.value = [...edgesFromPrevious];
     } else {
       const errMsg = `[fetchContractContext] Contract response not ok: ${contractRes.status} ${contractRes.statusText}`;
       console.error(errMsg);

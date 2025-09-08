@@ -9,11 +9,12 @@
       :nodes="nodes"
       :edges="edges"
       @node-click="onNodeClick"
-      :max-zoom="1.5"
-      fit-view-on-init
+      :fitViewOnInit="true"
       contenteditable="false"
       :nodes-draggable="false"
       v-bind="$attrs"
+      :max-zoom="1.5"
+      :min-zoom="-5"
     />
   </div>
 </template>

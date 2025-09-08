@@ -16,6 +16,7 @@ interface NodeData {
   isScheduled?: boolean;
   signal?: boolean;
   meta?: boolean;
+  isParent?: boolean;
 }
 
 const props = defineProps<{ data: NodeData }>();
@@ -79,6 +80,7 @@ const nodeSelectedBorder = computed(() =>
       data.isScheduled ? 'scheduled-node' : '',
       data.signal ? 'signal-node' : '',
       data.meta ? 'meta-node' : '',
+      data.isParent ? 'parent-node' : '',
     ]"
     :style="
       data.isSelected
@@ -100,11 +102,11 @@ const nodeSelectedBorder = computed(() =>
     role="button"
     tabindex="0"
   >
-    <span v-if="data.meta" class="meta-label">{{
-      data.label || data.uuid
-    }}</span>
+    <template v-if="data.meta">
+      <span class="meta-label">{{ data.label || data.uuid }}</span>
+    </template>
     <template v-else>
-      {{ data.label || data.uuid }}
+      <span>{{ data.label || data.uuid }}</span>
       <q-linear-progress
         v-if="data.isRunning"
         dark
@@ -139,24 +141,25 @@ const nodeSelectedBorder = computed(() =>
 .vue-flow__node {
   background: none !important;
   border: none !important;
+  margin: 0 !important;
 }
 .custom-node {
   color: white;
   border-radius: 4px;
-  padding: 5px;
-  width: 90px;
-  text-align: center;
+  text-align: left;
   cursor: pointer;
-  font-size: 0.6em;
+  font-size: 0.7em;
   overflow-wrap: break-word;
-
   transition: background 0.2s;
+  padding: 5px;
+
+  height: 100%;
+  width: 100%;
 }
 .custom-node:hover {
-  filter: brightness(0.95);
+  filter: brightness(0.75);
 }
-.selected-node {
-}
+
 .errored-node {
   background: #d37b7b !important;
   box-shadow: 2px 6px 6px #ff000069 !important;
@@ -178,10 +181,18 @@ const nodeSelectedBorder = computed(() =>
   word-wrap: break-word !important;
   color: #08c011 !important;
 }
+.parent-node {
+  background: rgba(10 238 162 / 0.43) !important;
+  box-shadow: 2px 6px 6px rgba(189, 188, 188, 0.66) !important;
+  height: 100%;
+  width: 100%;
+  padding: 10px;
+  margin: 0;
+}
 .meta-node {
   background: #ab0ac0 !important;
-  width: 20px !important;
-  height: 20px !important;
+  width: 40px !important;
+  height: 40px !important;
   box-shadow: 0 2px 8px 0 rgba(141, 140, 140, 0.66);
   transform: rotate(45deg);
   display: flex;

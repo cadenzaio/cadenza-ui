@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import CustomNode from '~/components/CustomNode.vue';
 import { VueFlow, type Node, type Edge, type Position } from '@vue-flow/core';
-import dagre from 'dagre';
+import ELK from 'elkjs/lib/elk.bundled.js';
 
 // Define props - generic flow item interface
 interface FlowItem {
@@ -104,30 +104,40 @@ const getPreviousIds = (item: FlowItem): string[] => {
   return singleValue ? [singleValue as string] : [];
 };
 
-// Function to create layout using dagre
-function createLayout(nodes: Node[], edges: Edge[]) {
-  const g = new dagre.graphlib.Graph();
-  g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: 'LR', nodesep: 5, ranksep: 60 });
-
-  nodes.forEach((node) => {
-    g.setNode(node.id, { width: 100, height: 50 });
-  });
-
-  edges.forEach((edge) => {
-    g.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(g);
-
+// Function to create layout using ELK
+const elk = new ELK();
+async function createLayout(nodes: Node[], edges: Edge[]) {
+  const elkGraph = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': 'RIGHT',
+      'elk.spacing.nodeNode': '40',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '40',
+    },
+    children: nodes.map((node) => ({
+      id: node.id,
+      width: 100,
+      height: 50,
+      // Only include properties allowed by ElkNode
+      // ELK expects only id, width, height, and optionally children/edges/layoutOptions
+    })),
+    edges: edges.map((edge) => ({
+      id: edge.id,
+      sources: [edge.source],
+      targets: [edge.target],
+      type: edge.type || 'default',
+      style: edge.style || { stroke: '#1976d2', strokeWidth: 2 },
+    })),
+  };
+  const layouted = await elk.layout(elkGraph);
   return nodes.map((node) => {
-    const nodeWithPosition = g.node(node.id);
+    const layoutNode = (layouted.children ?? []).find((n) => n.id === node.id);
     return {
       ...node,
-      position: {
-        x: nodeWithPosition.x - 50,
-        y: nodeWithPosition.y - 25,
-      },
+      position: layoutNode
+        ? { x: layoutNode.x ?? 0, y: layoutNode.y ?? 0 }
+        : { x: 0, y: 0 },
     };
   });
 }
@@ -176,7 +186,7 @@ function injectSignalNodes(items: FlowItem[]): FlowItem[] {
 }
 
 // --- BEGIN: TEMPORARY SIGNAL NODE INJECTION ---
-function processFlowItems(items: FlowItem[]) {
+async function processFlowItems(items: FlowItem[]) {
   if (!items || items.length === 0) {
     nodes.value = [];
     edges.value = [];
@@ -274,7 +284,7 @@ function processFlowItems(items: FlowItem[]) {
     });
   });
   // Apply layout
-  const layoutedNodes = createLayout(newNodes, newEdges);
+  const layoutedNodes = await createLayout(newNodes, newEdges);
 
   if (allCustom) {
     nodes.value = layoutedNodes;
@@ -405,7 +415,7 @@ watch(
 );
 </script>
 
-<style>
+<style scoped>
 .vue-flow-container {
   position: relative;
   min-width: 50dvw;

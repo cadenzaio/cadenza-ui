@@ -109,8 +109,49 @@ export default defineEventHandler(async (event) => {
       // Fetch contracts with pagination
       const contracts = await getContracts(uuid, page, limit);
 
+      // If a single contract is requested, fetch routines and servers
+      let routines = [];
+      let servers = [];
+      let tasks = [];
+      if (uuid && contracts.length > 0) {
+        // 1. Fetch routines for this contract
+        const routinesRes = await client.query(
+          `SELECT * FROM routine_execution WHERE contract_id = $1`,
+          [uuid]
+        );
+        routines = routinesRes.rows;
+
+        // 2. Get unique server_ids
+        const serverIds = [...new Set(routines.map((r) => r.server_id))];
+        if (serverIds.length > 0) {
+          // 3. Fetch servers
+          const serversRes = await client.query(
+            `SELECT * FROM server WHERE uuid = ANY($1)`,
+            [serverIds]
+          );
+          servers = serversRes.rows;
+        }
+
+        // 4. Get all tasks for the routines, including task name and dependencies
+        const routineIds = routines.map((r) => r.uuid);
+        if (routineIds.length > 0) {
+          const tasksRes = await client.query(
+            `SELECT te.*, t.name as task_name, tem.previous_task_execution_id
+             FROM task_execution te
+             LEFT JOIN task t ON te.task_id = t.uuid
+             LEFT JOIN task_execution_map tem ON tem.task_execution_id = te.uuid
+             WHERE te.routine_execution_id = ANY($1)`,
+            [routineIds]
+          );
+          tasks = tasksRes.rows;
+        }
+      }
+
       return {
         contracts: contracts,
+        routines: routines,
+        servers: servers,
+        tasks: tasks,
       };
     } catch (error) {
       console.error('Error fetching contracts:', error);

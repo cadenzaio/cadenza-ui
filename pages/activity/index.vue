@@ -61,7 +61,7 @@ import { ref, onMounted } from 'vue';
 import CustomNode from '~/components/CustomNode.vue';
 import { useAppStore } from '~/stores/app';
 import { useRouter } from '#vue-router';
-import dagre from 'dagre';
+import ELK from 'elkjs/lib/elk.bundled.js';
 import ServerMap from '~/components/serverMap.vue';
 import type { Node, Edge, Position } from '@vue-flow/core';
 
@@ -183,28 +183,39 @@ const mapNodes = ref<Node[]>([]);
 const mapEdges = ref<Edge[]>([]);
 const mapLoading = ref(false);
 
-function layoutGraph(nodes: Node[], edges: Edge[]) {
-  const g = new dagre.graphlib.Graph();
-  g.setGraph({
-    rankdir: 'LR',
-    ranksep: 200,
-    nodesep: 5,
-    edgesep: 1,
-    align: 'DL',
-  });
-  g.setDefaultEdgeLabel(() => ({}));
-  nodes.forEach((node) => {
-    g.setNode(node.id, { width: node.width || 5, height: node.height || 30 });
-  });
-  edges.forEach((edge) => {
-    g.setEdge(edge.source, edge.target);
-  });
-  dagre.layout(g);
+const elk = new ELK();
+async function layoutGraph(nodes: Node[], edges: Edge[]) {
+  const elkGraph = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': 'RIGHT',
+      'elk.spacing.nodeNode': '0',
+      'elk.layered.spacing.nodeNodeBetweenLayers': '200',
+      'elk.layered.spacing.edgeEdgeBetweenLayers': '0',
+    },
+    children: nodes.map((node) => ({
+      ...node,
+      width: typeof node.width === 'number' ? node.width : 100,
+      height: typeof node.height === 'number' ? node.height : 50,
+    })),
+    edges: edges.map((edge) => ({
+      id: edge.id,
+      sources: [edge.source],
+      targets: [edge.target],
+      type: edge.type || 'default',
+      style: edge.style || { stroke: '#1976d2', strokeWidth: 2 },
+    })),
+  };
+  const layouted = await elk.layout(elkGraph);
   return nodes.map((node) => {
-    const nodeWithPos = g.node(node.id);
+    const layoutNode = layouted.children?.find((n) => n.id === node.id);
     return {
       ...node,
-      position: { x: nodeWithPos.x, y: nodeWithPos.y },
+      position: {
+        x: layoutNode && typeof layoutNode.x === 'number' ? layoutNode.x : 0,
+        y: layoutNode && typeof layoutNode.y === 'number' ? layoutNode.y : 0,
+      },
     };
   });
 }
@@ -242,7 +253,7 @@ async function fetchServerMap() {
           });
         }
       });
-      mapNodes.value = layoutGraph(nodes, edges);
+      mapNodes.value = await layoutGraph(nodes, edges);
       mapEdges.value = edges;
     } else {
       mapNodes.value = [];
