@@ -36,6 +36,7 @@ interface TimelineItem {
   uuid: string;
   name: string;
   started: string;
+  created: string;
   ended: string;
   progress: number;
   errored: boolean;
@@ -104,7 +105,9 @@ const chartSeries = computed(() => {
     {
       name: 'Tasks',
       data: props.itemMap.map((item, index) => {
-        const startTime = new Date(item.started).getTime();
+        const startTime = new Date(
+          (item.started || item.created) as string
+        ).getTime();
         let endTime = item.ended ? new Date(item.ended).getTime() : Date.now();
 
         // Enforce minimum bar length
@@ -379,14 +382,6 @@ const onDataPointSelection = (
     emit('task-selected', selectedData.meta as TimelineItem);
   }
 };
-
-watch(
-  () => props.itemMap,
-  (newData) => {
-    console.log('ApexTimeline: itemMap changed:', newData);
-  },
-  { deep: true }
-);
 </script>
 
 <style scoped>

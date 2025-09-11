@@ -87,6 +87,7 @@ async function getContracts(uuid?: string, page?: number, limit?: number) {
     method: row.method,
     credentials: row.credentials,
     mode: row.mode,
+    type: 'contract',
   }));
 }
 
@@ -119,21 +120,23 @@ export default defineEventHandler(async (event) => {
           `SELECT * FROM routine_execution WHERE contract_id = $1`,
           [uuid]
         );
-        routines = routinesRes.rows;
+        routines = routinesRes.rows.map((r) => ({ ...r, type: 'routine' }));
 
         // 2. Get unique server_ids
-        const serverIds = [...new Set(routines.map((r) => r.server_id))];
+        const serverIds = [
+          ...new Set(routinesRes.rows.map((r) => r.server_id)),
+        ];
         if (serverIds.length > 0) {
           // 3. Fetch servers
           const serversRes = await client.query(
             `SELECT * FROM server WHERE uuid = ANY($1)`,
             [serverIds]
           );
-          servers = serversRes.rows;
+          servers = serversRes.rows.map((s) => ({ ...s, type: 'service' }));
         }
 
         // 4. Get all tasks for the routines, including task name and dependencies
-        const routineIds = routines.map((r) => r.uuid);
+        const routineIds = routinesRes.rows.map((r) => r.uuid);
         if (routineIds.length > 0) {
           const tasksRes = await client.query(
             `SELECT te.*, t.name as task_name, tem.previous_task_execution_id
@@ -143,7 +146,7 @@ export default defineEventHandler(async (event) => {
              WHERE te.routine_execution_id = ANY($1)`,
             [routineIds]
           );
-          tasks = tasksRes.rows;
+          tasks = tasksRes.rows.map((t) => ({ ...t, type: 'task' }));
         }
       }
 

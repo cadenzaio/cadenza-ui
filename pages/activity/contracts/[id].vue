@@ -28,7 +28,7 @@
           <transition
             name="fade"
             mode="out-in"
-            :duration="{ enter: 500, leave: 300 }"
+            :duration="{ enter: 600, leave: 400 }"
           >
             <div v-show="selectedOption === 'routineMap'">
               <NestedFlowMap
@@ -36,7 +36,6 @@
                 :nodes="nodes"
                 :edges="edges"
               />
-              <!-- <flowMap :items="routineMap" @item-selected="onTaskSelected" /> -->
             </div>
           </transition>
           <transition
@@ -45,9 +44,10 @@
             :duration="{ enter: 500, leave: 300 }"
           >
             <div v-show="selectedOption === 'timeline'">
-              <Timeline :itemMap="routineMap" />
+              <Timeline :itemMap="timelineItems" />
             </div>
           </transition>
+
           <transition
             name="fade"
             mode="out-in"
@@ -64,15 +64,15 @@
           <div class="justify-around flex w-full gap-4">
             <InfoCard>
               <template #title>
-                {{ contractContext?.product || 'Contract Info' }}
+                {{ contractContext?.name || 'Contract Info' }}
               </template>
               <template #info>
                 <div class="flex-column full-width">
                   <div class="q-mx-md q-my-sm">
                     Issued at:
                     {{
-                      contractContext?.issued_at
-                        ? formatDate(contractContext.issued_at)
+                      contractContext?.issued
+                        ? formatDate(contractContext.issued)
                         : ''
                     }}
                   </div>
@@ -110,7 +110,11 @@
                 <template #title>Input Context</template>
                 <template #info>
                   <div class="q-mx-md q-my-sm">
-                    <pre>{{ contractContext?.input_context }}</pre>
+                    <pre>{{
+                      contractContext?.input_context
+                        ? JSON.stringify(contractContext.input_context, null, 2)
+                        : ''
+                    }}</pre>
                   </div>
                 </template>
               </InfoCard>
@@ -118,7 +122,15 @@
                 <template #title>Output Context</template>
                 <template #info>
                   <div class="q-mx-md q-my-sm">
-                    <pre>{{ contractContext?.output_context }}</pre>
+                    <pre>{{
+                      contractContext?.output_context
+                        ? JSON.stringify(
+                            contractContext.output_context,
+                            null,
+                            2
+                          )
+                        : ''
+                    }}</pre>
                   </div>
                 </template>
               </InfoCard>
@@ -184,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useFetch, useRoute } from '#app';
 import { useRouter } from '#vue-router';
 import NestedFlowMap from '~/components/NestedFlowMap.vue';
@@ -208,8 +220,29 @@ const router = useRouter();
 const route = useRoute();
 const selectedOption = ref('routineMap');
 const routineMap = ref([]);
+const contractData = ref<any>(null);
 
 const nodes = ref<any[]>([]);
+
+const timelineItems = computed(() => {
+  const tasks = routineMap.value?.tasks || [];
+  const taskItems = tasks.map((task: any) => ({
+    label: task.task_name || task.label || task.uuid,
+    nodeType: 'task',
+    started: task.started || task.created || '',
+    ended: task.ended || '',
+    description: task.description || '',
+    id: task.uuid,
+    parentNode: task.routine_execution_id,
+    ...task,
+  }));
+  return taskItems.sort((a, b) => {
+    const aTime = a.started ? new Date(a.started).getTime() : 0;
+    const bTime = b.started ? new Date(b.started).getTime() : 0;
+    return aTime - bTime;
+  });
+});
+
 const edges = ref<any[]>([]);
 
 const columns = [
@@ -288,9 +321,6 @@ async function loadRoutines(isLoadMore = false) {
     } else {
       currentPage.value = 1;
     }
-    console.log(
-      `[loadRoutines] Fetching routines for contractId: ${contractId}, page: ${currentPage.value}`
-    );
     const routinesResponse = await fetch(
       `/api/activity/routines/activeRoutines?contractId=${contractId}&page=${currentPage.value}&limit=${pageSize}`
     );
@@ -301,16 +331,11 @@ async function loadRoutines(isLoadMore = false) {
       throw new Error(errMsg);
     }
     const routinesData = await routinesResponse.json();
-    console.log('[loadRoutines] Routines data received:', routinesData);
     if (isLoadMore) {
       routines.value = [...routines.value, ...(routinesData.routines || [])];
     } else {
       routines.value = routinesData.routines || [];
     }
-    // Debug: log all unique status values
-    const allStatuses = (routines.value || []).map((r) => r.status);
-    const uniqueStatuses = Array.from(new Set(allStatuses));
-    console.log('[DEBUG] Unique routine status values:', uniqueStatuses);
     routineMap.value = routinesData.routineMap || [];
     hasMoreData.value = (routinesData.routines || []).length === pageSize;
   } catch (err) {
@@ -341,26 +366,27 @@ function confirmGenerate() {
 
 async function fetchContractContext(contractId: string) {
   try {
-    console.log(
-      '[fetchContractContext] Fetching contract context for contractId:',
-      contractId
-    );
     const contractRes = await fetch(
       `/api/contracts/contracts?uuid=${contractId}`
     );
     if (contractRes.ok) {
-      const contractData = await contractRes.json();
-      console.log(
-        '[fetchContractContext] Contract data received:',
-        contractData
-      );
-      contractContext.value = contractData.contracts?.[0] || null;
+      const apiData = await contractRes.json();
+      contractData.value = apiData;
+      contractContext.value = apiData.contracts?.[0] || null;
 
-      // Build nodes and edges for NestedFlowMap (without contract node)
-      const contract = contractData.contracts?.[0];
-      const routines = contractData.routines || [];
-      const servers = contractData.servers || [];
-      const tasks = contractData.tasks || [];
+      // Set routineMap to the routines, servers, and tasks
+      routineMap.value = {
+        routines: apiData.routines || [],
+        servers: apiData.servers || [],
+        tasks: apiData.tasks || [],
+      };
+      console.log('apiData.tasks:', apiData.tasks);
+      console.log('routineMap:', routineMap.value);
+      // Build nodes and edges for NestedFlowMap using the raw API data
+      const contract = apiData.contracts?.[0];
+      const routines = apiData.routines || [];
+      const servers = apiData.servers || [];
+      const tasks = apiData.tasks || [];
 
       // Service nodes (no parentNode: contract)
       const serviceNodes = servers.map((srv: any) => ({
@@ -368,6 +394,8 @@ async function fetchContractContext(contractId: string) {
         type: 'custom',
         nodeType: 'service',
         data: { label: srv.processing_graph, isParent: true },
+        created: srv.created || '',
+        ended: srv.modified || '',
         // No parentNode
         extent: 'parent',
         expandParent: true,
@@ -380,6 +408,9 @@ async function fetchContractContext(contractId: string) {
         nodeType: 'routine',
         data: { label: routine.description, isParent: true },
         parentNode: routine.server_id,
+        created: routine.created || '',
+        started: routine.created || '',
+        ended: routine.ended || '',
         extent: 'parent',
         expandParent: true,
       }));
@@ -391,6 +422,9 @@ async function fetchContractContext(contractId: string) {
         nodeType: 'task',
         data: { label: task.task_name },
         parentNode: task.routine_execution_id,
+        created: task.created || '',
+        started: task.started || task.created || '',
+        ended: task.ended || '',
         extent: 'parent',
         expandParent: true,
         style: { margin: '50px', padding: '10px' },
@@ -417,7 +451,6 @@ async function fetchContractContext(contractId: string) {
           });
         }
       });
-      // Only keep task-to-task edges
       nodes.value = [...serviceNodes, ...routineNodes, ...taskNodes];
       edges.value = [...edgesFromPrevious];
     } else {
@@ -450,9 +483,6 @@ watch(
   () => route.params.id,
   (newId, oldId) => {
     if (newId !== oldId) {
-      console.log(
-        `[watch] contractId changed from ${oldId} to ${newId}, reloading data.`
-      );
       loadAllData();
     }
   }

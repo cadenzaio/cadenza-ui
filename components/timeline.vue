@@ -44,7 +44,9 @@ function getContext(entry: TimelineEntry): string {
 }
 
 const formatDate = computed(() => (date: string) => {
+  if (!date) return '';
   const formattedDate = new Date(date);
+  if (isNaN(formattedDate.getTime())) return '';
   return `${formattedDate.toLocaleString('en-US', {
     year: 'numeric',
     month: '2-digit',

@@ -20,7 +20,6 @@ interface NodeData {
 }
 
 const props = defineProps<{ data: NodeData }>();
-console.log('CustomNode.vue received prop:', props.data);
 
 import { computed } from 'vue';
 import { useAppStore } from '~/stores/app';
