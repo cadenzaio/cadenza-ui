@@ -54,7 +54,7 @@
             :duration="{ enter: 500, leave: 300 }"
           >
             <div v-show="selectedOption === 'rangedTimeline'">
-              <ApexTimeline :itemMap="routineMap" />
+              <ApexTimeline :itemMap="rangedTimelineItems" />
             </div>
           </transition>
         </div>
@@ -219,7 +219,31 @@ const pageSize = 50;
 const router = useRouter();
 const route = useRoute();
 const selectedOption = ref('routineMap');
-const routineMap = ref([]);
+const routineMap = ref<any>([]);
+
+// Dynamic items for ApexTimeline
+const rangedTimelineItems = ref<any[]>([]);
+
+// Helper to fetch all tasks for a list of routine IDs
+async function fetchTasksForRoutines(routineIds: string[]): Promise<any[]> {
+  const allTasks: any[] = [];
+  for (const id of routineIds) {
+    try {
+      const res = await fetch(
+        `/api/activity/tasks/tasksInRoutines?routineId=${id}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.tasks)) {
+          allTasks.push(...data.tasks);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching tasks for routine', id, err);
+    }
+  }
+  return allTasks;
+}
 const contractData = ref<any>(null);
 
 const nodes = ref<any[]>([]);
@@ -236,7 +260,7 @@ const timelineItems = computed(() => {
     parentNode: task.routine_execution_id,
     ...task,
   }));
-  return taskItems.sort((a, b) => {
+  return taskItems.sort((a: any, b: any) => {
     const aTime = a.started ? new Date(a.started).getTime() : 0;
     const bTime = b.started ? new Date(b.started).getTime() : 0;
     return aTime - bTime;
@@ -379,9 +403,8 @@ async function fetchContractContext(contractId: string) {
         routines: apiData.routines || [],
         servers: apiData.servers || [],
         tasks: apiData.tasks || [],
-      };
-      console.log('apiData.tasks:', apiData.tasks);
-      console.log('routineMap:', routineMap.value);
+      } as any;
+
       // Build nodes and edges for NestedFlowMap using the raw API data
       const contract = apiData.contracts?.[0];
       const routines = apiData.routines || [];
@@ -453,6 +476,85 @@ async function fetchContractContext(contractId: string) {
       });
       nodes.value = [...serviceNodes, ...routineNodes, ...taskNodes];
       edges.value = [...edgesFromPrevious];
+
+      // Fetch all tasks for all routine IDs and update rangedTimelineItems
+      const routineIds = routines.map((r: any) => r.uuid).filter(Boolean);
+      // Debug: log routineIds
+      console.log('[ApexTimeline] routineIds', routineIds);
+      if (!routineIds.length) {
+        console.warn('[ApexTimeline] No routines found for contract');
+      }
+      // Fetch all tasks for all routine IDs and map to ApexTimeline format
+      const allTasks: any[] = [];
+      for (const id of routineIds) {
+        try {
+          const res = await fetch(
+            `/api/activity/tasks/tasksInRoutines?routineId=${id}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            console.log(`[ApexTimeline] tasks for routine ${id}:`, data);
+            if (Array.isArray(data)) {
+              allTasks.push(...data);
+            } else if (Array.isArray(data.tasks)) {
+              allTasks.push(...data.tasks);
+            }
+          } else {
+            console.error(
+              `[ApexTimeline] Failed to fetch tasks for routine ${id}:`,
+              res.status,
+              res.statusText
+            );
+          }
+        } catch (err) {
+          console.error(
+            `[ApexTimeline] Error fetching tasks for routine ${id}:`,
+            err
+          );
+        }
+      }
+      rangedTimelineItems.value = allTasks
+        .map((task: any) => {
+          const started = task.started || task.scheduled || '';
+          const ended = task.ended || '';
+          const startedTime = new Date(started).getTime();
+          // If started is missing or invalid, skip this item
+          if (!started || isNaN(startedTime)) {
+            console.warn(
+              '[ApexTimeline] Skipping task with invalid started date:',
+              task
+            );
+            return null;
+          }
+          // If ended is missing or invalid, use Date.now() (for running tasks)
+          let endedTime =
+            ended && !isNaN(new Date(ended).getTime())
+              ? ended
+              : new Date().toISOString();
+          return {
+            label: task.label || task.name || task.uuid,
+            uuid: task.uuid,
+            name: task.name || task.label || task.uuid,
+            started,
+            created: task.scheduled || '',
+            ended: endedTime,
+            progress:
+              typeof task.progress === 'string'
+                ? parseInt(task.progress)
+                : task.progress ?? 0,
+            errored: task.errored ?? false,
+            failed: task.failed ?? false,
+            isComplete: task.isComplete ?? task.is_complete ?? false,
+            layer_index: task.layer_index ?? 0,
+            description: task.description || '',
+          };
+        })
+        .filter(Boolean);
+      console.log(
+        '[ApexTimeline] rangedTimelineItems',
+        rangedTimelineItems.value,
+        allTasks
+      );
     } else {
       const errMsg = `[fetchContractContext] Contract response not ok: ${contractRes.status} ${contractRes.statusText}`;
       console.error(errMsg);

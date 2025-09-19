@@ -92,6 +92,31 @@ const generateColors = (index: number) => {
 };
 
 // Convert itemMap to ApexCharts series format - each task gets its own row
+// Debug: log incoming itemMap and highlight any with missing/invalid dates
+watch(
+  () => props.itemMap,
+  (val) => {
+    console.log('[ApexTimeline] received itemMap', val);
+    if (Array.isArray(val)) {
+      val.forEach((item, idx) => {
+        if (!item.started || isNaN(new Date(item.started).getTime())) {
+          console.warn(
+            `[ApexTimeline] Item ${idx} missing or invalid started:`,
+            item
+          );
+        }
+        if (!item.ended && !item.isComplete) {
+          console.warn(
+            `[ApexTimeline] Item ${idx} missing ended (may be running):`,
+            item
+          );
+        }
+      });
+    }
+  },
+  { immediate: true }
+);
+
 const chartSeries = computed(() => {
   if (!props.itemMap || props.itemMap.length === 0) {
     return [];
@@ -101,31 +126,50 @@ const chartSeries = computed(() => {
   const MIN_BAR_LENGTH = 60;
 
   // Create a single series with each task as a separate data point
+  const data = props.itemMap.map((item, index) => {
+    const startTime = new Date(
+      (item.started || item.created) as string
+    ).getTime();
+    let endTime = item.ended ? new Date(item.ended).getTime() : Date.now();
+
+    // Enforce minimum bar length
+    if (endTime - startTime < MIN_BAR_LENGTH) {
+      endTime = startTime + MIN_BAR_LENGTH;
+    }
+
+    // Create a unique row name by combining task name with index or UUID
+    const uniqueRowName = `${index + 1}: ${item.name || item.label}`;
+    console.log(
+      `[ApexTimeline] Task ${index} (${item.name || item.label}) times:`,
+      new Date(startTime).toISOString(),
+      'to',
+      new Date(endTime).toISOString()
+    );
+    return {
+      x: uniqueRowName,
+      y: [startTime, endTime],
+      fillColor: generateColors(index),
+      strokeColor: '#fff',
+      meta: item,
+    };
+  });
+
+  // Debug: log chartSeries and min/max times
+  const allTimes = data.flatMap((d) => d.y);
+  const minTime = Math.min(...allTimes);
+  const maxTime = Math.max(...allTimes);
+  console.log('[ApexTimeline] chartSeries', data);
+  console.log(
+    '[ApexTimeline] minTime',
+    new Date(minTime).toISOString(),
+    'maxTime',
+    new Date(maxTime).toISOString()
+  );
+
   return [
     {
       name: 'Tasks',
-      data: props.itemMap.map((item, index) => {
-        const startTime = new Date(
-          (item.started || item.created) as string
-        ).getTime();
-        let endTime = item.ended ? new Date(item.ended).getTime() : Date.now();
-
-        // Enforce minimum bar length
-        if (endTime - startTime < MIN_BAR_LENGTH) {
-          endTime = startTime + MIN_BAR_LENGTH;
-        }
-
-        // Create a unique row name by combining task name with index or UUID
-        const uniqueRowName = `${index + 1}: ${item.name || item.label}`;
-
-        return {
-          x: uniqueRowName,
-          y: [startTime, endTime],
-          fillColor: generateColors(index),
-          strokeColor: '#fff',
-          meta: item,
-        };
-      }),
+      data,
     },
   ];
 });
