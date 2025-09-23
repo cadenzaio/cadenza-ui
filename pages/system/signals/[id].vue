@@ -24,7 +24,7 @@ import { useAppStore } from '~/stores/app';
 // Set current section to 'services' for correct node coloring
 const appStore = useAppStore();
 onMounted(() => {
-  appStore.setCurrentSection('services');
+  appStore.setCurrentSection('system');
 });
 
 // Hardcoded flow: Task 1 -> Signal -> Task 2 (no signal -> task 1 edge)

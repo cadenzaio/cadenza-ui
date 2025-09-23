@@ -4,9 +4,9 @@
       <template #title>
         Meta {{ selectedItem?.label }} - {{ selectedItem?.uuid.slice(0, 8) }}
         <q-btn color="warning" @click="showGenerateDialog = true">
-          Generate Contract
+          Generate Trace
           <q-tooltip anchor="top middle" self="bottom middle">
-            Generate a contract from this point
+            Generate a trace from this point
           </q-tooltip>
         </q-btn>
       </template>
@@ -204,16 +204,16 @@
                   class="q-mx-md q-my-sm"
                   @click="
                     navigateToItem(
-                      `/activity/contracts/${selectedItem?.contract_id}`
+                      `/activity/traces/${selectedItem?.contract_id}`
                     )
                   "
                   @contextmenu.prevent="
                     openLinkInNewTab(
-                      `/activity/contracts/${selectedItem?.contract_id}`
+                      `/activity/traces/${selectedItem?.contract_id}`
                     )
                   "
                 >
-                  <span class="text-warning cursor-pointer">Contract</span>
+                  <span class="text-warning cursor-pointer">Trace</span>
                 </div>
               </div>
             </template>
@@ -371,7 +371,7 @@
         <q-card>
           <q-card-section>
             <div class="text-h6">Confirm Generate</div>
-            <div>Are you sure you want to generate a contract?</div>
+            <div>Are you sure you want to generate a trace?</div>
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
@@ -552,7 +552,7 @@ function confirmStop() {
 
 function confirmGenerate() {
   showGenerateDialog.value = false;
-  // Add logic to handle generating the contract
+  // Add logic to handle generating the trace
 }
 // Flash animation for InfoCard when selectedTask updates
 import { nextTick } from 'vue';

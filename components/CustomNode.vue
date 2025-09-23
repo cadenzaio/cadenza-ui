@@ -17,6 +17,7 @@ interface NodeData {
   signal?: boolean;
   meta?: boolean;
   isParent?: boolean;
+  sectionNodeBg?: string | (() => string);
 }
 
 const props = defineProps<{ data: NodeData }>();
@@ -30,12 +31,17 @@ const currentSection = appStore.currentSection;
 const $q = useQuasar();
 
 const nodeBg = computed(() => {
+  if (props.data.sectionNodeBg) {
+    return typeof props.data.sectionNodeBg === 'function'
+      ? props.data.sectionNodeBg()
+      : props.data.sectionNodeBg;
+  }
   switch (currentSection) {
-    case 'services':
+    case 'system':
       return colors.changeAlpha(colors.getPaletteColor('primary'), 0.6);
     case 'serviceActivity':
       return colors.changeAlpha(colors.getPaletteColor('warning'), 0.6);
-    case 'contracts':
+    case 'traces':
       return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.6);
     case 'meta':
       return colors.changeAlpha(colors.getPaletteColor('accent'), 0.6);
@@ -48,11 +54,11 @@ const nodeBg = computed(() => {
 
 const nodeSelectedBg = computed(() => {
   switch (currentSection) {
-    case 'services':
+    case 'system':
       return colors.getPaletteColor('primary');
     case 'serviceActivity':
       return colors.getPaletteColor('warning');
-    case 'contracts':
+    case 'traces':
       return colors.getPaletteColor('secondary');
     case 'meta':
       return colors.getPaletteColor('accent');
@@ -181,7 +187,7 @@ const nodeSelectedBorder = computed(() =>
   color: #08c011 !important;
 }
 .parent-node {
-  background: rgba(10 238 162 / 0.43) !important;
+  background: rgba(81 83 83 / 0.22) !important;
   box-shadow: 2px 6px 6px rgba(189, 188, 188, 0.66) !important;
   height: 100%;
   width: 100%;

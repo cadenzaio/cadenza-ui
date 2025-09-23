@@ -70,7 +70,7 @@ const breadcrumbs = computed(() => {
 });
 
 function formatBreadcrumbLabel(segment) {
-  if (segment === 'services') return 'Services';
+  if (segment === 'system') return 'System';
   if (segment === 'active') return 'Service Activity';
   if (segment === 'activity') return 'Service Activity';
   if (segment === 'tasks') return 'Tasks';
@@ -87,11 +87,11 @@ function formatBreadcrumbLabel(segment) {
 
 const breadcrumbBg = computed(() => {
   switch (currentSection.value) {
-    case 'services':
+    case 'system':
       return colors.changeAlpha(colors.getPaletteColor('primary'), 0.1);
     case 'serviceActivity':
       return colors.changeAlpha(colors.getPaletteColor('warning'), 0.1);
-    case 'contracts':
+    case 'traces':
       return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.1);
     case 'meta':
       return colors.changeAlpha(colors.getPaletteColor('accent'), 0.1);
@@ -104,11 +104,11 @@ const breadcrumbBg = computed(() => {
 
 const breadcrumbActiveColor = computed(() => {
   switch (currentSection.value) {
-    case 'services':
+    case 'system':
       return 'primary';
     case 'serviceActivity':
       return 'warning';
-    case 'contracts':
+    case 'traces':
       return 'secondary';
     case 'meta':
       return 'accent';

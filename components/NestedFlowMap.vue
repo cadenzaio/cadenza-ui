@@ -1,29 +1,40 @@
 <template>
   <div class="vue-flow-container q-mb-md">
+    <div v-if="loading" class="loading-center-container">
+      <q-spinner :color="sectionColor" size="10em" class="loading-spinner" />
+      <q-badge
+        outline
+        :color="sectionColor"
+        label="Loading Map ..."
+        class="loading-badge"
+      />
+    </div>
     <VueFlow
       ref="vueFlowInstance"
       :nodes="laidOutNodes"
       :edges="laidOutEdges"
       @node-click="onNodeClick"
       :max-zoom="5"
-      :min-zoom="0.125"
+      :min-zoom="0"
       fit-view-on-init
       contenteditable="false"
-      :nodes-draggable="true"
+      :nodes-draggable="false"
     >
       <template #node-custom="props">
-        <CustomNode :data="props.data" />
+        <CustomNode :data="{ ...props.data, sectionNodeBg: sectionNodeBg }" />
       </template>
     </VueFlow>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { VueFlow } from '@vue-flow/core';
 import ELK from 'elkjs/lib/elk.bundled.js';
 import CustomNode from '~/components/CustomNode.vue';
 import { defineProps } from 'vue';
+import { useAppStore } from '~/stores/app';
+import { colors } from 'quasar';
 
 const props = defineProps({
   nodes: {
@@ -128,19 +139,23 @@ async function layoutNodes(nodesArr, edgesArr) {
 
 const laidOutNodes = ref([]);
 const laidOutEdges = ref([]);
+const loading = ref(false);
 
 async function updateLayout(newNodes, newEdges) {
-  // Layout nodes
-  laidOutNodes.value = await layoutNodes(newNodes, newEdges);
-  // Ensure edges have required fields and type
-  laidOutEdges.value = (newEdges || []).map((edge) => ({
-    id: edge.id,
-    source: edge.source,
-    target: edge.target,
-    type: edge.type || 'default',
-    style: edge.style || { stroke: '#1976d2', strokeWidth: 2 },
-    ...edge,
-  }));
+  loading.value = true;
+  try {
+    laidOutNodes.value = await layoutNodes(newNodes, newEdges);
+    laidOutEdges.value = (newEdges || []).map((edge) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      type: edge.type || 'default',
+      style: { stroke: sectionNodeBg.value, strokeWidth: 2 },
+      ...edge,
+    }));
+  } finally {
+    loading.value = false;
+  }
 }
 
 watch(
@@ -150,6 +165,41 @@ watch(
   },
   { immediate: true, deep: true }
 );
+
+const appStore = useAppStore();
+const currentSection = computed(() => appStore.currentSection);
+const sectionColor = computed(() => {
+  switch (currentSection.value) {
+    case 'system':
+      return 'primary';
+    case 'serviceActivity':
+      return 'warning';
+    case 'traces':
+      return 'secondary';
+    case 'meta':
+      return 'accent';
+    case 'help':
+      return 'grey-8';
+    default:
+      return 'secondary';
+  }
+});
+const sectionNodeBg = computed(() => {
+  switch (currentSection.value) {
+    case 'system':
+      return colors.changeAlpha(colors.getPaletteColor('primary'), 0.6);
+    case 'serviceActivity':
+      return colors.changeAlpha(colors.getPaletteColor('warning'), 0.6);
+    case 'traces':
+      return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.6);
+    case 'meta':
+      return colors.changeAlpha(colors.getPaletteColor('accent'), 0.6);
+    case 'help':
+      return colors.changeAlpha(colors.getPaletteColor('grey-8'), 0.6);
+    default:
+      return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.6);
+  }
+});
 </script>
 
 <style>
@@ -161,5 +211,22 @@ watch(
   box-shadow: 0 1px 6px 0 rgba(105, 105, 105, 0.5);
   border-radius: 20px;
   margin: 10px;
+}
+
+.loading-center-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  min-height: 300px;
+  min-width: 300px;
+}
+.loading-spinner {
+  margin-bottom: 24px;
+}
+.loading-badge {
+  font-size: 1.2em;
 }
 </style>

@@ -307,7 +307,7 @@ async function fetchHeatmapData(routineId: string) {
 
 onMounted(async () => {
   const appStore = useAppStore();
-  appStore.setCurrentSection('services');
+  appStore.setCurrentSection('system');
 
   const itemId: string = Array.isArray(route.params.id)
     ? route.params.id[0]

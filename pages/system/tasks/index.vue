@@ -1,31 +1,30 @@
 <template>
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
-      <template #title> Contracts </template>
+      <template #title> Tasks </template>
       <div class="row q-mx-md">
         <Table
           :columns="columns"
-          :rows="contracts"
+          :rows="tasks"
           row-key="uuid"
-          @inspect-row="inspectContracts"
+          @inspect-row="inspectTasks"
           @inspect-row-in-new-tab="inspectInNewTab"
-          @loadMoreData="loadMoreContracts"
+          @loadMoreData="loadMoreTasks"
           :enableInfiniteScroll="true"
           :hasMoreData="hasMoreData"
           :loadingMoreData="loadingMoreData"
         />
-        <FrequencyPieChart v-if="contracts.length > 0" :values="contracts" />
       </div>
     </NuxtLayout>
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useFetch } from '#app';
 import { useRouter } from '#vue-router';
 
-interface contracts {
+interface tasks {
   type: string;
   label: string;
   description: string;
@@ -33,66 +32,63 @@ interface contracts {
   executionId: any;
   progress: any;
   uuid: string;
+  service: string;
+  unique: boolean;
+  concurrency: number;
 }
 
 const layout = 'dashboard-layout';
-const selectedContract = ref<contracts[] | undefined>(undefined);
-watch(selectedContract, (newValue) => {});
+const selectedTask = ref<tasks[] | undefined>(undefined);
+watch(selectedTask, (newValue) => {});
 
 const columns = [
   {
-    name: 'name',
+    name: 'label',
     label: 'Name',
-    field: 'name',
+    field: 'label',
     required: true,
     sortable: true,
   },
   {
-    name: 'agent_name',
-    label: 'Agent',
-    field: 'agent_name',
+    name: 'service',
+    label: 'Service',
+    field: 'service',
     required: true,
     sortable: false,
   },
   {
-    name: 'issued',
-    label: 'Issued',
-    field: 'issued',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'status',
-    label: 'Status',
-    field: 'status',
+    name: 'unique',
+    label: 'Unique',
+    field: 'unique',
     required: true,
     sortable: true,
   },
 ];
 
-const contracts = ref<contracts[]>([]);
+const tasks = ref<tasks[]>([]);
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
+
 const currentPage = ref(1);
 const pageSize = 50;
 
 const router = useRouter();
 
-function inspectContracts(contracts: contracts) {
-  navigateToItem(`contracts/${contracts.uuid}`);
+function inspectTasks(tasks: tasks) {
+  navigateToItem(`/system/tasks/${tasks.uuid}`);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
-function inspectInNewTab(contracts: contracts) {
-  openLinkInNewTab(`/activity/contracts/${contracts.uuid}`);
+function inspectInNewTab(tasks: tasks) {
+  openLinkInNewTab(`/system/tasks/${tasks.uuid}`);
 }
 
 const navigateToItem = (route: string) => {
   router.push(route);
 };
 
-async function loadContracts(isLoadMore = false) {
+async function loadTasks(isLoadMore = false) {
   try {
     if (isLoadMore) {
       loadingMoreData.value = true;
@@ -100,20 +96,20 @@ async function loadContracts(isLoadMore = false) {
     }
 
     const response = await fetch(
-      `/api/contracts/contracts?page=${currentPage.value}&limit=${pageSize}`
+      `/api/services/tasks/tasks?page=${currentPage.value}&limit=${pageSize}`
     );
     if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();
 
     if (isLoadMore) {
-      contracts.value = [...contracts.value, ...data.contracts];
+      tasks.value = [...tasks.value, ...data];
     } else {
-      contracts.value = data.contracts;
+      tasks.value = data;
     }
 
-    hasMoreData.value = data.contracts.length === pageSize;
+    hasMoreData.value = data.length === pageSize;
   } catch (error) {
-    console.error('Error loading contracts:', error);
+    console.error('Error loading tasks:', error);
     hasMoreData.value = false;
   } finally {
     if (isLoadMore) {
@@ -122,14 +118,15 @@ async function loadContracts(isLoadMore = false) {
   }
 }
 
-async function loadMoreContracts() {
-  await loadContracts(true);
+async function loadMoreTasks() {
+  await loadTasks(true);
 }
 
 // Fetch server stats and set the current section on component mount
 onMounted(async () => {
   const appStore = useAppStore();
-  appStore.setCurrentSection('serviceActivity');
-  await loadContracts();
+  appStore.setCurrentSection('system');
+  currentPage.value = 1; // Always start at page 1 on mount
+  await loadTasks(false);
 });
 </script>

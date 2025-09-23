@@ -24,13 +24,13 @@
           </q-btn>
           <q-btn
             flat
-            to="/services"
-            @click="() => setSection('services')"
-            @contextmenu.prevent="openLinkInNewTab('/services')"
+            to="/system"
+            @click="() => setSection('system')"
+            @contextmenu.prevent="openLinkInNewTab('/system')"
             @mouseover="showTooltip = true"
             @mouseleave="showTooltip = false"
           >
-            Services
+            System
           </q-btn>
           <q-btn
             flat
@@ -78,18 +78,18 @@
       <div class="drawer-content">
         <q-expansion-item
           expand-separator
-          label="Services"
+          label="system"
           header-class="text-primary"
-          v-model="showServices"
-          to="/services"
+          v-model="showsystem"
+          to="/system"
           hide-expand-icon
-          @click="() => setSection('services', true)"
-          @contextmenu.prevent="openLinkInNewTab('/services')"
+          @click="() => setSection('system', true)"
+          @contextmenu.prevent="openLinkInNewTab('/system')"
         >
           <template #header>
             <div
               style="width: 100%"
-              @contextmenu.prevent="openLinkInNewTab('/services')"
+              @contextmenu.prevent="openLinkInNewTab('/system')"
               @mouseover="showTooltip = true"
               @mouseleave="showTooltip = false"
             >
@@ -99,15 +99,15 @@
                 :offset="[0, 10]"
                 >Right click to open in new tab</q-tooltip
               >
-              <span class="text-primary">Services</span>
+              <span class="text-primary">System</span>
             </div>
           </template>
           <q-item>
             <q-btn
               flat
               color="primary"
-              to="/services/routines"
-              @click="() => setSection('services', true)"
+              to="/system/services"
+              @click="() => setSection('system', true)"
             >
               <q-tooltip
                 anchor="top middle"
@@ -116,7 +116,28 @@
                 >Right click to open in new tab</q-tooltip
               >
               <span
-                @contextmenu.prevent="openLinkInNewTab('/services/routines')"
+                @contextmenu.prevent="openLinkInNewTab('/system/services')"
+                @mouseover="showTooltip = true"
+                @mouseleave="showTooltip = false"
+                >Services</span
+              >
+            </q-btn>
+          </q-item>
+          <q-item>
+            <q-btn
+              flat
+              color="primary"
+              to="/system/routines"
+              @click="() => setSection('system', true)"
+            >
+              <q-tooltip
+                anchor="top middle"
+                self="bottom middle"
+                :offset="[0, 10]"
+                >Right click to open in new tab</q-tooltip
+              >
+              <span
+                @contextmenu.prevent="openLinkInNewTab('/system/routines')"
                 @mouseover="showTooltip = true"
                 @mouseleave="showTooltip = false"
                 >Routines</span
@@ -127,8 +148,8 @@
             <q-btn
               flat
               color="primary"
-              to="/services/tasks"
-              @click="() => setSection('services', true)"
+              to="/system/tasks"
+              @click="() => setSection('system', true)"
             >
               <q-tooltip
                 anchor="top middle"
@@ -137,7 +158,7 @@
                 >Right click to open in new tab</q-tooltip
               >
               <span
-                @contextmenu.prevent="openLinkInNewTab('/services/tasks')"
+                @contextmenu.prevent="openLinkInNewTab('/system/tasks')"
                 @mouseover="showTooltip = true"
                 @mouseleave="showTooltip = false"
                 >Tasks</span
@@ -148,8 +169,8 @@
             <q-btn
               flat
               color="primary"
-              to="/services/signals"
-              @click="() => setSection('services', true)"
+              to="/system/signals"
+              @click="() => setSection('system', true)"
             >
               <q-tooltip
                 anchor="top middle"
@@ -158,7 +179,7 @@
                 >Right click to open in new tab</q-tooltip
               >
               <span
-                @contextmenu.prevent="openLinkInNewTab('/services/signals')"
+                @contextmenu.prevent="openLinkInNewTab('/system/signals')"
                 @mouseover="showTooltip = true"
                 @mouseleave="showTooltip = false"
                 >Signals</span
@@ -196,7 +217,7 @@
             <q-btn
               flat
               color="warning"
-              to="/activity/contracts"
+              to="/activity/traces"
               @click="() => setSection('serviceActivity', true)"
             >
               <q-tooltip
@@ -206,10 +227,10 @@
                 >Right click to open in new tab</q-tooltip
               >
               <span
-                @contextmenu.prevent="openLinkInNewTab('/activity/contracts')"
+                @contextmenu.prevent="openLinkInNewTab('/activity/traces')"
                 @mouseover="showTooltip = true"
                 @mouseleave="showTooltip = false"
-                >Contracts</span
+                >Traces</span
               >
             </q-btn>
           </q-item>
@@ -486,7 +507,7 @@ import { useAppStore } from '~/stores/app';
 import ThemeToggleButton from '~/components/ThemeToggleButton.vue';
 
 // State
-const showServices = ref(true);
+const showsystem = ref(true);
 const showserviceActivity = ref(true);
 const showMeta = ref(true);
 const showHelp = ref(false);
@@ -504,8 +525,8 @@ if (process.client) {
 // Methods
 const setSection = (section, disableMini = false) => {
   appStore.setCurrentSection(section);
-  // showContracts.value = section === 'contracts';
-  // showservices.value = section === 'services';
+  // showTraces.value = section === 'Traces';
+  // showsystem.value = section === 'system';
   // showserviceActivity.value = section === 'serviceActivity';
   if (disableMini) {
     miniState.value = false;
@@ -527,11 +548,11 @@ const handleResize = () => {
 // dynamic toolbar color
 const toolbarClass = computed(() => {
   switch (currentSection.value) {
-    case 'services':
+    case 'system':
       return 'bg-primary';
     case 'serviceActivity':
       return 'bg-warning';
-    case 'contracts':
+    case 'Traces':
       return 'bg-secondary';
     case 'meta':
       return 'bg-accent';
@@ -544,11 +565,11 @@ const toolbarClass = computed(() => {
 
 const toolbarClassLight = computed(() => {
   switch (currentSection.value) {
-    case 'services':
+    case 'system':
       return colors.changeAlpha(colors.getPaletteColor('primary'), 0.1);
     case 'serviceActivity':
       return colors.changeAlpha(colors.getPaletteColor('warning'), 0.1);
-    case 'contracts':
+    case 'Traces':
       return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.1);
     case 'meta':
       return colors.changeAlpha(colors.getPaletteColor('accent'), 0.1);

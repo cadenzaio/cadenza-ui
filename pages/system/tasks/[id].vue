@@ -332,7 +332,7 @@ const navigateToItem = (route: string) => {
 
 onMounted(() => {
   const appStore = useAppStore();
-  appStore.setCurrentSection('services');
+  appStore.setCurrentSection('system');
 
   tasksCurrentPage.value = 1; // Always start at page 1 for tasks
   routinesCurrentPage.value = 1; // Always start at page 1 for routines

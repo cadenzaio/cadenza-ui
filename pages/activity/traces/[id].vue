@@ -2,9 +2,9 @@
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
       <template #title>
-        Contract Elements
+        Trace Elements
         <q-btn color="primary" @click="showGenerateDialog = true"
-          >Regenerate Contract</q-btn
+          >Regenerate Trace</q-btn
         >
       </template>
       <div>
@@ -64,15 +64,15 @@
           <div class="justify-around flex w-full gap-4">
             <InfoCard>
               <template #title>
-                {{ contractContext?.name || 'Contract Info' }}
+                {{ traceContext?.name || 'Trace Info' }}
               </template>
               <template #info>
                 <div class="flex-column full-width">
                   <div class="q-mx-md q-my-sm">
                     Issued at:
                     {{
-                      contractContext?.issued
-                        ? formatDate(contractContext.issued)
+                      traceContext?.issued
+                        ? formatDate(traceContext.issued)
                         : ''
                     }}
                   </div>
@@ -80,27 +80,27 @@
                     Fulfilled:
                     <span
                       :class="
-                        contractContext?.fulfilled
+                        traceContext?.fulfilled
                           ? 'text-positive'
                           : 'text-negative'
                       "
                     >
-                      {{ contractContext?.fulfilled ? 'Yes' : 'No' }}
+                      {{ traceContext?.fulfilled ? 'Yes' : 'No' }}
                     </span>
                   </div>
                   <div class="q-mx-md q-my-sm">
                     Fulfilled at:
                     {{
-                      contractContext?.fulfilled_at
-                        ? formatDate(contractContext.fulfilled_at)
+                      traceContext?.fulfilled_at
+                        ? formatDate(traceContext.fulfilled_at)
                         : ''
                     }}
                   </div>
                   <div class="q-mx-md q-my-sm">
-                    Description: {{ contractContext?.description }}
+                    Description: {{ traceContext?.description }}
                   </div>
                   <div class="q-mx-md q-my-sm">
-                    Contract UUID: {{ contractContext?.uuid }}
+                    Trace UUID: {{ traceContext?.uuid }}
                   </div>
                 </div>
               </template>
@@ -111,8 +111,8 @@
                 <template #info>
                   <div class="q-mx-md q-my-sm">
                     <pre>{{
-                      contractContext?.input_context
-                        ? JSON.stringify(contractContext.input_context, null, 2)
+                      traceContext?.input_context
+                        ? JSON.stringify(traceContext.input_context, null, 2)
                         : ''
                     }}</pre>
                   </div>
@@ -123,12 +123,8 @@
                 <template #info>
                   <div class="q-mx-md q-my-sm">
                     <pre>{{
-                      contractContext?.output_context
-                        ? JSON.stringify(
-                            contractContext.output_context,
-                            null,
-                            2
-                          )
+                      traceContext?.output_context
+                        ? JSON.stringify(traceContext.output_context, null, 2)
                         : ''
                     }}</pre>
                   </div>
@@ -164,16 +160,16 @@
             v-else-if="routines.length === 0"
             class="q-pa-md text-center text-grey-6"
           >
-            No active executions found for this contract.
+            No active executions found for this trace.
           </div>
         </div>
-        <!-- <ContractHeatMap :contractId="String(route.params.id)"/> -->
+        <!-- <TraceHeatMap :traceId="String(route.params.id)"/> -->
       </div>
       <q-dialog v-model="showGenerateDialog">
         <q-card>
           <q-card-section>
             <div class="text-h6">Confirm Generate</div>
-            <div>Are you sure you want to generate a contract?</div>
+            <div>Are you sure you want to generate a trace?</div>
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
@@ -208,7 +204,8 @@ function formatDate(date: string) {
 }
 
 const showGenerateDialog = ref(false);
-const contractContext = ref<any>(null);
+// --- Trace page state ---
+const traceContext = ref<any>(null);
 const routines = ref<any[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
@@ -220,55 +217,9 @@ const router = useRouter();
 const route = useRoute();
 const selectedOption = ref('routineMap');
 const routineMap = ref<any>([]);
-
-// Dynamic items for ApexTimeline
 const rangedTimelineItems = ref<any[]>([]);
-
-// Helper to fetch all tasks for a list of routine IDs
-async function fetchTasksForRoutines(routineIds: string[]): Promise<any[]> {
-  const allTasks: any[] = [];
-  for (const id of routineIds) {
-    try {
-      const res = await fetch(
-        `/api/activity/tasks/tasksInRoutines?routineId=${id}`
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data.tasks)) {
-          allTasks.push(...data.tasks);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching tasks for routine', id, err);
-    }
-  }
-  return allTasks;
-}
-const contractData = ref<any>(null);
-
 const nodes = ref<any[]>([]);
-
-const timelineItems = computed(() => {
-  const tasks = routineMap.value?.tasks || [];
-  const taskItems = tasks.map((task: any) => ({
-    label: task.task_name || task.label || task.uuid,
-    nodeType: 'task',
-    started: task.started || task.created || '',
-    ended: task.ended || '',
-    description: task.description || '',
-    id: task.uuid,
-    parentNode: task.routine_execution_id,
-    ...task,
-  }));
-  return taskItems.sort((a: any, b: any) => {
-    const aTime = a.started ? new Date(a.started).getTime() : 0;
-    const bTime = b.started ? new Date(b.started).getTime() : 0;
-    return aTime - bTime;
-  });
-});
-
 const edges = ref<any[]>([]);
-
 const columns = [
   {
     name: 'label',
@@ -320,24 +271,36 @@ const columns = [
     sortable: true,
   },
 ];
-
+const timelineItems = computed(() => {
+  const tasks = routineMap.value?.tasks || [];
+  const taskItems = tasks.map((task: any) => ({
+    label: task.task_name || task.label || task.uuid,
+    nodeType: 'task',
+    started: task.started || task.created || '',
+    ended: task.ended || '',
+    description: task.description || '',
+    id: task.uuid,
+    parentNode: task.routine_execution_id,
+    ...task,
+  }));
+  return taskItems.sort((a: any, b: any) => {
+    const aTime = a.started ? new Date(a.started).getTime() : 0;
+    const bTime = b.started ? new Date(b.started).getTime() : 0;
+    return aTime - bTime;
+  });
+});
 function inspectRoutine(routine: any) {
   router.push(`/activity/routines/${routine.uuid}`);
 }
-
 function inspectInNewTab(routine: any) {
   const url = `/activity/routines/${routine.uuid}`;
   window.open(url, '_blank');
 }
-
 const isRoutinesLoading = ref(false);
 async function loadRoutines(isLoadMore = false) {
-  if (isRoutinesLoading.value) {
-    console.log('[loadRoutines] Prevented concurrent load');
-    return;
-  }
+  if (isRoutinesLoading.value) return;
   isRoutinesLoading.value = true;
-  const contractId = route.params.id;
+  const traceId = route.params.id;
   try {
     if (isLoadMore) {
       loadingMoreData.value = true;
@@ -345,12 +308,12 @@ async function loadRoutines(isLoadMore = false) {
     } else {
       currentPage.value = 1;
     }
+    // Note: backend param is still contractId
     const routinesResponse = await fetch(
-      `/api/activity/routines/activeRoutines?contractId=${contractId}&page=${currentPage.value}&limit=${pageSize}`
+      `/api/activity/routines/activeRoutines?contractId=${traceId}&page=${currentPage.value}&limit=${pageSize}`
     );
     if (!routinesResponse.ok) {
       const errMsg = `[loadRoutines] Routines response not ok: ${routinesResponse.status} ${routinesResponse.statusText}`;
-      console.error(errMsg);
       error.value = errMsg;
       throw new Error(errMsg);
     }
@@ -363,55 +326,36 @@ async function loadRoutines(isLoadMore = false) {
     routineMap.value = routinesData.routineMap || [];
     hasMoreData.value = (routinesData.routines || []).length === pageSize;
   } catch (err) {
-    console.error('[loadRoutines] Error loading routines:', err);
     hasMoreData.value = false;
-    if (!error.value) {
+    if (!error.value)
       error.value = err instanceof Error ? err.message : String(err);
-    }
   } finally {
-    if (isLoadMore) {
-      loadingMoreData.value = false;
-    }
+    if (isLoadMore) loadingMoreData.value = false;
     isRoutinesLoading.value = false;
   }
 }
-
 async function loadMoreRoutines() {
-  if (!isRoutinesLoading.value && hasMoreData.value) {
-    await loadRoutines(true);
-  }
+  if (!isRoutinesLoading.value && hasMoreData.value) await loadRoutines(true);
 }
-
-function onTaskSelected(task: any) {}
-
 function confirmGenerate() {
   showGenerateDialog.value = false;
 }
-
-async function fetchContractContext(contractId: string) {
+async function fetchTraceContext(traceId: string) {
   try {
-    const contractRes = await fetch(
-      `/api/contracts/contracts?uuid=${contractId}`
-    );
+    // Note: backend endpoint is still /contracts/contracts
+    const contractRes = await fetch(`/api/contracts/contracts?uuid=${traceId}`);
     if (contractRes.ok) {
       const apiData = await contractRes.json();
-      contractData.value = apiData;
-      contractContext.value = apiData.contracts?.[0] || null;
-
-      // Set routineMap to the routines, servers, and tasks
+      traceContext.value = apiData.contracts?.[0] || null;
       routineMap.value = {
         routines: apiData.routines || [],
         servers: apiData.servers || [],
         tasks: apiData.tasks || [],
-      } as any;
-
+      };
       // Build nodes and edges for NestedFlowMap using the raw API data
-      const contract = apiData.contracts?.[0];
       const routines = apiData.routines || [];
       const servers = apiData.servers || [];
       const tasks = apiData.tasks || [];
-
-      // Service nodes (no parentNode: contract)
       const serviceNodes = servers.map((srv: any) => ({
         id: srv.uuid,
         type: 'custom',
@@ -419,12 +363,9 @@ async function fetchContractContext(contractId: string) {
         data: { label: srv.processing_graph, isParent: true },
         created: srv.created || '',
         ended: srv.modified || '',
-        // No parentNode
         extent: 'parent',
         expandParent: true,
       }));
-
-      // Routine nodes (parentNode: server)
       const routineNodes = routines.map((routine: any) => ({
         id: routine.uuid,
         type: 'custom',
@@ -437,8 +378,6 @@ async function fetchContractContext(contractId: string) {
         extent: 'parent',
         expandParent: true,
       }));
-
-      // Task nodes (parentNode: routine)
       const taskNodes = tasks.map((task: any) => ({
         id: task.uuid,
         type: 'custom',
@@ -452,8 +391,6 @@ async function fetchContractContext(contractId: string) {
         expandParent: true,
         style: { margin: '50px', padding: '10px' },
       }));
-
-      // Build edges using previous_task_execution_id
       const edgesFromPrevious: any[] = [];
       tasks.forEach((task: any) => {
         if (Array.isArray(task.previous_task_execution_id)) {
@@ -476,15 +413,8 @@ async function fetchContractContext(contractId: string) {
       });
       nodes.value = [...serviceNodes, ...routineNodes, ...taskNodes];
       edges.value = [...edgesFromPrevious];
-
       // Fetch all tasks for all routine IDs and update rangedTimelineItems
       const routineIds = routines.map((r: any) => r.uuid).filter(Boolean);
-      // Debug: log routineIds
-      console.log('[ApexTimeline] routineIds', routineIds);
-      if (!routineIds.length) {
-        console.warn('[ApexTimeline] No routines found for contract');
-      }
-      // Fetch all tasks for all routine IDs and map to ApexTimeline format
       const allTasks: any[] = [];
       for (const id of routineIds) {
         try {
@@ -493,40 +423,20 @@ async function fetchContractContext(contractId: string) {
           );
           if (res.ok) {
             const data = await res.json();
-            console.log(`[ApexTimeline] tasks for routine ${id}:`, data);
             if (Array.isArray(data)) {
               allTasks.push(...data);
             } else if (Array.isArray(data.tasks)) {
               allTasks.push(...data.tasks);
             }
-          } else {
-            console.error(
-              `[ApexTimeline] Failed to fetch tasks for routine ${id}:`,
-              res.status,
-              res.statusText
-            );
           }
-        } catch (err) {
-          console.error(
-            `[ApexTimeline] Error fetching tasks for routine ${id}:`,
-            err
-          );
-        }
+        } catch {}
       }
       rangedTimelineItems.value = allTasks
         .map((task: any) => {
           const started = task.started || task.scheduled || '';
           const ended = task.ended || '';
           const startedTime = new Date(started).getTime();
-          // If started is missing or invalid, skip this item
-          if (!started || isNaN(startedTime)) {
-            console.warn(
-              '[ApexTimeline] Skipping task with invalid started date:',
-              task
-            );
-            return null;
-          }
-          // If ended is missing or invalid, use Date.now() (for running tasks)
+          if (!started || isNaN(startedTime)) return null;
           let endedTime =
             ended && !isNaN(new Date(ended).getTime())
               ? ended
@@ -550,43 +460,28 @@ async function fetchContractContext(contractId: string) {
           };
         })
         .filter(Boolean);
-      console.log(
-        '[ApexTimeline] rangedTimelineItems',
-        rangedTimelineItems.value,
-        allTasks
-      );
     } else {
-      const errMsg = `[fetchContractContext] Contract response not ok: ${contractRes.status} ${contractRes.statusText}`;
-      console.error(errMsg);
+      const errMsg = `[fetchTraceContext] Trace response not ok: ${contractRes.status} ${contractRes.statusText}`;
       error.value = errMsg;
     }
   } catch (err) {
-    console.error(
-      '[fetchContractContext] Error fetching contract context:',
-      err
-    );
     error.value = err instanceof Error ? err.message : String(err);
   }
 }
-
 async function loadAllData() {
-  let contractId = route.params.id;
-  if (Array.isArray(contractId)) contractId = contractId[0];
+  let traceId = route.params.id;
+  if (Array.isArray(traceId)) traceId = traceId[0];
   isLoading.value = true;
   error.value = null;
   await loadRoutines(false);
-  await fetchContractContext(contractId);
+  await fetchTraceContext(traceId);
   isLoading.value = false;
 }
-
 onMounted(loadAllData);
-
 watch(
   () => route.params.id,
   (newId, oldId) => {
-    if (newId !== oldId) {
-      loadAllData();
-    }
+    if (newId !== oldId) loadAllData();
   }
 );
 </script>

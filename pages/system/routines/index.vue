@@ -63,13 +63,13 @@ const pageSize = 50;
 const router = useRouter();
 
 function inspectRoutines(routines: routines) {
-  navigateToItem(`/services/routines/${routines.uuid}`);
+  navigateToItem(`/system/routines/${routines.uuid}`);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(routine: routines) {
-  openLinkInNewTab(`/services/routines/${routine.uuid}`);
+  openLinkInNewTab(`/system/routines/${routine.uuid}`);
 }
 
 const navigateToItem = (route: string) => {
@@ -104,7 +104,7 @@ async function loadMoreRoutines() {
 
 onMounted(async () => {
   const appStore = useAppStore();
-  appStore.setCurrentSection('services');
+  appStore.setCurrentSection('system');
   await loadRoutines(1, false);
 });
 </script>

@@ -181,7 +181,7 @@
                 @click="showStopDialog = true"
               />
               <q-btn
-                v-if="!hideGenerateContractButton"
+                v-if="!hideGenerateTraceButton"
                 size="sm"
                 color="warning"
                 round
@@ -190,7 +190,7 @@
                 @click="showGenerateDialog = true"
               >
                 <q-tooltip anchor="top middle" self="bottom middle">
-                  Generate a contract from this point
+                  Generate a Trace from this point
                 </q-tooltip>
               </q-btn>
               <q-btn
@@ -252,13 +252,13 @@
                 <strong>Product:</strong> {{ selectedRow.product }}
               </div>
 
-              <div v-if="selectedRow?.contract" class="detail-item">
-                <strong>Contract:</strong>
+              <div v-if="selectedRow?.Trace" class="detail-item">
+                <strong>Trace:</strong>
                 <span
                   class="text-secondary cursor-pointer link-text"
-                  @click="navigateToItem(`/contracts/${selectedRow.contract}`)"
+                  @click="navigateToItem(`/Traces/${selectedRow.Trace}`)"
                 >
-                  {{ selectedRow.contract }}
+                  {{ selectedRow.Trace }}
                 </span>
               </div>
 
@@ -287,10 +287,10 @@
               @click="showStopDialog = true"
             />
             <q-btn
-              v-if="!hideGenerateContractButton"
+              v-if="!hideGenerateTraceButton"
               color="secondary"
               icon="refresh"
-              label="Generate Contract"
+              label="Generate Trace"
               @click="showGenerateDialog = true"
             />
             <q-btn
@@ -332,7 +332,7 @@
         <q-card>
           <q-card-section>
             <div class="text-h6">Confirm Generate</div>
-            <div>Are you sure you want to generate a contract?</div>
+            <div>Are you sure you want to generate a Trace?</div>
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
@@ -452,7 +452,7 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  hideGenerateContractButton: {
+  hideGenerateTraceButton: {
     type: Boolean,
     default: false,
   },

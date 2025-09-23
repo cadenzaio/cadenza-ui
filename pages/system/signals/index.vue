@@ -160,13 +160,13 @@ async function loadMoreSignals() {
 const router = useRouter();
 
 function inspectSignal(signal: Signal) {
-  navigateToItem(`/services/signals/${signal.uuid}`);
+  navigateToItem(`/system/signals/${signal.uuid}`);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(signal: Signal) {
-  openLinkInNewTab(`/services/signals/${signal.uuid}`);
+  openLinkInNewTab(`/system/signals/${signal.uuid}`);
 }
 
 const navigateToItem = (route: string) => {
@@ -175,7 +175,7 @@ const navigateToItem = (route: string) => {
 
 onMounted(async () => {
   const appStore = useAppStore();
-  appStore.setCurrentSection('services');
+  appStore.setCurrentSection('system');
   currentPage.value = 1;
   await loadSignals(false);
 });

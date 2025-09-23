@@ -1,15 +1,16 @@
 <template>
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
-      <template #title> Tasks </template>
+      <template #title> Services </template>
       <div class="row q-mx-md">
         <Table
           :columns="columns"
-          :rows="tasks"
+          :rows="graphs"
           row-key="uuid"
-          @inspect-row="inspectTasks"
+          @inspect-row="inspectGraphs"
           @inspect-row-in-new-tab="inspectInNewTab"
-          @loadMoreData="loadMoreTasks"
+          @loadMoreData="loadMoreGraphs"
+          :hideGenerateTraceButton="true"
           :enableInfiniteScroll="true"
           :hasMoreData="hasMoreData"
           :loadingMoreData="loadingMoreData"
@@ -23,8 +24,9 @@
 import { ref, onMounted } from 'vue';
 import { useFetch } from '#app';
 import { useRouter } from '#vue-router';
+import { useAppStore } from '@/stores/app';
 
-interface tasks {
+interface Graph {
   type: string;
   label: string;
   description: string;
@@ -32,16 +34,22 @@ interface tasks {
   executionId: any;
   progress: any;
   uuid: string;
-  service: string;
-  unique: boolean;
-  concurrency: number;
 }
 
-const layout = 'dashboard-layout';
-const selectedTask = ref<tasks[] | undefined>(undefined);
-watch(selectedTask, (newValue) => {});
+interface TableColumn {
+  name: string;
+  label: string;
+  field: string;
+  required: boolean;
+  sortable: boolean;
+}
 
-const columns = [
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+
+const layout = 'dashboard-layout';
+const selectedGraph = ref<Graph[] | undefined>(undefined);
+
+const columns: TableColumn[] = [
   {
     name: 'label',
     label: 'Name',
@@ -50,45 +58,22 @@ const columns = [
     sortable: true,
   },
   {
-    name: 'service',
-    label: 'Service',
-    field: 'service',
+    name: 'description',
+    label: 'Description',
+    field: 'description',
     required: true,
     sortable: false,
   },
-  {
-    name: 'unique',
-    label: 'Unique',
-    field: 'unique',
-    required: true,
-    sortable: true,
-  },
 ];
 
-const tasks = ref<tasks[]>([]);
+const graphs = ref<Graph[]>([]);
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
 
 const currentPage = ref(1);
 const pageSize = 50;
 
-const router = useRouter();
-
-function inspectTasks(tasks: tasks) {
-  navigateToItem(`/services/tasks/${tasks.uuid}`);
-}
-import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
-const { openLinkInNewTab } = useOpenLinkInNewTab();
-
-function inspectInNewTab(tasks: tasks) {
-  openLinkInNewTab(`/services/tasks/${tasks.uuid}`);
-}
-
-const navigateToItem = (route: string) => {
-  router.push(route);
-};
-
-async function loadTasks(isLoadMore = false) {
+async function loadGraphs(isLoadMore = false): Promise<void> {
   try {
     if (isLoadMore) {
       loadingMoreData.value = true;
@@ -96,20 +81,31 @@ async function loadTasks(isLoadMore = false) {
     }
 
     const response = await fetch(
-      `/api/services/tasks/tasks?page=${currentPage.value}&limit=${pageSize}`
+      `/api/services/graphs/graphs?page=${currentPage.value}&limit=${pageSize}`
     );
     if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();
 
+    const mappedData: Graph[] = data.map((r: any) => ({
+      uuid: r.uuid,
+      label: r.label,
+      description: r.description,
+      type: r.type,
+      id: r.id,
+      executionId: r.executionId,
+      progress: r.progress,
+    }));
+
     if (isLoadMore) {
-      tasks.value = [...tasks.value, ...data];
+      graphs.value = [...graphs.value, ...mappedData];
     } else {
-      tasks.value = data;
+      graphs.value = mappedData;
     }
 
+    // Check if we have more data
     hasMoreData.value = data.length === pageSize;
   } catch (error) {
-    console.error('Error loading tasks:', error);
+    console.error('Error loading graphs:', error);
     hasMoreData.value = false;
   } finally {
     if (isLoadMore) {
@@ -118,15 +114,29 @@ async function loadTasks(isLoadMore = false) {
   }
 }
 
-async function loadMoreTasks() {
-  await loadTasks(true);
+async function loadMoreGraphs() {
+  await loadGraphs(true);
 }
+
+const router = useRouter();
+function inspectGraphs(graph: Graph): void {
+  navigateToItem(`/system/services/${graph.uuid}`);
+}
+
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
+function inspectInNewTab(graph: Graph): void {
+  openLinkInNewTab(`/system/services/${graph.uuid}`);
+}
+const navigateToItem = (route: string) => {
+  router.push(route);
+};
 
 // Fetch server stats and set the current section on component mount
 onMounted(async () => {
   const appStore = useAppStore();
-  appStore.setCurrentSection('services');
+  appStore.setCurrentSection('system');
   currentPage.value = 1; // Always start at page 1 on mount
-  await loadTasks(false);
+  await loadGraphs(false);
 });
 </script>

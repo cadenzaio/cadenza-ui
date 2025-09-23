@@ -271,7 +271,7 @@ const isLoading = ref(false);
 const error = ref<string | null>(null);
 onMounted(async () => {
   const appStore = useAppStore();
-  appStore.setCurrentSection('services');
+  appStore.setCurrentSection('system');
 
   currentPage.value = 1; // Always start at page 1 on mount
 

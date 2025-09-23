@@ -192,7 +192,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -226,7 +226,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -260,7 +260,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -294,7 +294,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -339,7 +339,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -367,7 +367,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -394,7 +394,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -426,7 +426,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -436,10 +436,10 @@ const tipsByRoute: Record<string, Tip> = {
       },
     ],
   },
-  '/agents/contracts': {
-    title: 'Agent Contracts',
+  '/agents/traces': {
+    title: 'Agent traces',
     body: [
-      { text: 'View contracts for your agents. For more help, visit the ' },
+      { text: 'View traces for your agents. For more help, visit the ' },
       {
         text: 'FAQ',
         link: '/help/terms',
@@ -458,7 +458,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -651,7 +651,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -685,7 +685,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -734,7 +734,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -783,7 +783,7 @@ const tipsByRoute: Record<string, Tip> = {
         btn: true,
         icon: 'refresh',
         color: 'warning',
-        text: '- Generate a contract',
+        text: '- Generate a trace',
       },
       {
         btn: true,
@@ -913,11 +913,11 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
   },
-  '/agents/contracts/[id]': {
-    title: 'Agent Contract Details',
+  '/agents/traces/[id]': {
+    title: 'Agent trace Details',
     body: [
       {
-        text: 'Detailed information about a specific agent contract. For more help, visit the ',
+        text: 'Detailed information about a specific agent trace. For more help, visit the ',
       },
       {
         text: 'Terminology Page',
