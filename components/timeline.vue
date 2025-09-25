@@ -8,11 +8,24 @@
       :side="entry.layer_index % 2 === 0 ? 'left' : 'right'"
       :style="{
         backgroundColor:
-          entry.layer_index % 2 === 0 ? 'rgba(128, 128, 128, 0.1)' : '',
+          entry.timelineType === 'heading'
+            ? 'rgba(0, 123, 255, 0.10)'
+            : entry.layer_index % 2 === 0
+            ? 'rgba(128, 128, 128, 0.1)'
+            : '',
+        borderLeft: entry.timelineType === 'heading' ? '4px solid #007bff' : '',
+        fontWeight: entry.timelineType === 'heading' ? 'bold' : 'normal',
       }"
       @click="onTaskSelected(entry)"
     >
-      <q-badge v-if="entry.description" color="primary">
+      <q-badge
+        v-if="entry.timelineType === 'heading'"
+        color="blue-8"
+        class="q-mb-sm"
+      >
+        {{ entry.nodeType === 'service' ? 'Service' : 'Routine' }}
+      </q-badge>
+      <q-badge v-else-if="entry.description" color="primary">
         {{ getDescription(entry) }}
       </q-badge>
       <blockquote>

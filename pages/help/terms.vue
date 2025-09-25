@@ -11,9 +11,7 @@
                 All links and Menus are color coded to indicate their function:
               </p>
               <ul>
-                <li>
-                  <span class="text-secondary">Green</span> - Agents/Contracts
-                </li>
+                <li><span class="text-secondary">Green</span> - Home</li>
                 <li>
                   <span class="text-primary">Blue</span> - Static Services
                 </li>
@@ -82,17 +80,17 @@
                     round
                     size="sm"
                     icon="refresh"
-                    color="secondary"
+                    color="warning"
                     class="q-ma-xs"
-                  />- Generate a contract
+                  />- Generate a trace
                 </li>
                 <li>
                   <q-btn
                     round
                     size="sm"
                     icon="arrow_outward"
-                    color="orange"
-                    class="q-ma-xs"
+                    class="q-ma-xs gradient-fade-btn"
+                    :style="inspectBtnStyle"
                   />- Inspect item
                 </li>
                 <li>
@@ -121,20 +119,11 @@
               <p>Here are some key terms used throughout the site:</p>
               <ul>
                 <li>
-                  <span class="text-secondary">Agent</span> - The owner assinged
-                  to a contract
+                  <span class="text-secondary">Home</span> - The start page
                 </li>
                 <li>
                   <span class="text-primary">Service</span> - A compilation of
                   routines and/or tasks that run on a server
-                </li>
-                <li>
-                  <span class="text-primary">Routine</span> - A set of tasks
-                  that run in a service
-                </li>
-                <li>
-                  <span class="text-primary">Task</span> - A single action that
-                  is part of a routine
                 </li>
                 <li>
                   <span class="text-warning">Server</span> - A computer that
@@ -145,10 +134,22 @@
                   data being processed before or after
                 </li>
                 <li>
-                  <span class="text-warning">Contract</span> - A implementation
-                  of a service on a server
+                  <span class="text-warning">Traces</span> - A implementation of
+                  a service on a server
                 </li>
                 <li><span class="text-accent">Meta</span> - Meta data</li>
+                <li>
+                  <span :style="dynamicColor">Routine</span> - A set of tasks
+                  that run in a service
+                </li>
+                <li>
+                  <span :style="dynamicColor">Task</span> - A single action that
+                  is part of a routine
+                </li>
+                <li>
+                  <span :style="dynamicColor">Signal</span> - A trigger that
+                  starts another action
+                </li>
               </ul>
             </div>
           </template>
@@ -158,23 +159,99 @@
   </NuxtLayout>
 </template>
 
-<script>
-import { ref, onMounted, watch } from 'vue';
+<script setup>
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useAppStore } from '~/stores/app';
 import { useRoute } from '#app';
 
+const appStore = useAppStore();
 const route = useRoute();
 
+// Gradient color cycling for Inspect item button
+const inspectColors = [
+  '#1976d2', // blue
+  '#f2c037', // orange
+  '#8e24aa', // purple
+];
+const currentIdx = ref(0);
+const nextIdx = ref(1);
+
+let progress = ref(0); // 0 to 1
+let isPaused = ref(true);
+let pauseTimeout = null;
+let animationFrame = null;
+
+function lerpColor(a, b, t) {
+  // a, b: hex color strings; t: 0-1
+  const ah = a.replace('#', '');
+  const bh = b.replace('#', '');
+  const ar = parseInt(ah.substring(0, 2), 16);
+  const ag = parseInt(ah.substring(2, 4), 16);
+  const ab = parseInt(ah.substring(4, 6), 16);
+  const br = parseInt(bh.substring(0, 2), 16);
+  const bg = parseInt(bh.substring(2, 4), 16);
+  const bb = parseInt(bh.substring(4, 6), 16);
+  const rr = Math.round(ar + (br - ar) * t);
+  const rg = Math.round(ag + (bg - ag) * t);
+  const rb = Math.round(ab + (bb - ab) * t);
+  return `rgb(${rr},${rg},${rb})`;
+}
+
+const inspectBtnStyle = computed(() => {
+  const colorA = inspectColors[currentIdx.value];
+  const colorB = inspectColors[nextIdx.value];
+  const bg = lerpColor(colorA, colorB, progress.value);
+  return {
+    background: bg,
+    color: '#fff',
+    transition: 'background 0.5s linear',
+  };
+});
+
+const dynamicColor = computed(() => {
+  const colorA = inspectColors[currentIdx.value];
+  const colorB = inspectColors[nextIdx.value];
+  const colors = lerpColor(colorA, colorB, progress.value);
+  return {
+    color: colors,
+  };
+});
+
+function startPause() {
+  isPaused.value = true;
+  pauseTimeout = setTimeout(() => {
+    isPaused.value = false;
+    animationFrame = requestAnimationFrame(animateGradient);
+  }, 2000); // 2s pause
+}
+
+function animateGradient() {
+  if (isPaused.value) return;
+  progress.value += 0.02; // adjust for smoothness/speed
+  if (progress.value >= 1) {
+    progress.value = 0;
+    currentIdx.value = nextIdx.value;
+    nextIdx.value = (nextIdx.value + 1) % inspectColors.length;
+    startPause();
+    return;
+  }
+  animationFrame = requestAnimationFrame(animateGradient);
+}
+
 onMounted(() => {
-  const appStore = useAppStore();
   appStore.setCurrentSection('help');
+  startPause();
+});
+
+onBeforeUnmount(() => {
+  if (animationFrame) cancelAnimationFrame(animationFrame);
+  if (pauseTimeout) clearTimeout(pauseTimeout);
 });
 
 watch(
   () => route.fullPath,
   (newPath) => {
     if (newPath === '/help/terms') {
-      const appStore = useAppStore();
       appStore.setCurrentSection('help');
     }
   }

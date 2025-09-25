@@ -3,7 +3,12 @@
     <NuxtLayout name="dashboard-main-layout">
       <template #title> System </template>
       <div v-show="selectedOption === 'routineMap'">
-        <NestedFlowMap v-if="nodes.length > 0" :nodes="nodes" :edges="edges" />
+        <NestedFlowMap
+          v-if="nodes.length > 0"
+          :nodes="nodes"
+          :edges="edges"
+          style="height: 80dvh !important"
+        />
       </div>
     </NuxtLayout>
   </NuxtLayout>

@@ -146,6 +146,82 @@ const nextMorphStep: Record<MorphState, MorphState> = {
 };
 
 const tipsByRoute: Record<string, Tip> = {
+  '/activity/signals/[id]': {
+    title: 'Signal Execution Details',
+    body: [
+      {
+        text: 'Detailed information about a specific signal execution. For more help, visit the ',
+      },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+  },
+  '/activity/traces/[id]': {
+    title: 'Agent Trace Details',
+    body: [
+      {
+        text: 'Detailed information about a specific trace. For more help, visit the ',
+      },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+  },
+  '/activity/services/[id]': {
+    title: 'Service Execution Details',
+    body: [
+      {
+        text: 'Detailed information about a specific service execution. For more help, visit the ',
+      },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+  },
+  '/system/tasks/[id]': {
+    title: 'Static Task Details',
+    body: [
+      {
+        text: 'Detailed information about a specific static task. For more help, visit the ',
+      },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+  },
+  '/system/routines/[id]': {
+    title: 'Static Routine Details',
+    body: [
+      {
+        text: 'Detailed information about a specific static routine. For more help, visit the ',
+      },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+  },
+  // Home
   '/': {
     title: 'Welcome!',
     body: [
@@ -174,6 +250,150 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
   },
+  // System
+  '/system': {
+    title: 'System',
+    body: [
+      { text: 'System overview and management. For more help, visit the ' },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+  },
+  '/system/services': {
+    title: 'Services',
+    body: [
+      { text: 'Manage your static services here. For more help, visit the ' },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+    list: [
+      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
+      {
+        btn: true,
+        icon: 'refresh',
+        color: 'warning',
+        text: '- Generate a trace',
+      },
+      {
+        btn: true,
+        icon: 'arrow_outward',
+        color: 'warning',
+        text: '- Inspect item',
+      },
+    ],
+  },
+  '/system/signals': {
+    title: 'Static Signals',
+    body: [
+      { text: 'Browse and manage static signals. For more help, visit the ' },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+    list: [
+      { icon: 'check', color: 'green', text: '- Complete' },
+      { icon: 'play_arrow', color: 'blue', text: '- Running' },
+      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
+      { icon: 'close', color: 'red', text: '- Failed' },
+      {
+        btn: true,
+        icon: 'refresh',
+        color: 'warning',
+        text: '- Generate a trace',
+      },
+      {
+        btn: true,
+        icon: 'arrow_outward',
+        color: 'primary',
+        text: '- Inspect item',
+      },
+    ],
+  },
+  '/system/routines': {
+    title: 'Static Routines',
+    body: [
+      { text: 'Browse and manage static routines. For more help, visit the ' },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+    list: [
+      {
+        btn: true,
+        icon: 'refresh',
+        color: 'warning',
+        text: '- Generate a trace',
+      },
+      {
+        btn: true,
+        icon: 'arrow_outward',
+        color: 'primary',
+        text: '- Inspect item',
+      },
+    ],
+  },
+  '/system/signals/[id]': {
+    title: 'Static Signal Details',
+    body: [
+      {
+        text: 'Detailed information about a specific static signal. For more help, visit the ',
+      },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+  },
+  '/system/tasks': {
+    title: 'Static Tasks',
+    body: [
+      { text: 'Browse and manage static tasks. For more help, visit the ' },
+      {
+        text: 'Terminology Page',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+    list: [
+      { icon: 'fiber_manual_record', color: 'green', text: '- Unique' },
+      {
+        btn: true,
+        icon: 'refresh',
+        color: 'warning',
+        text: '- Generate a trace',
+      },
+      {
+        btn: true,
+        icon: 'arrow_outward',
+        color: 'primary',
+        text: '- Inspect item',
+      },
+    ],
+  },
+  // Service Activity
   '/activity': {
     title: 'Service Activity',
     body: [
@@ -202,11 +422,39 @@ const tipsByRoute: Record<string, Tip> = {
       },
     ],
   },
-  '/activity/tasks': {
-    title: 'Task Executions',
+  '/activity/traces': {
+    title: 'Agent traces',
+    body: [
+      { text: 'View traces for your agents. For more help, visit the ' },
+      {
+        text: 'FAQ',
+        link: '/help/terms',
+        class: 'text-primary',
+        style: 'text-decoration: underline;',
+      },
+      { text: '.' },
+    ],
+    list: [
+      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
+      {
+        btn: true,
+        icon: 'refresh',
+        color: 'warning',
+        text: '- Generate a trace',
+      },
+      {
+        btn: true,
+        icon: 'arrow_outward',
+        color: 'warning',
+        text: '- Inspect item',
+      },
+    ],
+  },
+  '/activity/routines': {
+    title: 'Routine Executions',
     body: [
       {
-        text: 'View and manage all task executions. For more help, visit the ',
+        text: 'View and manage all routine executions. For more help, visit the ',
       },
       {
         text: 'Terminology Page',
@@ -236,11 +484,11 @@ const tipsByRoute: Record<string, Tip> = {
       },
     ],
   },
-  '/activity/routines': {
-    title: 'Routine Executions',
+  '/activity/tasks': {
+    title: 'Task Executions',
     body: [
       {
-        text: 'View and manage all routine executions. For more help, visit the ',
+        text: 'View and manage all task executions. For more help, visit the ',
       },
       {
         text: 'Terminology Page',
@@ -304,170 +552,9 @@ const tipsByRoute: Record<string, Tip> = {
       },
     ],
   },
-  '/activity/servers': {
-    title: 'Servers',
-    body: [
-      { text: 'Inspect server details and status. For more help, visit the ' },
-      {
-        text: 'Terminology Page',
-        link: '/help/terms',
-        class: 'text-primary',
-        style: 'text-decoration: underline;',
-      },
-      { text: '.' },
-    ],
-  },
-  '/services': {
-    title: 'Services',
-    body: [
-      { text: 'Manage your static services here. For more help, visit the ' },
-      {
-        text: 'Terminology Page',
-        link: '/help/terms',
-        class: 'text-primary',
-        style: 'text-decoration: underline;',
-      },
-      { text: '.' },
-    ],
-    list: [
-      { icon: 'check', color: 'green', text: '- Complete' },
-      { icon: 'play_arrow', color: 'blue', text: '- Running' },
-      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
-      { icon: 'close', color: 'red', text: '- Failed' },
-      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
-      {
-        btn: true,
-        icon: 'refresh',
-        color: 'warning',
-        text: '- Generate a trace',
-      },
-      {
-        btn: true,
-        icon: 'arrow_outward',
-        color: 'warning',
-        text: '- Inspect item',
-      },
-    ],
-  },
-  '/services/tasks': {
-    title: 'Static Tasks',
-    body: [
-      { text: 'Browse and manage static tasks. For more help, visit the ' },
-      {
-        text: 'Terminology Page',
-        link: '/help/terms',
-        class: 'text-primary',
-        style: 'text-decoration: underline;',
-      },
-      { text: '.' },
-    ],
-    list: [
-      { icon: 'fiber_manual_record', color: 'green', text: '- Unique' },
-      {
-        btn: true,
-        icon: 'refresh',
-        color: 'warning',
-        text: '- Generate a trace',
-      },
-      {
-        btn: true,
-        icon: 'arrow_outward',
-        color: 'primary',
-        text: '- Inspect item',
-      },
-    ],
-  },
-  '/services/routines': {
-    title: 'Static Routines',
-    body: [
-      { text: 'Browse and manage static routines. For more help, visit the ' },
-      {
-        text: 'Terminology Page',
-        link: '/help/terms',
-        class: 'text-primary',
-        style: 'text-decoration: underline;',
-      },
-      { text: '.' },
-    ],
-    list: [
-      {
-        btn: true,
-        icon: 'refresh',
-        color: 'warning',
-        text: '- Generate a trace',
-      },
-      {
-        btn: true,
-        icon: 'arrow_outward',
-        color: 'primary',
-        text: '- Inspect item',
-      },
-    ],
-  },
-  '/agents': {
-    title: 'Agents',
-    body: [
-      { text: 'View and manage your agents. For more help, visit the ' },
-      {
-        text: 'FAQ',
-        link: '/help/terms',
-        class: 'text-primary',
-        style: 'text-decoration: underline;',
-      },
-      { text: '.' },
-    ],
-    list: [
-      { icon: 'check', color: 'green', text: '- Complete' },
-      { icon: 'play_arrow', color: 'blue', text: '- Running' },
-      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
-      { icon: 'close', color: 'red', text: '- Failed' },
-      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
-      {
-        btn: true,
-        icon: 'refresh',
-        color: 'warning',
-        text: '- Generate a trace',
-      },
-      {
-        btn: true,
-        icon: 'arrow_outward',
-        color: 'warning',
-        text: '- Inspect item',
-      },
-    ],
-  },
-  '/agents/traces': {
-    title: 'Agent traces',
-    body: [
-      { text: 'View traces for your agents. For more help, visit the ' },
-      {
-        text: 'FAQ',
-        link: '/help/terms',
-        class: 'text-primary',
-        style: 'text-decoration: underline;',
-      },
-      { text: '.' },
-    ],
-    list: [
-      { icon: 'check', color: 'green', text: '- Complete' },
-      { icon: 'play_arrow', color: 'blue', text: '- Running' },
-      { icon: 'schedule', color: 'warning', text: '- Scheduled' },
-      { icon: 'close', color: 'red', text: '- Failed' },
-      { btn: true, icon: 'stop', color: 'red', text: '- Stop' },
-      {
-        btn: true,
-        icon: 'refresh',
-        color: 'warning',
-        text: '- Generate a trace',
-      },
-      {
-        btn: true,
-        icon: 'arrow_outward',
-        color: 'warning',
-        text: '- Inspect item',
-      },
-    ],
-  },
+  // Meta
+  // ...existing code...
+  // Help
   '/help': {
     title: 'Help',
     body: [
@@ -488,11 +575,11 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
   },
-  '/help/faq': {
-    title: 'FAQ',
+  '/help/processingGraph': {
+    title: 'Processing Graph Guide',
     body: [
       {
-        text: 'Frequently asked questions about the dashboard. For more help, visit ',
+        text: 'Learn about processing graphs and their chapters. For more help, visit ',
       },
       {
         text: 'Terminology Page',
@@ -518,11 +605,11 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
   },
-  '/help/tutorials': {
-    title: 'Tutorials',
+  '/help/faq': {
+    title: 'FAQ',
     body: [
       {
-        text: 'Step-by-step guides to help you get started. For more help, visit ',
+        text: 'Frequently asked questions about the dashboard. For more help, visit ',
       },
       {
         text: 'Terminology Page',
@@ -533,36 +620,7 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
   },
-  '/help/examples': {
-    title: 'Examples',
-    body: [
-      {
-        text: 'See practical examples of how to use the dashboard. For more help, visit ',
-      },
-      {
-        text: 'Terminology Page',
-        link: '/help/terms',
-        class: 'text-primary',
-        style: 'text-decoration: underline;',
-      },
-      { text: '.' },
-    ],
-  },
-  '/help/processingGraph': {
-    title: 'Processing Graph Guide',
-    body: [
-      {
-        text: 'Learn about processing graphs and their chapters. For more help, visit ',
-      },
-      {
-        text: 'Terminology Page',
-        link: '/help/terms',
-        class: 'text-primary',
-        style: 'text-decoration: underline;',
-      },
-      { text: '.' },
-    ],
-  },
+  // ...existing code...
   '/help/processingGraph/chapter1': {
     title: 'Processing Graph - Chapter 1',
     body: [
@@ -853,7 +911,7 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
   },
-  '/services/[id]': {
+  '/system/services/[id]': {
     title: 'Service Details',
     body: [
       {
@@ -868,7 +926,7 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
   },
-  '/services/tasks/[id]': {
+  '/system/services/tasks/[id]': {
     title: 'Static Task Details',
     body: [
       {
@@ -883,7 +941,7 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
   },
-  '/services/routines/[id]': {
+  '/system/services/routines/[id]': {
     title: 'Static Routine Details',
     body: [
       {

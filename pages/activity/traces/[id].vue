@@ -272,7 +272,33 @@ const columns = [
   },
 ];
 const timelineItems = computed(() => {
+  const services = routineMap.value?.servers || [];
+  const routines = routineMap.value?.routines || [];
   const tasks = routineMap.value?.tasks || [];
+
+  const serviceItems = services.map((service: any) => ({
+    label: service.processing_graph || service.label || service.uuid,
+    nodeType: 'service',
+    started: service.created || '',
+    ended: service.modified || '',
+    description: service.description || '',
+    id: service.uuid,
+    timelineType: 'heading',
+    ...service,
+  }));
+
+  const routineItems = routines.map((routine: any) => ({
+    label: routine.description || routine.label || routine.uuid,
+    nodeType: 'routine',
+    started: routine.created || '',
+    ended: routine.ended || '',
+    description: routine.description || '',
+    id: routine.uuid,
+    parentNode: routine.server_id,
+    timelineType: 'heading',
+    ...routine,
+  }));
+
   const taskItems = tasks.map((task: any) => ({
     label: task.task_name || task.label || task.uuid,
     nodeType: 'task',
@@ -281,9 +307,13 @@ const timelineItems = computed(() => {
     description: task.description || '',
     id: task.uuid,
     parentNode: task.routine_execution_id,
+    timelineType: 'body',
     ...task,
   }));
-  return taskItems.sort((a: any, b: any) => {
+
+  // Combine and sort by start time
+  const allItems = [...serviceItems, ...routineItems, ...taskItems];
+  return allItems.sort((a: any, b: any) => {
     const aTime = a.started ? new Date(a.started).getTime() : 0;
     const bTime = b.started ? new Date(b.started).getTime() : 0;
     return aTime - bTime;
