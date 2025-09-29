@@ -32,14 +32,14 @@
               :key="'body-' + idx"
             >
               <q-icon
-                v-if="part.icon"
+                v-if="isTipPart(part) && part.icon"
                 :name="part.icon"
                 :color="part.color"
                 :size="part.size || 'sm'"
                 class="q-ma-xs"
               />
               <q-btn
-                v-else-if="part.btn"
+                v-else-if="isTipPart(part) && part.btn"
                 round
                 :size="part.size || 'sm'"
                 :icon="part.icon"
@@ -47,15 +47,18 @@
                 class="q-ma-xs"
               />
               <NuxtLink
-                v-else-if="part.link"
+                v-else-if="isTipPart(part) && typeof part.link === 'string'"
                 :to="part.link"
                 :class="part.class || 'text-primary'"
                 :style="part.style || 'text-decoration: underline;'"
               >
                 {{ part.text }}
               </NuxtLink>
-              <span v-else-if="part.text" v-html="part.text"></span>
-              <span v-else>{{ part }}</span>
+              <span
+                v-else-if="isTipPart(part) && typeof part.text === 'string'"
+                v-html="part.text"
+              ></span>
+              <span v-else>{{ typeof part === 'string' ? part : '' }}</span>
             </template>
           </template>
           <ul v-if="currentTip.list" style="margin: 0 0 0 1em; padding: 0">
@@ -98,14 +101,18 @@
             :key="'bodypart-' + idx"
           >
             <NuxtLink
-              v-if="part.link"
+              v-if="isTipPart(part) && typeof part.link === 'string'"
               :to="part.link"
               :class="part.class || 'text-primary'"
               :style="part.style || 'text-decoration: underline;'"
             >
               {{ part.text }}
             </NuxtLink>
-            <span v-else>{{ part.text }}</span>
+            <span
+              v-else-if="isTipPart(part) && typeof part.text === 'string'"
+              >{{ part.text }}</span
+            >
+            <span v-else>{{ typeof part === 'string' ? part : '' }}</span>
           </template>
         </div>
         <span v-else v-html="currentTip.body"></span>
@@ -119,6 +126,9 @@
 </template>
 
 <script setup lang="ts">
+function isTipPart(part: unknown): part is TipPart {
+  return typeof part === 'object' && part !== null && !Array.isArray(part);
+}
 import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 

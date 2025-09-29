@@ -163,7 +163,6 @@
             No active executions found for this trace.
           </div>
         </div>
-        <!-- <TraceHeatMap :traceId="String(route.params.id)"/> -->
       </div>
       <q-dialog v-model="showGenerateDialog">
         <q-card>

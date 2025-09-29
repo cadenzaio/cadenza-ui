@@ -132,9 +132,9 @@ interface ExecutionTime {
 
 const layout = 'dashboard-layout';
 const selectedItem = ref<Item | null>(null);
-const executionTimeSeries = ref<
-  { name: string; data: (string | number)[][] }[]
->([]);
+const executionTimeSeries = ref<{ name: string; data: [number, number][] }[]>(
+  []
+);
 const route = useRoute();
 interface HeatmapData {
   chartSeries: any[];
@@ -164,7 +164,20 @@ if (executionError.value) {
   'series' in executionData.value &&
   Array.isArray(executionData.value.series)
 ) {
-  executionTimeSeries.value = executionData.value.series;
+  executionTimeSeries.value = executionData.value.series.map((series: any) => ({
+    name: series.name,
+    data: Array.isArray(series.data)
+      ? series.data
+          .filter(
+            (d: any) =>
+              Array.isArray(d) &&
+              d.length === 2 &&
+              typeof d[0] === 'number' &&
+              typeof d[1] === 'number'
+          )
+          .map((d: any) => [d[0], d[1]])
+      : [],
+  }));
 }
 
 interface Routine {
