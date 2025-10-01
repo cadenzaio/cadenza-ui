@@ -157,9 +157,7 @@ const nodeSelectedBorder = computed(() =>
   overflow-wrap: break-word;
   transition: background 0.2s;
   padding: 5px;
-
-  height: 100%;
-  width: 100%;
+  max-width: 60px;
 }
 .custom-node:hover {
   filter: brightness(0.75);
