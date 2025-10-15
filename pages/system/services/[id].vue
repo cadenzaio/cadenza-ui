@@ -10,7 +10,7 @@
           :items="tasksWithId"
           id-field="uuid"
           label-field="name"
-          previous-field="previous_task_execution_id"
+          previous-field="previous_task_execution_name"
           @item-selected="onTaskSelected"
         />
         <div v-if="error" class="text-negative q-pa-md">
@@ -46,7 +46,7 @@
           :columns="columns"
           :rows="activeProcesses"
           row-key="uuid"
-          @inspect-row="inspectServer"
+          @inspect-row="inspectService"
           @inspect-row-in-new-tab="inspectInNewTab"
           @loadMoreData="loadMoreServers"
           :enableInfiniteScroll="true"
@@ -57,7 +57,7 @@
             <tr
               v-for="row in props.rows"
               :key="row.uuid"
-              @click="inspectServer(row)"
+              @click="inspectService(row)"
               @contextmenu.prevent="
                 openLinkInNewTab(`/activity/services/${row.uuid}`)
               "
@@ -82,7 +82,7 @@ import { useAppStore } from '~/stores/app';
 
 const router = useRouter();
 const route = useRoute();
-const activeProcesses = ref<Server[]>([]);
+const activeProcesses = ref<Service[]>([]);
 const tasksInService = ref<Task[]>([]);
 const tasksWithId = computed(() =>
   tasksInService.value.map((task) => ({
@@ -90,7 +90,7 @@ const tasksWithId = computed(() =>
     id: task.uuid,
   }))
 );
-const processingGraph = route.params.id as string;
+const service = route.params.id as string;
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
 const currentPage = ref(1);
@@ -127,25 +127,25 @@ const columns = [
   },
 ];
 
-function inspectServer(server: Server) {
-  navigateToItem(`/activity/services/${server.uuid}`);
+function inspectService(service: Service) {
+  navigateToItem(`/activity/services/${service.uuid}`);
 }
 
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
-function inspectInNewTab(server: Server) {
-  openLinkInNewTab(`/activity/services/${server.uuid}`);
+function inspectInNewTab(service: Service) {
+  openLinkInNewTab(`/activity/services/${service.uuid}`);
 }
 
-function onServerSelected(server: any) {
-  // Navigate to the server details page when a server node is selected in the FlowMap
-  navigateToItem(`/activity/servers/${server.uuid || server.id}`);
+function onServiceSelected(service: any) {
+  // Navigate to the service details page when a service node is selected in the FlowMap
+  navigateToItem(`/activity/services/${service.uuid || service.id}`);
 }
 
 function onTaskSelected(task: any) {
   // Navigate to the task details page when a task node is selected in the FlowMap
-  navigateToItem(`/services/tasks/${task.uuid || task.id}`);
+  navigateToItem(`/services/tasks/${task.name}`);
 }
 
 const navigateToItem = (route: string) => {
@@ -161,8 +161,8 @@ const fetchFilteredServers = async (isLoadMore = false): Promise<void> => {
 
     error.value = null;
     const response = await fetch(
-      `/api/activity/servers/activeServers?processingGraph=${encodeURIComponent(
-        processingGraph
+      `/api/activity/servers/activeServers?service=${encodeURIComponent(
+        service
       )}&page=${currentPage.value}&limit=${pageSize}`
     );
     if (!response.ok) throw new Error('Failed to fetch filtered servers');
@@ -200,7 +200,7 @@ const fetchTasksInService = async (): Promise<void> => {
     error.value = null;
     const response = await fetch(
       `/api/services/tasksInService?serviceName=${encodeURIComponent(
-        processingGraph
+        service
       )}`
     );
     if (!response.ok) throw new Error('Failed to fetch tasks in service');
@@ -219,7 +219,7 @@ const fetchGraphDetails = async (): Promise<void> => {
   try {
     error.value = null;
     const response = await fetch(
-      `/api/services/graphs/${encodeURIComponent(processingGraph)}`
+      `/api/services/graphs/${encodeURIComponent(service)}`
     );
     if (!response.ok) throw new Error('Failed to fetch graph details');
     const data = await response.json();
@@ -240,9 +240,10 @@ interface Item {
   deleted: boolean;
   created: string;
   deletedStatus: string;
+  displayName: string;
 }
 
-interface Server {
+interface Service {
   uuid: string;
   graph: string;
   address: string;

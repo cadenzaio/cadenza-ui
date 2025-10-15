@@ -229,8 +229,11 @@
 
           <q-card-section>
             <div class="details-content">
-              <div class="detail-item">
+              <div v-if="selectedRow?.uuid" class="detail-item">
                 <strong>ID:</strong> {{ selectedRow?.uuid }}
+              </div>
+              <div v-if="selectedRow?.label" class="detail-item">
+                <strong>Name:</strong> {{ selectedRow?.label }}
               </div>
 
               <div v-if="selectedRow?.description" class="detail-item">

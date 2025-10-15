@@ -6,7 +6,7 @@
         <Table
           :columns="columns"
           :rows="tasks"
-          row-key="uuid"
+          row-key="name"
           @inspect-row="inspectTasks"
           @inspect-row-in-new-tab="inspectInNewTab"
           @loadMoreData="loadMoreTasks"
@@ -31,10 +31,10 @@ interface tasks {
   id: any;
   executionId: any;
   progress: any;
-  uuid: string;
   service: string;
   unique: boolean;
   concurrency: number;
+  name: string;
 }
 
 const layout = 'dashboard-layout';
@@ -43,9 +43,9 @@ watch(selectedTask, (newValue) => {});
 
 const columns = [
   {
-    name: 'label',
+    name: 'name',
     label: 'Name',
-    field: 'label',
+    field: 'name',
     required: true,
     sortable: true,
   },
@@ -75,13 +75,13 @@ const pageSize = 50;
 const router = useRouter();
 
 function inspectTasks(tasks: tasks) {
-  navigateToItem(`/system/tasks/${tasks.uuid}`);
+  navigateToItem(`/system/tasks/${tasks.name}`);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(tasks: tasks) {
-  openLinkInNewTab(`/system/tasks/${tasks.uuid}`);
+  openLinkInNewTab(`/system/tasks/${tasks.name}`);
 }
 
 const navigateToItem = (route: string) => {

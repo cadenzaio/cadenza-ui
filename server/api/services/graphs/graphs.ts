@@ -7,19 +7,23 @@ let client: pg.Client | null = null;
 async function getgraphs(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
   const query = `
-    SELECT * FROM processing_graph
+    SELECT * FROM service
     ORDER BY name ASC
     LIMIT $1 OFFSET $2
   `;
   const res = await client!.query(query, [limit, offset]);
-
   // Map the results to match the ListItem interface
+
   return res.rows.map((row) => ({
-    type: 'graph',
-    label: row.name,
+    type: 'service',
+    label: row.display_name || row.name,
+    uuid: row.uuid,
     description: row.description,
-    uuid: row.name,
+    displayName: row.display_name,
+    // include canonical name for routing/navigation
+    name: row.name,
   }));
+
 }
 
 // Event handler

@@ -10,8 +10,8 @@ async function getClient() {
   return client;
 }
 
-// Get RoutineExecutions by routine_id
-async function getRoutineMap(routineId: string) {
+// Get RoutineExecutions by routine_Name
+async function getRoutineMap(routineName: string) {
   const query = `
     SELECT
       DATE_TRUNC('day', created) as date,
@@ -21,13 +21,13 @@ async function getRoutineMap(routineId: string) {
       SUM(CASE WHEN failed THEN 1 ELSE 0 END) +
       SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as errors
     FROM "routine_execution"
-    WHERE "routine_id" = $1
+    WHERE "routine_Name" = $1
     GROUP BY date, hour
     ORDER BY date, hour
   `;
   const client = await getClient();
   try {
-    const result = await client.query(query, [routineId]);
+    const result = await client.query(query, [routineName]);
     return result.rows;
   } catch (error) {
     console.error('Error executing query:', error);
@@ -41,17 +41,17 @@ export default defineEventHandler(async (event) => {
     event.node.req.url ?? '',
     `http://${event.node.req.headers.host}`
   );
-  const routineId = url.searchParams.get('routineId');
+  const routineName = url.searchParams.get('routineName');
 
-  if (method === 'GET' && routineId) {
+  if (method === 'GET' && routineName) {
     try {
-      return await getRoutineMap(routineId);
+      return await getRoutineMap(routineName);
     } catch (error) {
       console.error('Error fetching RoutineExecutions:', error);
       throw error;
     }
   } else {
-    console.error('Invalid request:', { method, routineId });
+    console.error('Invalid request:', { method, routineName });
     return { error: 'Invalid request' };
   }
 });

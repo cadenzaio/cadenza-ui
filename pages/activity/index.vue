@@ -40,7 +40,7 @@
               <template #info>
                 <ul>
                   <li>
-                    Service: {{ selectedServer?.graph || 'Unknown service' }}
+                    Service: {{ selectedServer?.service || 'Unknown service' }}
                   </li>
                   <li>Server: {{ selectedServer?.uuid || 'N/A' }}</li>
                   <li>IP: {{ selectedServer?.address || 'N/A' }}</li>
@@ -87,9 +87,9 @@ interface TableColumn {
 
 const columns: TableColumn[] = [
   {
-    name: 'graph',
+    name: 'service',
     label: 'Service',
-    field: 'graph',
+    field: 'service',
     required: true,
     sortable: true,
   },
@@ -113,7 +113,7 @@ interface Server {
   uuid: string;
   address: string;
   port: string;
-  graph: string;
+  service_name: string; // Renamed from 'service' to 'service_name'
   status: string;
   isPrimary: boolean;
   processPid: number;
@@ -121,10 +121,10 @@ interface Server {
 }
 
 function inspectServer(server: Server): void {
-  navigateToItem(`/activity/services/${server.uuid}`);
+  navigateToItem(`/activity/services/${server.service_name}`); // Updated to use 'service_name'
 }
 function inspectInNewTab(server: Server): void {
-  const url = `/activity/services/${server.uuid}`;
+  const url = `/activity/services/${server.service_name}`; // Updated to use 'service_name'
   window.open(url, '_blank');
 }
 const navigateToItem = (route: string) => {
@@ -155,9 +155,18 @@ const fetchServerStats = async (isLoadMore = false) => {
     const data = await response.json();
 
     if (isLoadMore) {
-      servers.value = [...servers.value, ...(data.servers || [])];
+      servers.value = [
+        ...servers.value,
+        ...(data.servers || []).map((server: any) => ({
+          ...server,
+          service_name: server.service, // Map 'service' to 'service_name'
+        })),
+      ];
     } else {
-      servers.value = data.servers || [];
+      servers.value = (data.servers || []).map((server: any) => ({
+        ...server,
+        service_name: server.service, // Map 'service' to 'service_name'
+      }));
     }
 
     hasMoreData.value = (data.servers || []).length === pageSize;
@@ -237,7 +246,7 @@ async function fetchServerMap() {
           position: { x: 0, y: 0 },
           sourcePosition: 'right' as Position,
           targetPosition: 'left' as Position,
-          data: { label: server.processing_graph },
+          data: { label: server.service_name },
           type: 'customNode',
         });
       });

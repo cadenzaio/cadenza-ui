@@ -46,12 +46,10 @@
                 <FlowMap
                   v-else
                   :items="routineMap"
-                  id-field="uuid"
+                  id-field="name"
                   label-field="name"
                   previous-field="previousTaskExecutionId"
-                  @item-selected="
-                    (task) => onTaskSelected(mapTaskToSelectedTask(task))
-                  "
+                  @item-selected="(task) => onTaskSelected(mapTaskToSelectedTask(task))"
                   style="width: 100%"
                 />
               </div>

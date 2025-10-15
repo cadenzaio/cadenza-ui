@@ -21,7 +21,11 @@
               <div class="row no-wrap items-center">
                 <div class="col text-h6 ellipsis">Load on all Servers</div>
               </div>
-              <ServerStats :selectedServer="aggregatedServer" />
+              <ServerStats 
+                :selectedServer="aggregatedServer" 
+                :loading="isLoadingServerStats"
+                :hasData="activeProcesses.length > 0"
+              />
             </q-card-section>
           </q-card>
           <ExecutionStatisticsPieChart v-if="appStore.isLoggedIn" />
@@ -29,13 +33,15 @@
       </div>
       <div>
         <HeatMap
-          v-if="appStore.isLoggedIn && heatmapData"
-          :chartSeries="heatmapData.chartSeries"
-          :yearOptions="heatmapData.yearOptions"
-          :monthNames="heatmapData.monthNames"
-          :editableRanges="heatmapData.editableRanges"
-          :rawHeatmapData="heatmapData.rawData"
-          @update:editableRanges="(val) => (heatmapData.editableRanges = val)"
+          v-if="appStore.isLoggedIn"
+          :loading="isLoadingHeatmap"
+          :hasData="hasHeatmapData"
+          :chartSeries="heatmapData?.chartSeries || []"
+          :yearOptions="heatmapData?.yearOptions || []"
+          :monthNames="heatmapData?.monthNames || []"
+          :editableRanges="heatmapData?.editableRanges || defaultHeatmapRanges"
+          :rawHeatmapData="heatmapData?.rawData || []"
+          @update:editableRanges="(val) => heatmapData && (heatmapData.editableRanges = val)"
         />
       </div>
     </NuxtLayout>
@@ -49,6 +55,26 @@ import { useAppStore } from '~/stores/app';
 const appStore = useAppStore();
 const activeProcesses = ref<Server[]>([]);
 const heatmapData = ref<any>(null);
+
+// Loading states
+const isLoadingServerStats = ref(false);
+const isLoadingHeatmap = ref(false);
+
+// Default heatmap ranges
+const defaultHeatmapRanges = [
+  { from: 1, to: 10 },
+  { from: 11, to: 50 },
+  { from: 51, to: 100 },
+  { from: 101, to: Infinity },
+];
+
+// Computed property to check if heatmap has meaningful data
+const hasHeatmapData = computed(() => {
+  return !!(heatmapData.value && 
+    heatmapData.value.chartSeries && 
+    Array.isArray(heatmapData.value.chartSeries) && 
+    heatmapData.value.chartSeries.length > 0);
+});
 
 const totalCpuUsage = ref(0);
 const totalMemoryUsage = ref(0);
@@ -66,6 +92,7 @@ interface Server {
 }
 
 const fetchServerStats = async () => {
+  isLoadingServerStats.value = true;
   try {
     const response = await $fetch('/api/services/graphs/serverStats');
     activeProcesses.value = (response || []).map((server: any) => ({
@@ -92,15 +119,33 @@ const fetchServerStats = async () => {
     });
   } catch (error) {
     console.error('Error fetching server stats:', error);
+    // Reset to empty state on error
+    activeProcesses.value = [];
+    totalCpuUsage.value = 0;
+    totalMemoryUsage.value = 0;
+    totalGpuUsage.value = 0;
+    serverCount.value = 0;
+  } finally {
+    isLoadingServerStats.value = false;
   }
 };
 
 async function fetchHeatmapData() {
+  isLoadingHeatmap.value = true;
   try {
     const data = await $fetch('/api/heatmap/routineMap');
-    heatmapData.value = data;
+    // Validate that we received meaningful data
+    if (data && typeof data === 'object' && 'chartSeries' in data && Array.isArray(data.chartSeries)) {
+      heatmapData.value = data;
+    } else {
+      console.warn('Received invalid heatmap data structure:', data);
+      heatmapData.value = null;
+    }
   } catch (error) {
     console.error('Error fetching heatmap data:', error);
+    heatmapData.value = null;
+  } finally {
+    isLoadingHeatmap.value = false;
   }
 }
 

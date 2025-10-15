@@ -14,8 +14,8 @@ let client: pg.Client | null = null;
  */
 interface TaskExecutionRow {
   uuid: string;
-  routine_execution_id: string;
-  task_id: string;
+  routine_execution_name: string;
+  task_name: string;
   is_running: boolean;
   is_complete: boolean;
   errored: boolean;
@@ -28,9 +28,8 @@ interface TaskExecutionRow {
   previous_task_names: string[] | null;
   next_task_execution_ids: string[] | null;
   next_task_names: string[] | null;
-  server_id: string;
+  service_name: string;
   routine_name: string;
-  contract_id: string;
   context_id: string | null;
   result_context_id: string | null;
   input_context: TaskContext;
@@ -49,8 +48,8 @@ interface TaskExecutionRow {
  */
 interface TaskExecutionResponse {
   uuid: string;
-  routineExecutionId: string;
-  taskId: string;
+  routineExecutionName: string;
+  taskName: string;
   isRunning: boolean;
   isComplete: boolean;
   errored: boolean;
@@ -83,8 +82,8 @@ interface TaskExecutionResponse {
 const TASK_EXECUTION_QUERY = `
 SELECT
     te.uuid,
-    te.routine_execution_id,
-    te.task_id,
+    te.routine_execution_name,
+    te.task_name,
     te.is_running,
     te.is_complete,
     te.errored,
@@ -93,14 +92,12 @@ SELECT
     te.created AS scheduled,
     te.started,
     te.ended,
-
     prev.previous_task_execution_ids,
     prev.previous_task_names,
     nxt.next_task_execution_ids,
     nxt.next_task_names,
-    re.server_id,
+    re.service_name,
     re.description AS routine_name,
-    re.contract_id,
     ctx.uuid AS context_id,
     ctx2.uuid AS result_context_id,
     ctx.context AS input_context,
@@ -109,7 +106,7 @@ SELECT
     t.description,
     t.is_unique,
     t.function_string,
-    s.processing_graph,
+    s.service_name,
     s.address,
     s.port
 FROM task_execution te

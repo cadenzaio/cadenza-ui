@@ -5,42 +5,42 @@ let client: pg.Client | null = null;
 
 // Type for routine task row
 interface RoutineTask {
-  uuid: string;
+  name: string;
   label: string;
   layer_index: number;
-  previousTaskExecutionId: string | null;
+  previousTaskExecutionName: string | null;
   description: string;
   is_unique: boolean;
   concurrency: number;
 }
 
 // Get all routines
-async function getRoutineMap(routineId: string): Promise<RoutineTask[]> {
+async function getRoutineMap(routineName: string): Promise<RoutineTask[]> {
   const query = `
 SELECT
-    ttrm.routine_id,
-    ttrm.task_id AS uuid,
+    ttrm.routine_name,
+    ttrm.task_name AS name,
     t.name,
     t.layer_index,
     t.description,
     t.is_unique,
     t.concurrency,
-    dtm.task_id,
-    dtm.predecessor_task_id AS previous_task_execution_id
+    dtm.task_name,
+    dtm.predecessor_task_name AS previous_task_execution_name
 FROM task_to_routine_map ttrm
-LEFT OUTER JOIN task t ON ttrm.task_id = t.uuid
-LEFT OUTER JOIN directional_task_graph_map dtm ON ttrm.task_id = dtm.task_id
-Where routine_id = $1 ;
+LEFT OUTER JOIN task t ON ttrm.task_name = t.name
+LEFT OUTER JOIN directional_task_graph_map dtm ON ttrm.task_name = dtm.task_name
+Where routine_name = $1 ;
   `;
-  const result = await client!.query(query, [routineId]);
+  const result = await client!.query(query, [routineName]);
 
   // Map the results to match the expected format (restore to original)
   return result.rows.map(
     (task: any): RoutineTask => ({
-      uuid: task.uuid,
+      name: task.name,
       label: task.name,
       layer_index: task.layer_index,
-      previousTaskExecutionId: task.previous_task_execution_id,
+      previousTaskExecutionName: task.previous_task_execution_name,
       description: task.description,
       is_unique: task.is_unique,
       concurrency: task.concurrency,
@@ -55,11 +55,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const { method, url } = event.node.req;
-  const routineId = url?.split('=')[1];
+  const routineName = url?.split('=')[1];
 
   if (method === 'GET') {
     try {
-      return await getRoutineMap(routineId ?? '');
+      return await getRoutineMap(routineName ?? '');
     } catch (error) {
       console.error('Error fetching routines:', error);
       throw error;

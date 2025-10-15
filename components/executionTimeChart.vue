@@ -2,7 +2,7 @@
   <InfoCard>
     <template #title> Execution Times </template>
     <template #info>
-      <div>
+      <div v-if="hasData">
         <apexchart
           type="area"
           height="350"
@@ -12,6 +12,11 @@
           style="color: black"
         ></apexchart>
       </div>
+
+      <div v-else class="flex column items-center justify-center full-height">
+        <q-icon name="bar_chart" size="48px" color="grey-5" class="q-mb-md" />
+        <div class="text-subtitle1 text-grey-6 text-center">No execution data available</div>
+      </div>
     </template>
   </InfoCard>
 </template>
@@ -20,6 +25,7 @@
 import { computed } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 import InfoCard from './InfoCard.vue';
+import { useQuasar } from 'quasar';
 
 // ApexCharts series type for area chart
 interface AreaSeries {
@@ -30,6 +36,13 @@ interface AreaSeries {
 const props = defineProps<{
   series: AreaSeries[];
 }>();
+
+// Determine if series has any data points
+const hasData = computed(() => {
+  if (!Array.isArray(props.series) || props.series.length === 0) return false;
+  // If any series contains non-empty data array, consider it has data
+  return props.series.some((s) => Array.isArray((s as any).data) && (s as any).data.length > 0);
+});
 
 const chartOptions = computed(() => ({
   chart: {

@@ -6,7 +6,7 @@
         <Table
           :columns="columns"
           :rows="graphs"
-          row-key="uuid"
+          row-key="name"
           @inspect-row="inspectGraphs"
           @inspect-row-in-new-tab="inspectInNewTab"
           @loadMoreData="loadMoreGraphs"
@@ -30,10 +30,9 @@ interface Graph {
   type: string;
   label: string;
   description: string;
-  id: any;
-  executionId: any;
-  progress: any;
-  uuid: string;
+  name: string;
+  uuid?: string;
+  displayName?: string;
 }
 
 interface TableColumn {
@@ -56,13 +55,6 @@ const columns: TableColumn[] = [
     field: 'label',
     required: true,
     sortable: true,
-  },
-  {
-    name: 'description',
-    label: 'Description',
-    field: 'description',
-    required: true,
-    sortable: false,
   },
 ];
 
@@ -87,13 +79,12 @@ async function loadGraphs(isLoadMore = false): Promise<void> {
     const data = await response.json();
 
     const mappedData: Graph[] = data.map((r: any) => ({
-      uuid: r.uuid,
-      label: r.label,
-      description: r.description,
-      type: r.type,
-      id: r.id,
-      executionId: r.executionId,
-      progress: r.progress,
+      uuid: r.uuid || r.id,
+      label: r.displayName || r.label || r.name || r.service_name || r.uuid,
+      type: r.type || 'service',
+      name: r.name || r.label || r.service_name || r.uuid,
+      description: r.description || '',
+      displayName: r.displayName,
     }));
 
     if (isLoadMore) {
@@ -120,13 +111,13 @@ async function loadMoreGraphs() {
 
 const router = useRouter();
 function inspectGraphs(graph: Graph): void {
-  navigateToItem(`/system/services/${graph.uuid}`);
+  navigateToItem(`/system/services/${graph.name}`);
 }
 
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(graph: Graph): void {
-  openLinkInNewTab(`/system/services/${graph.uuid}`);
+  openLinkInNewTab(`/system/services/${graph.name}`);
 }
 const navigateToItem = (route: string) => {
   router.push(route);

@@ -11,25 +11,25 @@
           </template>
           <template #info>
             <ul>
-              <li>IP: {{ serverData?.address || 'Loading...' }}</li>
-              <li>PORT: {{ serverData?.port || 'Loading...' }}</li>
+              <li>Server: {{ serverData?.address || 'N/A' }}</li>
+              <li>PORT: {{ serverData?.port || 'N/A' }}</li>
               <li>
                 Status: {{ serverData?.is_active ? 'Active' : 'Inactive' }}
               </li>
-              <li>Description: {{ serverData?.description }}</li>
+              <li>Description: {{ serverData?.description || 'None' }}</li>
               <li
                 class="text-primary cursor-pointer"
                 @click="
                   navigateToItem(
-                    `/services/${encodeURIComponent(
-                      serverData?.processing_graph || ''
+                    `/system/services/${encodeURIComponent(
+                      serverData?.service_name || ''
                     )}`
                   )
                 "
                 @contextmenu.prevent="
                   openLinkInNewTab(
-                    `/services/${encodeURIComponent(
-                      serverData?.processing_graph || ''
+                    `/system/services/${encodeURIComponent(
+                      serverData?.service_name || ''
                     )}`
                   )
                 "
@@ -71,6 +71,7 @@ interface ServerData {
   label?: string;
   processing_graph: string;
   description: string;
+  service_name?: string; // Added service_name property
 }
 
 const route = ref(useRoute());

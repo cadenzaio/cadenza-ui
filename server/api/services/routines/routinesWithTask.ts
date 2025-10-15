@@ -14,12 +14,11 @@ async function getRoutineMap(
   const query = `
     SELECT
     r.name,
-    r.uuid,
     r.description
     FROM routine r
-    JOIN task_to_routine_map trm ON r.uuid = trm.routine_id
-    JOIN task t ON trm.task_id = t.uuid
-    WHERE t.uuid = $1
+    JOIN task_to_routine_map trm ON r.name = trm.routine_name
+    JOIN task t ON trm.task_name = t.name
+    WHERE t.name = $1
     ORDER BY r.name ASC
     LIMIT $2 OFFSET $3;
   `;
@@ -27,7 +26,6 @@ async function getRoutineMap(
 
   // Map the results to match the expected frontend format
   return result.rows.map((routine) => ({
-    uuid: routine.uuid,
     name: routine.name,
     description: routine.description,
   }));

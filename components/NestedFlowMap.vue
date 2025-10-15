@@ -19,6 +19,20 @@
         class="loading-badge"
       />
     </div>
+    <div v-else-if="!loading && displayedNodes.length === 0" class="no-data-overlay">
+      <q-icon 
+        name="account_tree" 
+        :color="sectionColor" 
+        size="8em" 
+        class="no-data-icon" 
+      />
+      <q-badge
+        outline
+        :color="sectionColor"
+        label="Nothing to map"
+        class="no-data-badge"
+      />
+    </div>
     <VueFlow
       ref="vueFlowInstance"
       :nodes="displayedNodes"
@@ -386,6 +400,27 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 .loading-badge {
+  font-size: 1.2em;
+}
+.no-data-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  z-index: 5;
+}
+.no-data-icon {
+  margin-bottom: 24px;
+  opacity: 0.6;
+}
+.no-data-badge {
   font-size: 1.2em;
 }
 .back-btn-container {

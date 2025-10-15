@@ -13,12 +13,10 @@
       <div>
         <FlowMap
           :items="taskMap"
-          id-field="uuid"
+          id-field="name"
           label-field="name"
           previous-field="previousTaskExecutionId"
-          @item-selected="
-            (task) => navigateToItem(`/activity/tasks/${task.uuid}`)
-          "
+          @item-selected="(task) => navigateToItem(`/activity/tasks/${task.name || task.uuid}`)"
         ></FlowMap>
       </div>
 

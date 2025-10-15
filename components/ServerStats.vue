@@ -4,7 +4,17 @@
     elevated
     style="max-width: 50dvw; max-height: 70dvh; overflow-y: auto"
   >
-    <div class="col q-pa-md flex flex-start">
+    <div v-if="loading" class="col q-pa-md flex column items-center justify-center" style="min-height: 200px;">
+      <q-spinner-dots size="40px" color="primary" class="q-mb-md" />
+      <div class="text-subtitle1">Loading server stats...</div>
+    </div>
+    
+    <div v-else-if="!hasData" class="col q-pa-md flex column items-center justify-center" style="min-height: 200px;">
+      <q-icon name="dns" size="48px" color="grey-5" class="q-mb-md" />
+      <div class="text-subtitle1 text-grey-6">No server data available</div>
+    </div>
+    
+    <div v-else class="col q-pa-md flex flex-start">
       <span class="text-caption"> CPU</span>
       <q-linear-progress
         size="25px"
@@ -60,7 +70,11 @@ interface ServerStats {
   ram: number; // in MB
 }
 
-const props = defineProps<{ selectedServer: ServerStats }>();
+const props = defineProps<{ 
+  selectedServer: ServerStats;
+  loading?: boolean;
+  hasData?: boolean;
+}>();
 </script>
 
 <style>

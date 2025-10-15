@@ -13,7 +13,7 @@
       <div>
         <FlowMap
           :items="taskMap"
-          id-field="uuid"
+          id-field="name"
           label-field="name"
           previous-field="previousTaskExecutionId"
           @item-selected="

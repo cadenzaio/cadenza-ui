@@ -3,13 +3,13 @@ import pg from 'pg';
 
 let client: pg.Client | null = null;
 
-async function getRoutine(routineId: string) {
+async function getRoutine(routineName: string) {
   const query = `
     SELECT *
     FROM routine
-    WHERE uuid = $1;
+    WHERE name = $1;
   `;
-  const result = await client!.query(query, [routineId]);
+  const result = await client!.query(query, [routineName]);
 
   // Format the routine data
   return result.rows.map((routine: any) => ({
@@ -17,9 +17,7 @@ async function getRoutine(routineId: string) {
     name: routine.name,
     description: routine.description,
     function_string: routine.function_string,
-    id: routine.id,
-    uuid: routine.uuid,
-    processing_graph: routine.processing_graph,
+    service_instance: routine.service_instance,
     created: routine.created,
     deleted: routine.deleted,
   }));
@@ -31,11 +29,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const { method } = event.node.req;
-  const routineId = event.context.params?.id ?? '';
+  const routineName = event.context.params?.id ?? '';
 
   if (method === 'GET') {
     try {
-      return await getRoutine(routineId);
+      return await getRoutine(routineName);
     } catch (error) {
       console.error('Error fetching routine:', error);
       throw error;

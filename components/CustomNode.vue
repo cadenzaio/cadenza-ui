@@ -90,14 +90,14 @@ const nodeSelectedBorder = computed(() =>
     :style="
       data.isSelected
         ? {
-            background: nodeSelectedBg,
+            ...(data.signal ? {} : { background: nodeSelectedBg }),
             border: nodeSelectedBorder,
             boxShadow: `2px 6px 6px ${
               typeof nodeBg === 'string' ? nodeBg : nodeBg
             }`,
           }
         : {
-            background: nodeSelectedBg,
+            ...(data.signal ? {} : { background: nodeSelectedBg }),
             border: 'none',
             boxShadow: `2px 6px 6px ${
               typeof nodeBg === 'string' ? nodeBg : nodeBg
@@ -177,11 +177,69 @@ const nodeSelectedBorder = computed(() =>
   box-shadow: 2px 6px 6px rgba(189 188 188 / 0.66) !important;
 }
 .signal-node {
-  background: rgba(43, 146, 34, 0) !important;
+  /* Keep background fully transparent to let the scan band show clearly */
+  background: transparent !important;
   box-shadow: none !important;
   align-content: center !important;
   word-wrap: break-word !important;
   color: #08c011 !important;
+}
+
+/* Scanning highlight */
+.signal-node {
+  position: relative;
+  overflow: hidden;
+}
+.signal-node::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -15%;
+  height: 100%;
+  width: 12%;
+  pointer-events: none;
+  /* colored band that uses the node color with a strong center and soft edges */
+  background: linear-gradient(90deg,
+    rgba(0,0,0,0) 0%,
+    color-mix(in srgb, currentColor 45%, transparent) 80%,
+    color-mix(in srgb, currentColor 75%, transparent) 50%,
+    color-mix(in srgb, currentColor 45%, transparent) 88%,
+    rgba(0,0,0,0) 100%
+  );
+  transform: skewX(-12deg);
+  /* use linear timing and make the sweep occupy most of the duration so there's minimal idle time */
+  animation: signal-scan 1.5s linear infinite;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 6px rgba(8,192,17,0.85));
+}
+
+@keyframes signal-scan {
+  /* movement now occupies most of the animation (0% -> 92%),
+     brief fade/reset window (92% -> 100%) so gap between scans is small */
+  0% {
+    left: -40%;
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  92% {
+    left: 120%;
+    opacity: 1;
+  }
+  98% {
+    opacity: 0;
+  }
+  100% {
+    left: -40%;
+    opacity: 0;
+  }
+}
+
+/* Burn / glow effect so text remains visible over the gradient */
+.signal-node span {
+  position: relative;
+  z-index: 2;
 }
 .parent-node {
   background: rgba(81 83 83 / 0.22) !important;

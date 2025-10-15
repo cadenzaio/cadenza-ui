@@ -8,6 +8,7 @@ async function getTasks(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
   const query = `
     SELECT * FROM task
+    WHERE is_meta = false
     ORDER BY name ASC
     LIMIT $1 OFFSET $2
   `;
@@ -19,9 +20,10 @@ async function getTasks(page: number = 1, limit: number = 100) {
     label: row.name,
     description: row.description,
     uuid: row.uuid,
-    service: row.processing_graph,
+    service: row.service_name,
     unique: row.is_unique,
     concurrency: row.concurrency,
+    name: row.name,
   }));
 }
 

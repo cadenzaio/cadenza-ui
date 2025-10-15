@@ -20,8 +20,8 @@ interface TaskExecutionTimeRow {
   average_time: number;
 }
 
-// Get TaskExecutions by task_id
-async function getTaskMap(taskId: string): Promise<TaskExecutionTimeRow[]> {
+// Get TaskExecutions by task_name
+async function getTaskMap(taskName: string): Promise<TaskExecutionTimeRow[]> {
   const query = `
  SELECT
       MIN(te.started) as started,
@@ -31,13 +31,13 @@ async function getTaskMap(taskId: string): Promise<TaskExecutionTimeRow[]> {
       MIN(EXTRACT(EPOCH FROM (ended - started))) as fastest_time,
       AVG(EXTRACT(EPOCH FROM (ended - started))) as average_time
     FROM task_execution as te
-    WHERE task_id = $1
+    WHERE task_name = $1
     GROUP BY date, hour
     ORDER BY started
   `;
   const client = await getClient();
   try {
-    const result = await client.query(query, [taskId]);
+    const result = await client.query(query, [taskName]);
     return result.rows as TaskExecutionTimeRow[];
   } catch (error) {
     console.error('Error executing query:', error);
@@ -52,11 +52,11 @@ export default defineEventHandler(async (event) => {
     event.node.req.url ?? '',
     `http://${event.node.req.headers.host}`
   );
-  const taskId = url.searchParams.get('taskId');
+  const taskName = url.searchParams.get('taskName');
 
-  if (method === 'GET' && taskId) {
+  if (method === 'GET' && taskName) {
     try {
-      const rows = await getTaskMap(taskId);
+      const rows = await getTaskMap(taskName);
       if (!rows || rows.length === 0) {
         return { series: [] };
       }
@@ -88,7 +88,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
   } else {
-    console.error('Invalid request:', { method, taskId });
+    console.error('Invalid request:', { method, taskName });
     return { error: 'Invalid request' };
   }
 });

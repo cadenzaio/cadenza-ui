@@ -1,75 +1,95 @@
 <template>
   <q-card class="heatmap-container">
-    <div v-show="!showMonthView">
-      <apexchart
-        type="heatmap"
-        height="500"
-        :options="chartOptions"
-        :series="chartSeries"
-        @dataPointSelection="onCellClick"
-      />
-      <div class="heatmap-header-bottom">
-        <q-btn icon="settings" color="primary" @click="showDialog = true" />
-        <q-btn icon="chevron_left" color="primary" @click="decrementYear" />
-        <q-select
-          v-model="selectedYear"
-          :options="yearOptions"
-          label="Year"
-          dense
-          outlined
-          class="year-select"
-        />
-        <q-btn
-          v-if="selectedYear !== currentYear"
-          icon="chevron_right"
-          color="primary"
-          @click="incrementYear"
-        />
+    <div v-if="loading" class="flex column items-center justify-center q-pa-xl" style="min-height: 300px;">
+      <q-spinner-dots size="50px" color="primary" class="q-mb-md" />
+      <div class="text-h6">Loading heatmap data...</div>
+    </div>
+    
+    <div v-else-if="!hasData" class="flex column items-center justify-center q-pa-xl" style="min-height: 300px;">
+      <q-icon name="grid_view" size="80px" color="grey-4" class="q-mb-md" />
+      <div class="text-h5 q-mb-sm text-grey-6">No Heatmap Data Available</div>
+      <div class="text-body1 text-grey-5 text-center">
+        No routine execution data found for the heatmap visualization.
       </div>
     </div>
-    <div v-show="showMonthView">
-      <apexchart
-        type="heatmap"
-        height="500"
-        :options="monthChartOptions"
-        :series="monthChartSeries"
-      />
-      <div class="heatmap-header-bottom">
-        <q-btn
-          icon="arrow_back"
-          color="primary"
-          @click="handleBackToYearView"
+    
+    <div v-else>
+      <div v-show="!showMonthView">
+        <apexchart
+          type="heatmap"
+          height="500"
+          :options="chartOptions"
+          :series="chartSeries"
+          @dataPointSelection="onCellClick"
         />
-        <q-btn icon="chevron_left" color="primary" @click="decrementMonth" />
-        <q-select
-          v-model="selectedMonth"
-          :options="props.monthNames.map((m: string) => m)"
-          label="Month"
-          dense
-          outlined
-          class="month-select"
+        <div class="heatmap-header-bottom">
+          <q-btn 
+            icon="settings" 
+            color="primary" 
+            @click="showDialog = true"
+            :disable="!hasData || loading"
+          />
+          <q-btn icon="chevron_left" color="primary" @click="decrementYear" />
+          <q-select
+            v-model="selectedYear"
+            :options="yearOptions"
+            label="Year"
+            dense
+            outlined
+            class="year-select"
+          />
+          <q-btn
+            v-if="selectedYear !== currentYear"
+            icon="chevron_right"
+            color="primary"
+            @click="incrementYear"
+          />
+        </div>
+      </div>
+      <div v-show="showMonthView">
+        <apexchart
+          type="heatmap"
+          height="500"
+          :options="monthChartOptions"
+          :series="monthChartSeries"
         />
-        <q-select
-          v-model="selectedYear"
-          :options="yearOptions"
-          label="Year"
-          dense
-          outlined
-          class="year-select"
-        />
-        <q-btn
-          v-if="
-            !(
-              selectedMonth === monthNames[currentMonth] &&
-              selectedYear === currentYear
-            )
-          "
-          icon="chevron_right"
-          color="primary"
-          @click="incrementMonth"
-        />
-        <div class="text-h6 q-ml-md">
-          Month: {{ selectedMonth }} Year: {{ selectedYear }}
+        <div class="heatmap-header-bottom">
+          <q-btn
+            icon="arrow_back"
+            color="primary"
+            @click="handleBackToYearView"
+          />
+          <q-btn icon="chevron_left" color="primary" @click="decrementMonth" />
+          <q-select
+            v-model="selectedMonth"
+            :options="props.monthNames.map((m: string) => m)"
+            label="Month"
+            dense
+            outlined
+            class="month-select"
+          />
+          <q-select
+            v-model="selectedYear"
+            :options="yearOptions"
+            label="Year"
+            dense
+            outlined
+            class="year-select"
+          />
+          <q-btn
+            v-if="
+              !(
+                selectedMonth === monthNames[currentMonth] &&
+                selectedYear === currentYear
+              )
+            "
+            icon="chevron_right"
+            color="primary"
+            @click="incrementMonth"
+          />
+          <div class="text-h6 q-ml-md">
+            Month: {{ selectedMonth }} Year: {{ selectedYear }}
+          </div>
         </div>
       </div>
     </div>
@@ -175,6 +195,19 @@ interface HeatmapSeries {
   data: HeatmapSeriesData[];
 }
 const props = defineProps({
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  hasData: {
+    type: Boolean,
+    default: true,
+  },
+  chartSeries: {
+    type: Array as () => HeatmapSeries[],
+    required: false,
+    default: () => [],
+  },
   yearOptions: {
     type: Array as () => Array<number>,
     required: true,
@@ -423,6 +456,18 @@ const scaleToData = computed({
 });
 
 function applyRanges() {
+  // Safety check: Don't apply ranges if there's no data or ranges are not initialized
+  if (!editableRanges.value || !Array.isArray(editableRanges.value) || editableRanges.value.length === 0) {
+    console.warn('Cannot apply ranges: editableRanges is not properly initialized');
+    return;
+  }
+  
+  // Additional safety check for chartSeries
+  if (!chartSeries.value || !Array.isArray(chartSeries.value)) {
+    console.warn('Cannot apply ranges: chartSeries is not properly initialized');
+    return;
+  }
+  
   // Copy to avoid mutating prop directly
   const newRanges: RangeSection[] = JSON.parse(
     JSON.stringify(editableRanges.value)
@@ -431,6 +476,19 @@ function applyRanges() {
     const allData = chartSeries.value.flatMap((s: HeatmapSeries) =>
       s.data.map((d: HeatmapSeriesData) => d.y)
     );
+    
+    // Safety check: ensure we have data to work with
+    if (allData.length === 0) {
+      console.warn('Cannot apply ranges: no chart data available');
+      return;
+    }
+    
+    // Safety check: ensure newRanges has the expected structure
+    if (newRanges.length < 4) {
+      console.warn('Cannot apply ranges: editableRanges must have at least 4 elements');
+      return;
+    }
+    
     let min = Math.min(...allData.filter((v: number) => v > 0));
     min = Math.max(min, 1); // Clamp min to at least 1
     const max = Math.max(...allData);
@@ -591,12 +649,21 @@ onMounted(() => {
     emit('update:editableRanges', localEditableRanges.value);
   } else {
     // No settings: enable scaleToData, apply scaling, and save
-    localEditableRanges.value = JSON.parse(
-      JSON.stringify(props.editableRanges)
-    );
-    localScaleToData.value = true;
-    // Apply scaling and save as initial settings
-    applyRanges();
+    // But only if we have valid data to work with
+    if (props.editableRanges && Array.isArray(props.editableRanges) && props.editableRanges.length >= 4) {
+      localEditableRanges.value = JSON.parse(
+        JSON.stringify(props.editableRanges)
+      );
+      localScaleToData.value = true;
+      // Apply scaling and save as initial settings only if we have data
+      if (props.hasData && !props.loading) {
+        applyRanges();
+      }
+    } else {
+      // Initialize with empty array if no valid ranges provided
+      localEditableRanges.value = [];
+      localScaleToData.value = false;
+    }
   }
 });
 
@@ -675,6 +742,18 @@ watch(
 watch(selectedYear, (newYear) => {
   if (!showMonthView.value) {
     buildYearChartSeries(newYear);
+  }
+});
+
+// Watch for hasData changes to initialize ranges when data becomes available
+watch(() => props.hasData, (newHasData) => {
+  if (newHasData && !props.loading && localEditableRanges.value.length === 0) {
+    // Data became available and we don't have ranges initialized yet
+    if (props.editableRanges && Array.isArray(props.editableRanges) && props.editableRanges.length >= 4) {
+      localEditableRanges.value = JSON.parse(JSON.stringify(props.editableRanges));
+      localScaleToData.value = true;
+      applyRanges();
+    }
   }
 });
 

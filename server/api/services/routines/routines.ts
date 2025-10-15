@@ -8,6 +8,7 @@ async function getRoutines(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
   const query = `
     SELECT * FROM routine
+    WHERE is_meta = false
     ORDER BY created DESC
     LIMIT $1 OFFSET $2;
   `;
@@ -19,8 +20,7 @@ async function getRoutines(page: number = 1, limit: number = 100) {
     label: row.name,
     uuid: row.uuid,
     description: row.description,
-    service: row.processing_graph,
-    id: row.uuid,
+    service: row.service_name,
   }));
 }
 

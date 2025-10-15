@@ -28,7 +28,6 @@ interface routines {
   type: string;
   label: string;
   service: string;
-  id: any;
   executionId: any;
   progress: any;
   uuid: string;
@@ -63,13 +62,13 @@ const pageSize = 50;
 const router = useRouter();
 
 function inspectRoutines(routines: routines) {
-  navigateToItem(`/system/routines/${routines.uuid}`);
+  navigateToItem(`/system/routines/${routines.label}`);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(routine: routines) {
-  openLinkInNewTab(`/system/routines/${routine.uuid}`);
+  openLinkInNewTab(`/system/routines/${routine.label}`);
 }
 
 const navigateToItem = (route: string) => {

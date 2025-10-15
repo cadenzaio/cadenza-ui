@@ -8,7 +8,7 @@
       :max-zoom="1.5"
       fit-view-on-init
       contenteditable="false"
-      :nodes-draggable="false"
+      :nodes-draggable="true"
     >
       <template #node-custom="props">
         <CustomNode :data="props.data" />
@@ -24,7 +24,7 @@ import ELK from 'elkjs/lib/elk.bundled.js';
 
 // Define props - generic flow item interface
 interface FlowItem {
-  id: string;
+  id?: string;
   label?: string;
   name?: string;
   description?: string;
@@ -60,8 +60,11 @@ const vueFlowInstance = ref<InstanceType<typeof VueFlow> | null>(null);
 
 // Helper functions to get field values with fallbacks
 const getId = (item: FlowItem): string => {
-  const idField = props.idField || 'id';
-  return (item[idField] as string) || (item['uuid'] as string) || item.id;
+  // Prefer `name` as the primary identifier (DB now uses name)
+  const idField = props.idField || 'name';
+  return (
+    ((item as any)[idField] as string) || (item['uuid'] as string) || item.id || ''
+  );
 };
 
 const getLabel = (item: FlowItem): string => {
@@ -71,7 +74,8 @@ const getLabel = (item: FlowItem): string => {
     item.label ||
     item.name ||
     item.id ||
-    (item['uuid'] as string)
+    (item['uuid'] as string) ||
+    getId(item)
   );
 };
 
@@ -81,7 +85,7 @@ const getPreviousIds = (item: FlowItem): string[] => {
   // First check for the proper previousExecutions array (from tasksInRoutines endpoint)
   if (item.previousExecutions && Array.isArray(item.previousExecutions)) {
     return item.previousExecutions
-      .map((exec) => exec.previousTaskExecutionId)
+      .map((exec) => (exec.previousTaskExecutionId ?? exec.previousTaskName) as string)
       .filter((id) => id != null);
   }
 
@@ -100,7 +104,7 @@ const getPreviousIds = (item: FlowItem): string[] => {
 
   // Fallback to single value for backward compatibility
   const singleValue =
-    item[previousField] || item.previousTaskExecutionId || item.previousId;
+    item[previousField] || item.previousTaskExecutionId || item.previousId || null;
   return singleValue ? [singleValue as string] : [];
 };
 
@@ -179,7 +183,7 @@ function injectSignalNodes(items: FlowItem[]): FlowItem[] {
       signal: true,
       label: 'Signal 2',
       description: 'Signal node for Task 7',
-      previousId: task7.id,
+      previousId: getId(task7),
     });
   }
   return result;
@@ -225,6 +229,18 @@ async function processFlowItems(items: FlowItem[]) {
 
   // Create edges based on previous item references
   const newEdges: Edge[] = [];
+  // Build mapping of possible identifiers -> primary node id (primary id is getId(item))
+  const idToPrimary: Record<string, string> = {};
+  const primaryToItem: Record<string, FlowItem> = {};
+  itemsWithSignals.forEach((item) => {
+    const primary = getId(item);
+    if (!primary) return;
+    primaryToItem[primary] = item;
+    idToPrimary[primary] = primary;
+    if (item.id) idToPrimary[String(item.id)] = primary;
+    if ((item as any).uuid) idToPrimary[String((item as any).uuid)] = primary;
+    if (item.name) idToPrimary[String(item.name)] = primary;
+  });
   itemsWithSignals.forEach((item: FlowItem) => {
     // Special: for Task 1, connect signal-1 -> Task 1
     if (
@@ -259,27 +275,24 @@ async function processFlowItems(items: FlowItem[]) {
       return;
     }
 
-    // Default: connect as usual
+    // Default: connect as usual (resolve previousId via idToPrimary map so UUIDs still work)
     const previousIds = getPreviousIds(item);
     previousIds.forEach((previousId: string) => {
-      if (previousId) {
-        const previousItem = itemsWithSignals.find(
-          (t: FlowItem) => getId(t) === previousId
-        );
-        if (previousItem) {
-          const isSignalEdge =
-            item.signal === true || previousItem.signal === true;
-          newEdges.push({
-            id: `${previousId}-${getId(item)}`,
-            source: previousId,
-            target: getId(item),
-            type: isSignalEdge ? 'smoothstep' : 'default',
-            animated: isSignalEdge,
-            style: isSignalEdge
-              ? { stroke: '#2b9222', strokeWidth: 1 }
-              : undefined,
-          });
-        }
+      if (!previousId) return;
+      const resolvedPrimary = idToPrimary[previousId] || previousId;
+      const previousItem = primaryToItem[resolvedPrimary];
+      if (previousItem) {
+        const isSignalEdge = item.signal === true || previousItem.signal === true;
+        const sourceId = resolvedPrimary;
+        const targetId = getId(item);
+        newEdges.push({
+          id: `${sourceId}-${targetId}`,
+          source: sourceId,
+          target: targetId,
+          type: isSignalEdge ? 'smoothstep' : 'default',
+          animated: isSignalEdge,
+          style: isSignalEdge ? { stroke: '#2b9222', strokeWidth: 1 } : undefined,
+        });
       }
     });
   });

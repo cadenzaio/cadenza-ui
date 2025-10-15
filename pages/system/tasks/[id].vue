@@ -2,13 +2,13 @@
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
       <template #title>
-        {{ selectedItem?.name }} - {{ selectedItem?.uuid.slice(0, 8) }}
+        {{ selectedItem?.name }}
       </template>
       <div class="row q-mx-md">
         <FlowMap
           v-if="taskMap && taskMap.length > 0"
           :items="taskMap"
-          id-field="uuid"
+          id-field="name"
           label-field="name"
           previous-field="previousTaskExecutionId"
           @item-selected="onTaskSelected"
@@ -23,7 +23,6 @@
                 Description: {{ selectedItem?.description }}
               </div>
               <div class="q-separator" style="height: 2px"></div>
-              <div class="q-mx-md q-my-sm">UUID: {{ selectedItem?.uuid }}</div>
               <div
                 class="q-mx-md q-my-sm"
                 @click="
@@ -40,7 +39,7 @@
                 }}</span>
               </div>
               <div class="q-mx-md q-my-sm">
-                Created: {{ new Date(selectedItem?.created).toLocaleString() }}
+                Created: {{ selectedItem?.created ? new Date(selectedItem.created).toLocaleString() : 'N/A' }}
               </div>
               <div class="q-mx-md q-my-sm">
                 Deleted: {{ selectedItem?.deleted ? 'Yes' : 'No' }}
@@ -62,7 +61,7 @@
         </InfoCard>
         <ExecutionStatisticsPieChart
           :type="'task'"
-          :taskId="String(route.params.id)"
+          :taskName="String(route.params.id)"
         />
         <ExecutionTimeChart :series="executionTimeSeries" />
         <Table
@@ -119,20 +118,19 @@ import HeatMap from '~/components/HeatMap.vue';
 
 // Define the Item interface
 interface Item {
-  taskId: string;
-  type: string;
+  taskId?: string;
+  type?: string;
   name: string;
-  description: string;
-  function_string: string;
-  id: any;
-  executionId: any;
-  progress: any;
-  uuid: any;
-  processing_graph: string;
-  created: string;
-  deleted: boolean;
-  is_unique: boolean;
-  concurrency: number;
+  description?: string;
+  function_string?: string;
+  uuid?: string;
+  executionId?: any;
+  progress?: any;
+  processing_graph?: string;
+  created?: string;
+  deleted?: boolean;
+  is_unique?: boolean;
+  concurrency?: number;
 }
 
 interface ExecutionTime {
@@ -172,7 +170,7 @@ if (error.value) {
 
 // Fetch the execution times chart series data
 const { data: executionData, error: executionError } = await useFetch(
-  `/api/activity/tasks/taskExecutionTimes?taskId=${route.params.id}`
+  `/api/activity/tasks/taskExecutionTimes?taskName=${route.params.id}`
 );
 if (executionError.value) {
   console.error('Error fetching execution times:', executionError.value);
@@ -206,20 +204,18 @@ interface Task {
   type: string;
   label: string;
   description: string;
-  id: any;
-  executionId: any;
+  executionName: any;
   progress: any;
-  uuid: string;
+  name: string;
 }
 
 interface Routine {
   type: string;
   label: string;
   description: string;
-  id: any;
-  executionId: any;
+  executionName: any;
   progress: any;
-  uuid: string;
+  name: string;
 }
 
 const selectedTask = ref<Task[] | undefined>(undefined);
@@ -270,8 +266,9 @@ async function updateTaskMap() {
   }
   try {
     const firstRoutine = routines.value[0];
+    // backend now expects routineName instead of routineId/uuid
     const response = await $fetch(
-      `/api/services/tasks/staticTasksInRoutine?routineId=${firstRoutine.uuid}`
+      `/api/services/tasks/staticTasksInRoutine?routineName=${firstRoutine.name}`
     );
     const itemsArray = Array.isArray(response) ? response : [];
     // Set isSelected on the correct node (by uuid or taskId)
@@ -279,8 +276,7 @@ async function updateTaskMap() {
       ...item,
       isSelected:
         selectedItem.value &&
-        (item.taskId === selectedItem.value.uuid ||
-          item.uuid === selectedItem.value.uuid),
+        (item.taskName === selectedItem.value.name || item.name === selectedItem.value.name),
     }));
   } catch (error) {
     console.error('Error fetching task map:', error);
@@ -292,8 +288,8 @@ watch([selectedItem, routines], updateTaskMap, { immediate: true });
 
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
-  if (task.uuid) {
-    navigateToItem(`/services/tasks/${task.uuid}`);
+  if (task.name) {
+    navigateToItem(`/services/tasks/${task.name}`);
   }
 }
 
@@ -308,22 +304,22 @@ const pageSize = 50;
 const router = useRouter();
 
 function inspectTask(task: Task) {
-  navigateToItem(`/activity/tasks/${task.uuid}`);
+  navigateToItem(`/activity/tasks/${task.name}`);
 }
 
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(task: Task) {
-  openLinkInNewTab(`/activity/tasks/${task.uuid}`);
+  openLinkInNewTab(`/activity/tasks/${task.name}`);
 }
 
 function inspectRoutine(routine: Routine) {
-  navigateToItem(`/services/routines/${routine.uuid}`);
+  navigateToItem(`/services/routines/${routine.name}`);
 }
 
 function inspectRoutineInNewTab(routine: Routine) {
-  openLinkInNewTab(`/services/routines/${routine.uuid}`);
+  openLinkInNewTab(`/services/routines/${routine.name}`);
 }
 
 const navigateToItem = (route: string) => {
@@ -337,22 +333,23 @@ onMounted(() => {
   tasksCurrentPage.value = 1; // Always start at page 1 for tasks
   routinesCurrentPage.value = 1; // Always start at page 1 for routines
 
-  const itemId: string = Array.isArray(route.params.id)
+  const itemName: string = Array.isArray(route.params.id)
     ? route.params.id[0]
     : route.params.id;
   if (Array.isArray(Items.value)) {
-    selectedItem.value = Items.value.find((item: Item) => item.uuid === itemId);
+    // DB now uses `name` as primary identifier
+    selectedItem.value = Items.value.find((item: Item) => item.name === itemName);
   } else {
     selectedItem.value = null;
   }
-  fetchActiveTasks(itemId, false);
-  fetchRoutinesUsingTask(itemId, false);
-  fetchHeatmapData(itemId);
+  fetchActiveTasks(itemName, false);
+  fetchRoutinesUsingTask(itemName, false);
+  fetchHeatmapData(itemName);
 });
 
-const taskId = route.params.id;
+const taskName = route.params.id;
 
-async function fetchActiveTasks(taskId: string, isLoadMore = false) {
+async function fetchActiveTasks(taskName: string, isLoadMore = false) {
   try {
     if (isLoadMore) {
       loadingMoreTasksData.value = true;
@@ -360,12 +357,12 @@ async function fetchActiveTasks(taskId: string, isLoadMore = false) {
     }
 
     console.log(
-      `Fetching active tasks for itemId: ${taskId}, page: ${tasksCurrentPage.value}`
+      `Fetching active tasks for itemName: ${taskName}, page: ${tasksCurrentPage.value}`
     );
     const response = await fetch(
       `/api/activity/tasks/activeTasks${
-        taskId
-          ? `?id=${taskId}&page=${tasksCurrentPage.value}&limit=${pageSize}`
+        taskName
+          ? `?name=${taskName}&page=${tasksCurrentPage.value}&limit=${pageSize}`
           : ''
       }`,
       { method: 'GET' }
@@ -419,7 +416,7 @@ async function fetchActiveTasks(taskId: string, isLoadMore = false) {
   }
 }
 
-async function fetchRoutinesUsingTask(taskId: string, isLoadMore = false) {
+async function fetchRoutinesUsingTask(taskName: string, isLoadMore = false) {
   try {
     if (isLoadMore) {
       loadingMoreRoutinesData.value = true;
@@ -427,7 +424,7 @@ async function fetchRoutinesUsingTask(taskId: string, isLoadMore = false) {
     }
 
     const response = await fetch(
-      `/api/services/routines/routinesWithTask?taskId=${taskId}&page=${routinesCurrentPage.value}&limit=${pageSize}`
+      `/api/services/routines/routinesWithTask?taskName=${taskName}&page=${routinesCurrentPage.value}&limit=${pageSize}`
     );
     const data = await response.json();
 
@@ -448,10 +445,10 @@ async function fetchRoutinesUsingTask(taskId: string, isLoadMore = false) {
   }
 }
 
-async function fetchHeatmapData(taskId: string) {
+async function fetchHeatmapData(taskName: string) {
   try {
     const response = await fetch(
-      `/api/services/tasks/heatmapData?taskId=${taskId}`
+      `/api/services/tasks/heatmapData?taskName=${taskName}`
     );
     const rawData = await response.json();
     // Build yearOptions and monthNames from rawData
@@ -494,30 +491,30 @@ async function fetchHeatmapData(taskId: string) {
 }
 
 async function loadMoreTasks() {
-  const itemId: string = Array.isArray(route.params.id)
+  const itemName: string = Array.isArray(route.params.id)
     ? route.params.id[0]
     : route.params.id;
-  await fetchActiveTasks(itemId, true);
+  await fetchActiveTasks(itemName, true);
 }
 
 async function loadMoreRoutines() {
-  const itemId: string = Array.isArray(route.params.id)
+  const itemName: string = Array.isArray(route.params.id)
     ? route.params.id[0]
     : route.params.id;
-  await fetchRoutinesUsingTask(itemId, true);
+  await fetchRoutinesUsingTask(itemName, true);
 }
 watch(
   () => route.params.id,
-  (newId) => {
-    const itemId: string = Array.isArray(newId) ? newId[0] : newId;
+  (newName) => {
+    const itemName: string = Array.isArray(newName) ? newName[0] : newName;
     selectedItem.value = Array.isArray(Items.value)
-      ? Items.value.find((item: Item) => item.uuid === itemId)
+      ? Items.value.find((item: Item) => item.uuid === itemName)
       : null;
     tasksCurrentPage.value = 1;
     routinesCurrentPage.value = 1;
-    fetchActiveTasks(itemId, false);
-    fetchRoutinesUsingTask(itemId, false);
-    fetchHeatmapData(Array.isArray(newId) ? newId[0] : newId);
+    fetchActiveTasks(itemName, false);
+    fetchRoutinesUsingTask(itemName, false);
+    fetchHeatmapData(Array.isArray(newName) ? newName[0] : newName);
   }
 );
 </script>

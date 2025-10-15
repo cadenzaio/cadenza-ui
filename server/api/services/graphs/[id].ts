@@ -3,12 +3,17 @@ import pg from 'pg';
 
 let client: pg.Client | null = null;
 
-async function getGraph(graphId: string) {
+// The frontend passes a service instance id (name). Query the service_instance
+// table and join to service to get display name/description if available.
+async function getGraph(serviceInstanceId: string) {
   const query = `
-    SELECT * FROM processing_graph
-    WHERE name = $1;
+    SELECT *
+    FROM service s
+    WHERE s.name = $1
+    LIMIT 1;
   `;
-  const result = await client!.query(query, [graphId]);
+
+  const result = await client!.query(query, [serviceInstanceId]);
 
   if (result.rows && result.rows.length > 0) {
     const row = result.rows[0];
@@ -19,6 +24,7 @@ async function getGraph(graphId: string) {
       deleted: row.deleted,
       created: formatDateLocale(row.created),
       deletedStatus: row.deleted ? 'Yes' : 'No',
+      displayName: row.display_name || row.name,
     };
   }
 
@@ -31,11 +37,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const { method } = event.node.req;
-  const graphId = decodeURIComponent(event.context.params?.id ?? '');
+  const serviceInstanceId = decodeURIComponent(event.context.params?.id ?? '');
 
   if (method === 'GET') {
     try {
-      return await getGraph(graphId);
+      return await getGraph(serviceInstanceId);
     } catch (error) {
       console.error('Error fetching graph:', error);
       throw error;

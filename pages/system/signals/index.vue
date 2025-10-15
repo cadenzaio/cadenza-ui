@@ -49,9 +49,9 @@ const columns = [
     sortable: true,
   },
   {
-    name: 'value',
-    label: 'Value',
-    field: 'value',
+    name: 'service',
+    label: 'Service',
+    field: 'service',
     required: true,
     sortable: false,
   },
@@ -82,7 +82,7 @@ const signals = ref<Signal[]>([]);
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
 const currentPage = ref(1);
-const pageSize = 50;
+const pageSize = 50000;
 
 async function loadSignals(isLoadMore = false) {
   try {
@@ -91,50 +91,19 @@ async function loadSignals(isLoadMore = false) {
       currentPage.value++;
     }
 
-    // Replace with your endpoint when ready
-    // const response = await fetch(`/api/services/signals?page=${currentPage.value}&limit=${pageSize}`);
-    // if (!response.ok) throw new Error('Network response was not ok');
-    // const data = await response.json();
+    const response = await $fetch(`/api/services/signals/signals?page=${currentPage.value}&limit=${pageSize}`);
+    const rows = response || [];
 
-    // For now, use hardcoded mock data
-    const data = [
-      {
-        name: 'Signal 1',
-        status: 'check',
-        value: 'OK',
-        started: '2025-08-21T10:00:00Z',
-        ended: '2025-08-21T10:00:01Z',
-        duration: 1,
-        uuid: 'sig-1',
-      },
-      {
-        name: 'Signal 2',
-        status: 'close',
-        value: 'Threshold Exceeded',
-        started: '2025-08-21T09:55:00Z',
-        ended: '2025-08-21T09:55:05Z',
-        duration: 5,
-        uuid: 'sig-2',
-      },
-      {
-        name: 'Signal 3',
-        status: 'play_arrow',
-        value: 'In Progress',
-        started: '2025-08-21T09:50:00Z',
-        ended: '',
-        duration: 0,
-        uuid: 'sig-3',
-      },
-      {
-        name: 'Signal 4',
-        status: 'schedule',
-        value: 'Scheduled',
-        started: '2025-08-21T11:00:00Z',
-        ended: '',
-        duration: 0,
-        uuid: 'sig-4',
-      },
-    ];
+    // Map DB rows to the table's expected Signal interface
+    const data = rows.map((r: any) => ({
+      name: r.name,
+      status: r.is_meta ? 'meta' : 'signal',
+      service: r.service_name || r.action || '',
+      started: r.created || '',
+      ended: '',
+      duration: 0,
+      uuid: r.name,
+    }));
 
     if (isLoadMore) {
       signals.value = [...signals.value, ...data];

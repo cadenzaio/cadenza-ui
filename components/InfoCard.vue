@@ -1,10 +1,10 @@
 <template>
   <q-card class="custom-card q-mb-md overflow-auto q-ma-sm">
-    <div class="col flex-grow q-pa-md">
+    <div class="col flex-grow q-pa-md" style="height: 100%; min-height: 400px;">
       <div class="row text-h5">
         <slot name="title" />
       </div>
-      <div class="row">
+      <div class="col flex-grow">
         <slot name="info" />
       </div>
     </div>

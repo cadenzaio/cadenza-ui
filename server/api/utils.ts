@@ -5,11 +5,11 @@ dotenv.config();
 
 export async function initializeClient() {
   const client = new pg.Client({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: parseInt(process.env.DB_PORT || '5432', 10),
+    user: process.env.DATABASE_USER || '',
+    host: process.env.DATABASE_ADDRESS || 'localhost',
+    database: process.env.DATABASE_NAME || '',
+    password: process.env.DATABASE_PASSWORD || '',
+    port: parseInt(process.env.DATABASE_PORT || '5433', 10),
   });
 
   try {

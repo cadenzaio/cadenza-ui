@@ -2,15 +2,15 @@
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
       <template #title>
-        {{ selectedItem?.name }} - {{ selectedItem?.uuid.slice(0, 8) }}
+        {{ selectedItem?.name }}
       </template>
       <div class="row q-mx-md">
         <FlowMap
           v-if="routineMap && routineMap.length > 0"
           :items="routineMap"
-          id-field="uuid"
+          id-field="name"
           label-field="label"
-          previous-field="previousTaskExecutionId"
+          previous-field="previousTaskExecutionName"
           @item-selected="onTaskSelected"
         />
         <InfoCard v-if="selectedItem">
@@ -26,21 +26,21 @@
                 Function: {{ selectedItem?.function_string }}
               </div>
               <div class="q-separator" style="height: 2px"></div>
-              <div class="q-mx-md q-my-sm">UUID: {{ selectedItem?.uuid }}</div>
+              <div class="q-mx-md q-my-sm">Name: {{ selectedItem?.name }}</div>
               <div class="q-mx-md q-my-sm">Type: {{ selectedItem?.type }}</div>
               <div
                 class="q-mx-md q-my-sm"
                 @click="
-                  navigateToItem(`/services/${selectedItem?.processing_graph}`)
+                  navigateToItem(`/services/${selectedItem?.service_instance}`)
                 "
                 @contextmenu.prevent="
                   openLinkInNewTab(
-                    `/services/${selectedItem?.processing_graph}`
+                    `/services/${selectedItem?.service_instance}`
                   )
                 "
               >
                 <span class="text-primary cursor-pointer">
-                  {{ selectedItem?.processing_graph }}
+                  {{ selectedItem?.service_instance }}
                 </span>
               </div>
               <div class="q-mx-md q-my-sm">
@@ -59,14 +59,14 @@
         </InfoCard>
         <ExecutionStatisticsPieChart
           type="routine"
-          :routineId="String(route.params.id)"
+          :routineName="String(route.params.id)"
         />
         <ExecutionTimeChart v-if="selectedItem" :series="executionTimeSeries" />
         <Table
           class="custom-table"
           :columns="columns"
           :rows="routines"
-          row-key="id"
+          row-key="name"
           @inspect-row="inspectRoutine"
           @inspect-row-in-new-tab="inspectInNewTab"
           @loadMoreData="loadMoreRoutines"
@@ -110,12 +110,9 @@ interface Item {
   name: string;
   description: string;
   function_string: string;
-  id: any;
-  executionId: any;
+  executionName: any;
   progress: any;
-  uuid: any;
-  routine_id: any;
-  processing_graph: string;
+  service_instance: string;
   created: string;
   deleted: boolean;
 }
@@ -155,7 +152,7 @@ if (error.value) {
 
 // Fetch the execution times chart series data
 const { data: executionData, error: executionError } = await useFetch(
-  `/api/activity/routines/routineExecutionTimes?routineId=${route.params.id}`
+  `/api/activity/routines/routineExecutionTimes?routineName=${route.params.id}`
 );
 if (executionError.value) {
   console.error('Error fetching execution times:', executionError.value);
@@ -181,25 +178,21 @@ if (executionError.value) {
 }
 
 interface Routine {
-  id: string;
   name: string;
   type: string;
   label: string;
   description: string;
   routineDescription: string;
-  serverId: string;
-  routineId: string;
+  serviceName: string;
   status: string;
   previousRoutineExecution: string;
   progress: number;
   started: string;
   ended: string;
   duration: string;
-  uuid: string;
-  serverName: string;
   previousRoutineName: string;
-  contract_id: string;
-  processingGraph: string;
+  traceId: string;
+  serviceInstance: string;
   inputContext: any;
   outputContext: any;
   isRunning: boolean;
@@ -209,16 +202,16 @@ interface Routine {
 const selectedRoutine = ref<Routine[] | undefined>(undefined);
 
 interface RoutineMapTask {
-  uuid: any;
+  name: any;
   label: any;
   layer_index: any;
-  previousTaskExecutionId: any;
+  previousTaskExecutionName: any;
   description: any;
   is_unique: any;
   concurrency: any;
 }
 
-const routineMap = ref<(RoutineMapTask & { id: any })[]>([]);
+const routineMap = ref<(RoutineMapTask & { name: any })[]>([]);
 
 const columns = [
   {
@@ -255,11 +248,11 @@ const router = useRouter();
 function inspectRoutine(routine: Routine) {
   // Left click: navigate, right click: open in new tab
   // (Assume this is called from a row or button, so add @contextmenu in template where used)
-  navigateToItem(`/activity/routines/${routine.id}`);
+  navigateToItem(`/activity/routines/${routine.name}`);
 }
 
 function inspectInNewTab(routine: Routine) {
-  openLinkInNewTab(`/activity/routines/${routine.id}`);
+  openLinkInNewTab(`/activity/routines/${routine.name}`);
 }
 
 const navigateToItem = (route: string) => {
@@ -268,17 +261,17 @@ const navigateToItem = (route: string) => {
 
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
-  if (task.uuid) {
+  if (task.name) {
     // Left click: navigate, right click: open in new tab
     // (Assume this is called from a row or button, so add @contextmenu in template where used)
-    navigateToItem(`/services/tasks/${task.uuid}`);
+    navigateToItem(`/system/tasks/${task.name}`);
   }
 }
 
-async function fetchHeatmapData(routineId: string) {
+async function fetchHeatmapData(routineName: string) {
   try {
     const response = await fetch(
-      `/api/services/routines/heatmapData?routineId=${routineId}`
+      `/api/services/routines/heatmapData?routineName=${routineName}`
     );
     const rawData = await response.json();
     const dates = rawData.map((r: any) => new Date(r.date));
@@ -322,27 +315,27 @@ onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('system');
 
-  const itemId: string = Array.isArray(route.params.id)
+  const itemName: string = Array.isArray(route.params.id)
     ? route.params.id[0]
     : route.params.id;
 
   if (Items.value && Array.isArray(Items.value)) {
     selectedItem.value =
-      (Items.value.find((item) => item.uuid === itemId) as Item) ?? null;
+      (Items.value.find((item) => item.name === itemName) as Item) ?? null;
   }
 
-  fetchActiveRoutines(itemId, false);
+  fetchActiveRoutines(itemName, false);
 
   // Fetch routine map data
-  if (selectedItem.value) {
+      if (selectedItem.value) {
     try {
       const tasks = await $fetch(
-        `/api/services/tasks/staticTasksInRoutine?routineId=${selectedItem.value.uuid}`
+        `/api/services/tasks/staticTasksInRoutine?routineName=${selectedItem.value.name}`
       );
       routineMap.value =
         (tasks as RoutineMapTask[]).map((task) => ({
           ...task,
-          id: task.uuid, // Add 'id' property required by FlowItem
+              name: task.name, // Add 'name' property required by FlowItem
         })) || [];
     } catch (error) {
       console.error('Error fetching routine map:', error);
@@ -362,7 +355,7 @@ watch(
   }
 );
 
-async function fetchActiveRoutines(itemId: string, isLoadMore = false) {
+async function fetchActiveRoutines(itemName: string, isLoadMore = false) {
   try {
     if (isLoadMore) {
       loadingMoreData.value = true;
@@ -370,7 +363,7 @@ async function fetchActiveRoutines(itemId: string, isLoadMore = false) {
     }
 
     const data = await $fetch<Routine[]>(
-      `/api/activity/routines/routineActivity?id=${itemId}&page=${currentPage.value}&limit=${pageSize}`
+      `/api/activity/routines/routineActivity?id=${itemName}&page=${currentPage.value}&limit=${pageSize}`
     );
 
     if (isLoadMore) {
@@ -391,10 +384,10 @@ async function fetchActiveRoutines(itemId: string, isLoadMore = false) {
 }
 
 async function loadMoreRoutines() {
-  const itemId: string = Array.isArray(route.params.id)
+  const itemName: string = Array.isArray(route.params.id)
     ? route.params.id[0]
     : route.params.id;
-  await fetchActiveRoutines(itemId, true);
+  await fetchActiveRoutines(itemName, true);
 }
 </script>
 
