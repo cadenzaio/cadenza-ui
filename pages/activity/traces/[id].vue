@@ -371,20 +371,20 @@ function confirmGenerate() {
 }
 async function fetchTraceContext(traceId: string) {
   try {
-    // Note: backend endpoint is still /contracts/contracts
-    const contractRes = await fetch(`/api/contracts/contracts?uuid=${traceId}`);
-    if (contractRes.ok) {
-      const apiData = await contractRes.json();
-      traceContext.value = apiData.contracts?.[0] || null;
+    // Updated backend endpoint to fetch trace context by UUID
+    const traceRes = await fetch(`/api/activity/traces/trace?uuid=${traceId}`);
+    if (traceRes.ok) {
+      const apiData = await traceRes.json();
+      traceContext.value = apiData[0] || null;
       routineMap.value = {
-        routines: apiData.routines || [],
-        servers: apiData.servers || [],
-        tasks: apiData.tasks || [],
+        routines: apiData[0]?.routines || [],
+        servers: apiData[0]?.servers || [],
+        tasks: apiData[0]?.tasks || [],
       };
       // Build nodes and edges for NestedFlowMap using the raw API data
-      const routines = apiData.routines || [];
-      const servers = apiData.servers || [];
-      const tasks = apiData.tasks || [];
+      const routines = apiData[0]?.routines || [];
+      const servers = apiData[0]?.servers || [];
+      const tasks = apiData[0]?.tasks || [];
       const serviceNodes = servers.map((srv: any) => ({
         id: srv.uuid,
         type: 'custom',
@@ -490,7 +490,7 @@ async function fetchTraceContext(traceId: string) {
         })
         .filter(Boolean);
     } else {
-      const errMsg = `[fetchTraceContext] Trace response not ok: ${contractRes.status} ${contractRes.statusText}`;
+      const errMsg = `[fetchTraceContext] Trace response not ok: ${traceRes.status} ${traceRes.statusText}`;
       error.value = errMsg;
     }
   } catch (err) {

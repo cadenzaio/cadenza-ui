@@ -111,7 +111,7 @@ const nodeSelectedBorder = computed(() =>
       <span class="meta-label">{{ data.label || data.uuid }}</span>
     </template>
     <template v-else>
-      <span>{{ data.label || data.uuid }}</span>
+      <span class="node-label" :title="data.label">{{ (data.label || data.uuid).slice(0, 20) }}</span>
       <q-linear-progress
         v-if="data.isRunning"
         dark
@@ -122,9 +122,10 @@ const nodeSelectedBorder = computed(() =>
       />
     </template>
     <q-tooltip>
+      Name: {{ data.label || data.uuid }}<br />
       Description: {{ data.description }}<br />
       {{ data.is_unique ? 'Unique' : 'Not Unique' }}<br />
-      Concurrency: {{ data.concurrency }}
+      Concurrency: {{ data.concurrency }}<br/>
     </q-tooltip>
     <template v-if="data.signal">
       <Handle type="target" :position="Position.Top" />
@@ -157,6 +158,8 @@ const nodeSelectedBorder = computed(() =>
   overflow-wrap: break-word;
   transition: background 0.2s;
   padding: 5px;
+
+
 }
 .custom-node:hover {
   filter: brightness(0.75);
@@ -185,53 +188,37 @@ const nodeSelectedBorder = computed(() =>
   color: #08c011 !important;
 }
 
-/* Scanning highlight */
+/* Updated animation for signal-node */
 .signal-node {
   position: relative;
   overflow: hidden;
 }
-.signal-node::before {
+.signal-node::before,
+.signal-node::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: -15%;
-  height: 100%;
-  width: 12%;
-  pointer-events: none;
-  /* colored band that uses the node color with a strong center and soft edges */
-  background: linear-gradient(90deg,
-    rgba(0,0,0,0) 0%,
-    color-mix(in srgb, currentColor 45%, transparent) 80%,
-    color-mix(in srgb, currentColor 75%, transparent) 50%,
-    color-mix(in srgb, currentColor 45%, transparent) 88%,
-    rgba(0,0,0,0) 100%
-  );
-  transform: skewX(-12deg);
-  /* use linear timing and make the sweep occupy most of the duration so there's minimal idle time */
-  animation: signal-scan 1.5s linear infinite;
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 0 6px rgba(8,192,17,0.85));
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border: 2px solid rgba(8, 192, 17, 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: expand-ring 1.5s ease-out infinite;
+}
+.signal-node::after {
+  animation-delay: 0.15s; /* Delay the second ring to overtake the first */
 }
 
-@keyframes signal-scan {
-  /* movement now occupies most of the animation (0% -> 92%),
-     brief fade/reset window (92% -> 100%) so gap between scans is small */
+@keyframes expand-ring {
   0% {
-    left: -40%;
-    opacity: 0;
-  }
-  6% {
+    width: 0;
+    height: 0;
     opacity: 1;
-  }
-  92% {
-    left: 120%;
-    opacity: 1;
-  }
-  98% {
-    opacity: 0;
   }
   100% {
-    left: -40%;
+    width: 200%;
+    height: 200%;
     opacity: 0;
   }
 }
@@ -251,8 +238,8 @@ const nodeSelectedBorder = computed(() =>
 }
 .meta-node {
   background: #ab0ac0 !important;
-  width: 40px !important;
-  height: 40px !important;
+  width: 30px !important;
+  height: 30px !important;
   box-shadow: 0 2px 8px 0 rgba(141, 140, 140, 0.66);
   transform: rotate(45deg);
   display: flex;
@@ -270,5 +257,18 @@ const nodeSelectedBorder = computed(() =>
   color: #fff;
   font-size: 0.7em;
   pointer-events: none;
+}
+.node-label {
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.node-label:hover {
+  white-space: normal;
+  overflow: visible;
 }
 </style>

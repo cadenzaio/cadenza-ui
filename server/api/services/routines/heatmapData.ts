@@ -21,7 +21,7 @@ async function getRoutineMap(routineName: string) {
       SUM(CASE WHEN failed THEN 1 ELSE 0 END) +
       SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as errors
     FROM "routine_execution"
-    WHERE "routine_Name" = $1
+    WHERE "routine_Name" = $1 AND is_meta = false
     GROUP BY date, hour
     ORDER BY date, hour
   `;

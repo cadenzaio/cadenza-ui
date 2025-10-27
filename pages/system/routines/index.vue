@@ -35,6 +35,11 @@ interface routines {
 
 const layout = 'dashboard-layout';
 const selectedRoutine = ref<routines[] | undefined>(undefined);
+const routines = ref<routines[]>([]);
+const hasMoreData = ref(true);
+const currentPage = ref(1);
+const pageSize = 50;
+const router = useRouter();
 
 const columns = [
   {
@@ -53,13 +58,6 @@ const columns = [
   },
 ];
 
-const routines = ref<routines[]>([]);
-const hasMoreData = ref(true);
-
-const currentPage = ref(1);
-const pageSize = 50;
-
-const router = useRouter();
 
 function inspectRoutines(routines: routines) {
   navigateToItem(`/system/routines/${routines.label}`);

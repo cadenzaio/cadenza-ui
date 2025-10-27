@@ -207,6 +207,7 @@ interface Task {
   executionName: any;
   progress: any;
   name: string;
+  uuid: string;
 }
 
 interface Routine {
@@ -304,7 +305,7 @@ const pageSize = 50;
 const router = useRouter();
 
 function inspectTask(task: Task) {
-  navigateToItem(`/activity/tasks/${task.name}`);
+  navigateToItem(`/activity/tasks/${task.uuid}`);
 }
 
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';

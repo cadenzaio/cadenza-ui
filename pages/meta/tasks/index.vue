@@ -27,6 +27,7 @@ import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
 
 interface task {
+  name: string;
   type: string;
   label: string;
   description: string;
@@ -94,13 +95,11 @@ const pageSize = 50;
 const router = useRouter();
 
 function inspectTask(task: task) {
-  navigateToItem(`/meta/tasks/${task.uuid}`);
+  navigateToItem(`/activity/tasks/${task.uuid}`);
 }
-import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
-const { openLinkInNewTab } = useOpenLinkInNewTab();
-
 function inspectInNewTab(task: task) {
-  openLinkInNewTab(`/meta/tasks/${task.uuid}`);
+  const url = `/activity/tasks/${task.uuid}`;
+  window.open(url, '_blank');
 }
 
 const navigateToItem = (route: string) => {
@@ -115,7 +114,7 @@ async function loadTasks(isLoadMore = false) {
     }
 
     const response = await fetch(
-      `/api/activity/tasks/activeTasks?page=${currentPage.value}&limit=${pageSize}`
+      `/api/meta/tasks/metaTasks?page=${currentPage.value}&limit=${pageSize}`
     );
     if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();

@@ -148,36 +148,36 @@
                   class="q-mx-md q-my-sm"
                   @click="
                     navigateToItem(
-                      `/services/routines/${selectedItem?.routineId}`
+                      `/system/routines/${selectedItem?.name}`
                     )
                   "
                   @contextmenu.prevent="
                     openLinkInNewTab(
-                      `/services/routines/${selectedItem?.routineId}`
+                      `/system/routines/${selectedItem?.name}`
                     )
                   "
                 >
                   Routine id:
                   <span class="text-primary cursor-pointer">{{
-                    selectedItem?.label
+                    selectedItem?.uuid
                   }}</span>
                 </div>
                 <div
                   class="q-mx-md q-my-sm"
                   @click="
                     navigateToItem(
-                      `/services/${selectedItem?.serverName?.split('@')[0]}`
+                      `/activity/services/${selectedItem?.serviceName}`
                     )
                   "
                   @contextmenu.prevent="
                     openLinkInNewTab(
-                      `/services/${selectedItem?.serverName?.split('@')[0]}`
+                      `/activity/services/${selectedItem?.serviceName}`
                     )
                   "
                 >
-                  Service id:
+                  Service Name:
                   <span class="text-primary cursor-pointer">{{
-                    selectedItem?.serverName
+                    selectedItem?.serviceName
                   }}</span>
                 </div>
                 <div
@@ -320,18 +320,18 @@
                     class="q-mx-md q-my-sm"
                     @click="
                       navigateToItem(
-                        `/services/${selectedItem?.serverName?.split('@')[0]}`
+                        `/services/${selectedItem?.serviceName?.split('@')[0]}`
                       )
                     "
                     @contextmenu.prevent="
                       openLinkInNewTab(
-                        `/services/${selectedItem?.serverName?.split('@')[0]}`
+                        `/services/${selectedItem?.serviceName?.split('@')[0]}`
                       )
                     "
                   >
-                    Server id:
+                    Service name:
                     <span class="text-primary cursor-pointer">{{
-                      selectedItem?.serverName
+                      selectedItem?.serviceName
                     }}</span>
                   </div>
                 </div>
@@ -400,6 +400,7 @@ import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
 
 interface SelectedItem {
+  name: string;
   label: string;
   uuid: string;
   routineDescription: string;
@@ -408,9 +409,10 @@ interface SelectedItem {
   ended: string;
   status: string;
   routineId?: string;
+  routineName: string;
   serverId: string;
   previousRoutineExecution?: string;
-  serverName: string;
+  serviceName: string;
   previousRoutineName: string;
   contract_id: string;
   layer_index: number;
@@ -431,7 +433,7 @@ interface SelectedTask {
   previous_task_name: string;
   taskId?: string;
   serverId: string;
-  serverName: string;
+  serviceName: string;
   failed: boolean;
   layer_index: number;
 }
@@ -471,7 +473,7 @@ function mapTaskToSelectedTask(task: any): SelectedTask {
     previous_task_name: task.previous_task_name,
     taskId: task.taskId,
     serverId: task.serverId,
-    serverName: task.serverName,
+    serviceName: task.serviceName,
     failed: task.failed,
     layer_index: task.layer_index,
   };
@@ -509,7 +511,7 @@ onMounted(async () => {
   try {
     // Fetch the specific routine by uuid using the new query param
     const response = await fetch(
-      `/api/activity/routines/activeRoutines?uuid=${itemId}`
+      `/api/activity/routines/activeRoutine?uuid=${itemId}`
     );
     if (!response.ok) throw new Error('Failed to fetch routine');
     const data = await response.json();

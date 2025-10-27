@@ -20,146 +20,155 @@
         ></FlowMap>
       </div>
 
-      <div class="row q-mx-md">
-        <InfoCard v-if="taskExecution">
+      <div class="q-mx-md">
+        <InfoCard v-if="taskExecution" class="full-width">
           <template #title>
             {{ taskExecution.name }}
           </template>
           <template #info>
-            <div class="flex-column full-width">
-              <div class="q-mx-md q-my-sm">
-                Description: {{ taskExecution.description }}
-              </div>
-              <div class="q-mx-md q-my-sm">
-                Execution ID: {{ taskExecution.uuid }}
-              </div>
-              <div class="q-mx-md q-my-sm">
-                Routine Name: {{ taskExecution.routineName }}
-              </div>
-              <div class="q-separator" style="height: 2px"></div>
-              <div class="q-mx-md q-my-sm">
-                Is Unique: {{ taskExecution.isUnique }}
-              </div>
-              <div class="q-separator" style="height: 2px"></div>
-              <div class="flex">
-                <div>
-                  <div class="q-mx-md q-my-sm">
-                    Progress: {{ taskExecution.progress }}%
-                  </div>
-                  <div class="q-mx-md q-my-sm">
-                    Started: {{ formatDate(taskExecution.started) }}
-                  </div>
-                  <div class="q-mx-md q-my-sm">
-                    Ended: {{ formatDate(taskExecution.ended) }}
-                  </div>
-                  <div class="q-mx-md q-my-sm">
-                    Duration:
-                    {{
-                      getDuration(taskExecution.started, taskExecution.ended)
-                    }}
-                    sec
-                  </div>
+            <div class="row" style="flex-wrap: wrap;">
+              <!-- First Column -->
+              <div class="col" style="min-width: 300px;">
+                <div class="q-mx-md q-my-sm">
+                  Description: {{ taskExecution.description }}
                 </div>
-                <ProgressRadialBarChart
-                  v-if="taskExecution"
-                  :name="taskExecution?.name"
-                  :value="taskExecution?.progress"
-                />
-              </div>
-              <div class="q-separator" style="height: 2px"></div>
-              <div class="q-mx-md q-my-sm">
-                Success: {{ !taskExecution.failed && !taskExecution.errored }}
-              </div>
-              <div class="q-separator" style="height: 2px"></div>
-              <div
-                v-if="taskExecution.previousTaskExecutionId !== null"
-                class="q-mx-md q-my-sm cursor-pointer text-warning"
-              >
-                <div
-                  v-for="(id, index) in taskExecution.previousTaskExecutionId"
-                  :key="index"
-                  @click="navigateToItem(`/activity/tasks/${id}`)"
-                  @contextmenu.prevent="
-                    openLinkInNewTab(`/activity/tasks/${id}`)
-                  "
-                >
-                  Previous {{ taskExecution.previousTaskNames[index] }}
+                <div class="q-mx-md q-my-sm">
+                  Execution ID: {{ taskExecution.uuid }}
                 </div>
-              </div>
-              <div
-                v-if="taskExecution.nextTaskExecutionId !== null"
-                class="q-mx-md q-my-sm cursor-pointer text-warning"
-              >
-                <div
-                  v-for="(id, index) in taskExecution.nextTaskExecutionId"
-                  :key="index"
-                  @click="navigateToItem(`/activity/tasks/${id}`)"
-                  @contextmenu.prevent="
-                    openLinkInNewTab(`/activity/tasks/${id}`)
-                  "
-                >
-                  Next {{ taskExecution.nextTaskNames[index] }}
+                <div class="q-mx-md q-my-sm">
+                  Routine Name: {{ taskExecution.routineName }}
                 </div>
-              </div>
-              <div
-                class="q-mx-md q-my-sm cursor-pointer text-warning"
-                @click="
-                  navigateToItem(
-                    `/activity/routines/${taskExecution.routineExecutionId}`
-                  )
-                "
-                @contextmenu.prevent="
-                  openLinkInNewTab(
-                    `/activity/routines/${taskExecution.routineExecutionId}`
-                  )
-                "
-              >
-                Routine Execution ID: {{ taskExecution.routineName }}
+                <div class="q-mx-md q-my-sm">
+                  Is Unique: {{ taskExecution.isUnique }}
+                </div>
               </div>
 
-              <div
-                v-if="taskExecution.taskId"
-                class="q-mx-md q-my-sm cursor-pointer text-primary"
-                @click="
-                  navigateToItem(`/services/tasks/${taskExecution.taskId}`)
-                "
-                @contextmenu.prevent="
-                  openLinkInNewTab(`/services/tasks/${taskExecution.taskId}`)
-                "
-              >
-                Task: {{ taskExecution.name }}
+              <!-- Second Column -->
+              <div class="col" style="min-width: 300px;">
+                <div class="row items-center">
+                  <div class="col">
+                    <div class="q-mx-md q-my-sm">
+                      Progress: {{ taskExecution.progress }}%
+                    </div>
+                    <div class="q-mx-md q-my-sm">
+                      Success: {{ !taskExecution.failed && !taskExecution.errored }}
+                    </div>
+                    <div class="q-mx-md q-my-sm">
+                      Started: {{ formatDate(taskExecution.started) }}
+                    </div>
+                    <div class="q-mx-md q-my-sm">
+                      Ended: {{ formatDate(taskExecution.ended) }}
+                    </div>
+                    <div class="q-mx-md q-my-sm">
+                      Duration:
+                      {{
+                        getDuration(taskExecution.started, taskExecution.ended)
+                      }}
+                      sec
+                    </div>
+                  </div>
+                  <div class="col-auto">
+                    <ProgressRadialBarChart
+                      v-if="taskExecution"
+                      :name="taskExecution?.name"
+                      :value="taskExecution?.progress"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div
-                class="q-mx-md q-my-sm cursor-pointer text-primary"
-                @click="navigateToItem(`/services/${taskExecution.serverName}`)"
-                @contextmenu.prevent="
-                  openLinkInNewTab(`/services/${taskExecution.serverName}`)
-                "
-              >
-                Server: {{ taskExecution.serverName }}
-              </div>
-              <div
-                class="q-mx-md q-my-sm"
-                @click="
-                  navigateToItem(
-                    `/activity/traces/${taskExecution?.contract_id}`
-                  )
-                "
-                @contextmenu.prevent="
-                  openLinkInNewTab(
-                    `/activity/traces/${taskExecution?.contract_id}`
-                  )
-                "
-              >
-                <span class="text-warning cursor-pointer">Trace</span>
+              <!-- Third Column -->
+              <div class="col" style="min-width: 300px;">
+                <div
+                  v-if="taskExecution.previousTaskExecutionId !== null"
+                  class="q-mx-md q-my-sm cursor-pointer text-warning"
+                >
+                  <div
+                    v-for="(id, index) in taskExecution.previousTaskExecutionId"
+                    :key="index"
+                    @click="navigateToItem(`/activity/tasks/${id}`)"
+                    @contextmenu.prevent="
+                      openLinkInNewTab(`/activity/tasks/${id}`)
+                    "
+                  >
+                    Previous {{ taskExecution.previousTaskNames[index] }}
+                  </div>
+                </div>
+                <div
+                  v-if="taskExecution.nextTaskExecutionId !== null"
+                  class="q-mx-md q-my-sm cursor-pointer text-warning"
+                >
+                  <div
+                    v-for="(id, index) in taskExecution.nextTaskExecutionId"
+                    :key="index"
+                    @click="navigateToItem(`/activity/tasks/${taskExecution.nextTaskExecutionId}`)"
+                    @contextmenu.prevent="
+                      openLinkInNewTab(`/activity/tasks/${taskExecution.nextTaskExecutionId}`)
+                    "
+                  >
+                    Next {{ taskExecution.nextTaskNames[index] }}
+                  </div>
+                </div>
+                <div
+                  class="q-mx-md q-my-sm cursor-pointer text-warning"
+                  @click="
+                    navigateToItem(
+                      `/activity/routines/${taskExecution.routineExecutionId}`
+                    )
+                  "
+                  @contextmenu.prevent="
+                    openLinkInNewTab(
+                      `/activity/routines/${taskExecution.routineExecutionId}`
+                    )
+                  "
+                >
+                  Routine Execution ID: {{ taskExecution.routineName }}
+                </div>
+
+                <div
+                  v-if="taskExecution.taskId"
+                  class="q-mx-md q-my-sm cursor-pointer text-primary"
+                  @click="
+                    navigateToItem(`/services/tasks/${taskExecution.taskId}`)
+                  "
+                  @contextmenu.prevent="
+                    openLinkInNewTab(`/services/tasks/${taskExecution.taskId}`)
+                  "
+                >
+                  Task: {{ taskExecution.name }}
+                </div>
+
+                <div
+                  class="q-mx-md q-my-sm cursor-pointer text-primary"
+                  @click="navigateToItem(`/services/${taskExecution.serverName}`)"
+                  @contextmenu.prevent="
+                    openLinkInNewTab(`/services/${taskExecution.serverName}`)
+                  "
+                >
+                  Server: {{ taskExecution.serverName }}
+                </div>
+                <div
+                  class="q-mx-md q-my-sm"
+                  @click="
+                    navigateToItem(
+                      `/activity/traces/${taskExecution?.contract_id}`
+                    )
+                  "
+                  @contextmenu.prevent="
+                    openLinkInNewTab(
+                      `/activity/traces/${taskExecution?.contract_id}`
+                    )
+                  "
+                >
+                  <span class="text-warning cursor-pointer">Trace</span>
+                </div>
               </div>
             </div>
           </template>
         </InfoCard>
 
-        <div>
-          <InfoCard>
+        <div class="row" style="flex-wrap: wrap;">
+          <InfoCard class="col" style="min-width: 300px;">
             <template #title>Input Context</template>
             <template #info>
               <div class="q-mx-md q-my-sm">
@@ -168,16 +177,16 @@
             </template>
           </InfoCard>
 
-          <InfoCard>
+          <InfoCard class="col" style="min-width: 300px;">
             <template #title>Tasks Function</template>
             <template #info>
               <div class="q-mx-md q-my-sm">
-                <pre>{{ taskExecution?.function_string }}</pre>
+                <pre>{{ taskExecution?.functionString }}</pre>
               </div>
             </template>
           </InfoCard>
 
-          <InfoCard>
+          <InfoCard class="col" style="min-width: 300px;">
             <template #title>Output Context</template>
             <template #info>
               <div class="q-mx-md q-my-sm">
@@ -233,9 +242,9 @@ async function fetchTaskExecution() {
 
   try {
     const result = await $fetch(
-      `/api/activity/tasks/taskExecution?id=${taskExecutionId.value}`
+      `/api/activity/tasks/activeTask?id=${taskExecutionId.value}`
     );
-    console.log('API fetch result (taskExecution):', result);
+    console.log('API fetch result (activeTask):', result);
     if (result) {
       taskExecution.value = result;
     }

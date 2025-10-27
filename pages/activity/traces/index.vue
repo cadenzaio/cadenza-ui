@@ -5,16 +5,14 @@
       <div class="row q-mx-md">
         <Table
           :columns="columns"
-          :rows="traces"
+          :rows="Traces"
           row-key="uuid"
           @inspect-row="inspectTraces"
           @inspect-row-in-new-tab="inspectInNewTab"
-          @loadMoreData="loadMoreTraces"
           :enableInfiniteScroll="true"
           :hasMoreData="hasMoreData"
-          :loadingMoreData="loadingMoreData"
+          @load-more="loadMoreTraces"
         />
-        <FrequencyPieChart v-if="traces.length > 0" :values="traces" />
       </div>
     </NuxtLayout>
   </NuxtLayout>
@@ -22,76 +20,88 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useFetch } from '#app';
 import { useRouter } from '#vue-router';
-import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+import { useAppStore } from '~/stores/app';
 
-interface Trace {
+interface Traces {
   type: string;
   label: string;
-  description: string;
-  id: any;
+  service: string;
   executionId: any;
   progress: any;
   uuid: string;
 }
 
-const traces = ref<Trace[]>([]);
+const layout = 'dashboard-layout';
+const selectedRoutine = ref<Traces[] | undefined>(undefined);
+const Traces = ref<Traces[]>([]);
 const hasMoreData = ref(true);
-const loadingMoreData = ref(false);
 const currentPage = ref(1);
 const pageSize = 50;
 const router = useRouter();
-const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 const columns = [
   {
-    name: 'name',
-    label: 'Name',
-    field: 'name',
+    name: 'uuid',
+    label: 'UUID',
+    field: 'uuid',
     required: true,
     sortable: true,
   },
   {
-    name: 'issued',
-    label: 'Issued',
-    field: 'issued',
+    name: 'service',
+    label: 'Service',
+    field: 'service',
     required: true,
-    sortable: true,
+    sortable: false,
   },
 ];
-function inspectTraces(trace: Trace) {
-  router.push(`traces/${trace.uuid}`);
+
+
+function inspectTraces(Traces: Traces) {
+  navigateToItem(`/activity/Traces/${Traces.uuid}`);
 }
-function inspectInNewTab(trace: Trace) {
-  openLinkInNewTab(`/activity/traces/${trace.uuid}`);
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
+function inspectInNewTab(routine: Traces) {
+  openLinkInNewTab(`/activity/Traces/${routine.uuid}`);
 }
-async function loadTraces(isLoadMore = false) {
+
+const navigateToItem = (route: string) => {
+  router.push(route);
+};
+
+async function loadTraces(page: number = 1, append: boolean = false) {
   try {
-    if (isLoadMore) {
-      loadingMoreData.value = true;
-      currentPage.value++;
-    }
-    // Note: backend endpoint is still /contracts/contracts
     const response = await fetch(
-      `/api/contracts/contracts?page=${currentPage.value}&limit=${pageSize}`
+      `/api/activity/traces/traces?page=${page}&limit=${pageSize}`
     );
     if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();
-    if (isLoadMore) {
-      traces.value = [...traces.value, ...data.contracts];
+
+    if (append) {
+      Traces.value = [...Traces.value, ...data];
     } else {
-      traces.value = data.contracts;
+      Traces.value = data;
     }
-    hasMoreData.value = data.contracts.length === pageSize;
+
+    hasMoreData.value = data.length === pageSize;
   } catch (error) {
+    console.error('Error loading Traces:', error);
     hasMoreData.value = false;
-  } finally {
-    if (isLoadMore) loadingMoreData.value = false;
   }
 }
+
 async function loadMoreTraces() {
-  await loadTraces(true);
+  currentPage.value++;
+  await loadTraces(currentPage.value, true);
 }
+
 onMounted(async () => {
-  await loadTraces();
+  const appStore = useAppStore();
+  appStore.setCurrentSection('serviceActivity');
+  await loadTraces(1, false);
 });
 </script>

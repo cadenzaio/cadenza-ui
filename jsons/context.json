@@ -1,0 +1,1129 @@
+[
+  {
+    "uuid": "7ae44196-b22c-46f6-84d7-621cee048d69",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:30:37.461Z\",\"consumed\":true,\"consumedBy\":\"2abb5a72-b641-42e9-903b-c1c8cb46e451\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__routineExecId\":\"2cba7d64-8aaa-4d6f-9680-6fa9b3547ea6\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:30:37.470062"
+  },
+  {
+    "uuid": "2e103be1-e5e5-40de-96c5-0935a5ae7807",
+    "context": "{\"deviceId\":\"device-27\",\"readings\":{\"temperature\":65.31150088580291,\"humidity\":58.884305935834995,\"battery\":66.4752315222702},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"2abb5a72-b641-42e9-903b-c1c8cb46e451\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:30:37.464Z\",\"consumed\":true,\"consumedBy\":\"19549097-c579-4220-9b6c-5b8f4192a74b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"2cba7d64-8aaa-4d6f-9680-6fa9b3547ea6\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\"},\"__isSubMeta\":true,\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__routineExecId\":\"b44716cc-4bbe-4453-9533-0160d9283c3c\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:30:37.501339"
+  },
+  {
+    "uuid": "6f3a38bc-7cb0-42b2-8fa9-6861663251f4",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:30:37.461Z\",\"consumed\":true,\"consumedBy\":\"2abb5a72-b641-42e9-903b-c1c8cb46e451\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__routineExecId\":\"2cba7d64-8aaa-4d6f-9680-6fa9b3547ea6\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:30:37.521266"
+  },
+  {
+    "uuid": "f1ccaf14-3e72-4322-9fc4-49fee383d181",
+    "context": "{\"data\":{\"temperature\":65.31150088580291,\"humidity\":58.884305935834995,\"battery\":66.4752315222702,\"deviceId\":\"device-27\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"2abb5a72-b641-42e9-903b-c1c8cb46e451\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:30:37.464Z\",\"consumed\":true,\"consumedBy\":\"19549097-c579-4220-9b6c-5b8f4192a74b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"2cba7d64-8aaa-4d6f-9680-6fa9b3547ea6\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\"},\"__isSubMeta\":false,\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__routineExecId\":\"b44716cc-4bbe-4453-9533-0160d9283c3c\",\"__nextNodes\":[\"a24cfc0e-4446-44de-b9d6-3fda3cc8e954\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:30:37.525200"
+  },
+  {
+    "uuid": "b7ef73cb-4e29-4262-804b-43a48728941c",
+    "context": "{\"data\":{\"temperature\":65.31150088580291,\"humidity\":58.884305935834995,\"battery\":66.4752315222702,\"deviceId\":\"device-27\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"2abb5a72-b641-42e9-903b-c1c8cb46e451\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:30:37.464Z\",\"consumed\":true,\"consumedBy\":\"19549097-c579-4220-9b6c-5b8f4192a74b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"2cba7d64-8aaa-4d6f-9680-6fa9b3547ea6\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\"},\"__isSubMeta\":false,\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__routineExecId\":\"b44716cc-4bbe-4453-9533-0160d9283c3c\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:30:37.527695"
+  },
+  {
+    "uuid": "b356f035-73c3-4b4e-9f38-4b840f6c9720",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__localRoutineExecId\":\"b44716cc-4bbe-4453-9533-0160d9283c3c\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"2abb5a72-b641-42e9-903b-c1c8cb46e451\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:30:37.464Z\",\"consumed\":true,\"consumedBy\":\"19549097-c579-4220-9b6c-5b8f4192a74b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"2cba7d64-8aaa-4d6f-9680-6fa9b3547ea6\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\"},\"__isSubMeta\":false,\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__routineExecId\":\"d6ac3401-242b-4219-9d8d-ba11bb2c6d99\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"dfc9fd6a-243e-4dae-bbc9-4adf13f8e750\"},\"queryData\":{\"data\":{\"temperature\":65.31150088580291,\"humidity\":58.884305935834995,\"battery\":66.4752315222702,\"deviceId\":\"device-27\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"dfc9fd6a-243e-4dae-bbc9-4adf13f8e750\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:30:37.533645"
+  },
+  {
+    "uuid": "cb79edea-af7d-4efd-bff3-919151810841",
+    "context": "{\"telemetry\":{\"uuid\":\"f6735e5d-4052-455e-a6a6-7bc9d1cffb64\",\"deviceId\":\"device-27\",\"timestamp\":{},\"temperature\":\"65.31\",\"humidity\":\"58.88\",\"battery\":\"66.48\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__localRoutineExecId\":\"b44716cc-4bbe-4453-9533-0160d9283c3c\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"2abb5a72-b641-42e9-903b-c1c8cb46e451\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:30:37.464Z\",\"consumed\":true,\"consumedBy\":\"19549097-c579-4220-9b6c-5b8f4192a74b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"2cba7d64-8aaa-4d6f-9680-6fa9b3547ea6\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\"},\"__isSubMeta\":false,\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__routineExecId\":\"dfc9fd6a-243e-4dae-bbc9-4adf13f8e750\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"dfc9fd6a-243e-4dae-bbc9-4adf13f8e750\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"4a8c7094-d644-492b-8e76-569a88f34c33\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:30:37.548912"
+  },
+  {
+    "uuid": "55bfcf47-fce3-47e1-89a8-5c0409caafc1",
+    "context": "{\"telemetry\":{\"uuid\":\"f6735e5d-4052-455e-a6a6-7bc9d1cffb64\",\"deviceId\":\"device-27\",\"timestamp\":{},\"temperature\":\"65.31\",\"humidity\":\"58.88\",\"battery\":\"66.48\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__localRoutineExecId\":\"b44716cc-4bbe-4453-9533-0160d9283c3c\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"2cba7d64-8aaa-4d6f-9680-6fa9b3547ea6\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"dfc9fd6a-243e-4dae-bbc9-4adf13f8e750\",\"__routineExecId\":\"b44716cc-4bbe-4453-9533-0160d9283c3c\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"2abb5a72-b641-42e9-903b-c1c8cb46e451\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:30:37.464Z\",\"consumed\":true,\"consumedBy\":\"19549097-c579-4220-9b6c-5b8f4192a74b\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:30:37.553222"
+  },
+  {
+    "uuid": "2c81968b-b52b-41df-bce2-0290d02e7db1",
+    "context": "{\"deviceId\":\"device-24\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"signalName\":\"health.check\",\"emittedAt\":\"2025-10-16T15:33:51.869Z\",\"consumed\":true,\"consumedBy\":\"a4758b7c-1f48-47a4-ac17-bca835b232b9\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"966e7c8b-57c0-4e50-973d-d8691bc5770c\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:51.942903"
+  },
+  {
+    "uuid": "22948afb-854a-410e-8ea4-2e03b649d885",
+    "context": "{\"telemetry\":{\"uuid\":\"f6735e5d-4052-455e-a6a6-7bc9d1cffb64\",\"deviceId\":\"device-27\",\"timestamp\":{},\"temperature\":\"65.31\",\"humidity\":\"58.88\",\"battery\":\"66.48\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__localRoutineExecId\":\"b44716cc-4bbe-4453-9533-0160d9283c3c\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"2abb5a72-b641-42e9-903b-c1c8cb46e451\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:30:37.464Z\",\"consumed\":true,\"consumedBy\":\"19549097-c579-4220-9b6c-5b8f4192a74b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"2cba7d64-8aaa-4d6f-9680-6fa9b3547ea6\",\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\"},\"__isSubMeta\":false,\"__executionTraceId\":\"104b5092-69d8-4b26-8934-503e00bb73df\",\"__routineExecId\":\"dfc9fd6a-243e-4dae-bbc9-4adf13f8e750\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"dfc9fd6a-243e-4dae-bbc9-4adf13f8e750\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"4a8c7094-d644-492b-8e76-569a88f34c33\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:30:37.555772"
+  },
+  {
+    "uuid": "693759a1-da3f-4fbe-a161-f3fd7e772697",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:33:05.471Z\",\"consumed\":true,\"consumedBy\":\"4c04fdad-f202-45ed-9023-b12c494bc7a1\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__routineExecId\":\"bf957906-fca6-4d1f-ac6a-256c5b710461\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:05.505720"
+  },
+  {
+    "uuid": "21875053-fb2a-4434-8f37-ec962910033b",
+    "context": "{\"deviceId\":\"device-1\",\"readings\":{\"temperature\":66.07816927839474,\"humidity\":35.42175720008479,\"battery\":65.83154627918981},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"4c04fdad-f202-45ed-9023-b12c494bc7a1\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:05.474Z\",\"consumed\":true,\"consumedBy\":\"17c9b821-964f-4164-9c9e-12c282286506\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"bf957906-fca6-4d1f-ac6a-256c5b710461\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\"},\"__isSubMeta\":true,\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__routineExecId\":\"294a05f1-a16d-47a1-8ddd-d370e0f853a0\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:05.518247"
+  },
+  {
+    "uuid": "8739ecb3-8e0a-45db-882b-e2025694f166",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:33:05.471Z\",\"consumed\":true,\"consumedBy\":\"4c04fdad-f202-45ed-9023-b12c494bc7a1\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__routineExecId\":\"bf957906-fca6-4d1f-ac6a-256c5b710461\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:05.526721"
+  },
+  {
+    "uuid": "d2655b75-7b83-4781-b24e-d1f0f100b095",
+    "context": "{\"data\":{\"temperature\":66.07816927839474,\"humidity\":35.42175720008479,\"battery\":65.83154627918981,\"deviceId\":\"device-1\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"4c04fdad-f202-45ed-9023-b12c494bc7a1\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:05.474Z\",\"consumed\":true,\"consumedBy\":\"17c9b821-964f-4164-9c9e-12c282286506\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"bf957906-fca6-4d1f-ac6a-256c5b710461\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__routineExecId\":\"294a05f1-a16d-47a1-8ddd-d370e0f853a0\",\"__nextNodes\":[\"080d5992-4f2c-4aa2-ab2f-da622cac6d7f\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:05.530624"
+  },
+  {
+    "uuid": "a8850855-c017-4cdc-8449-30693abacd29",
+    "context": "{\"data\":{\"temperature\":66.07816927839474,\"humidity\":35.42175720008479,\"battery\":65.83154627918981,\"deviceId\":\"device-1\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"4c04fdad-f202-45ed-9023-b12c494bc7a1\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:05.474Z\",\"consumed\":true,\"consumedBy\":\"17c9b821-964f-4164-9c9e-12c282286506\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"bf957906-fca6-4d1f-ac6a-256c5b710461\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__routineExecId\":\"294a05f1-a16d-47a1-8ddd-d370e0f853a0\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:05.533176"
+  },
+  {
+    "uuid": "1cf5a3e2-76e0-4f42-a794-c2f5b0442cc7",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__localRoutineExecId\":\"294a05f1-a16d-47a1-8ddd-d370e0f853a0\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"4c04fdad-f202-45ed-9023-b12c494bc7a1\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:05.474Z\",\"consumed\":true,\"consumedBy\":\"17c9b821-964f-4164-9c9e-12c282286506\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"bf957906-fca6-4d1f-ac6a-256c5b710461\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__routineExecId\":\"38fe8eed-1c09-4dfd-9fd3-5e9ab1380c5d\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"be83cc70-482a-4bc3-8069-a15752522fc2\"},\"queryData\":{\"data\":{\"temperature\":66.07816927839474,\"humidity\":35.42175720008479,\"battery\":65.83154627918981,\"deviceId\":\"device-1\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"be83cc70-482a-4bc3-8069-a15752522fc2\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:05.539723"
+  },
+  {
+    "uuid": "f4e9e0a8-d9f9-4ec0-bc27-9ddde60b6843",
+    "context": "{\"telemetry\":{\"uuid\":\"d5c666b8-87ef-4062-bd3b-e93f8b936e4e\",\"deviceId\":\"device-1\",\"timestamp\":{},\"temperature\":\"66.08\",\"humidity\":\"35.42\",\"battery\":\"65.83\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__localRoutineExecId\":\"294a05f1-a16d-47a1-8ddd-d370e0f853a0\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"4c04fdad-f202-45ed-9023-b12c494bc7a1\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:05.474Z\",\"consumed\":true,\"consumedBy\":\"17c9b821-964f-4164-9c9e-12c282286506\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"bf957906-fca6-4d1f-ac6a-256c5b710461\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__routineExecId\":\"be83cc70-482a-4bc3-8069-a15752522fc2\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"be83cc70-482a-4bc3-8069-a15752522fc2\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"c22a2da0-1d9a-4531-8472-d90337809920\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:33:05.551816"
+  },
+  {
+    "uuid": "96bfdcab-bad6-4140-8b34-ba451d981609",
+    "context": "{\"telemetry\":{\"uuid\":\"d5c666b8-87ef-4062-bd3b-e93f8b936e4e\",\"deviceId\":\"device-1\",\"timestamp\":{},\"temperature\":\"66.08\",\"humidity\":\"35.42\",\"battery\":\"65.83\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__localRoutineExecId\":\"294a05f1-a16d-47a1-8ddd-d370e0f853a0\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"4c04fdad-f202-45ed-9023-b12c494bc7a1\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:05.474Z\",\"consumed\":true,\"consumedBy\":\"17c9b821-964f-4164-9c9e-12c282286506\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"bf957906-fca6-4d1f-ac6a-256c5b710461\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__routineExecId\":\"be83cc70-482a-4bc3-8069-a15752522fc2\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"be83cc70-482a-4bc3-8069-a15752522fc2\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"c22a2da0-1d9a-4531-8472-d90337809920\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:05.554498"
+  },
+  {
+    "uuid": "0c552406-4344-4cf4-a6b8-67b87052dea9",
+    "context": "{\"telemetry\":{\"uuid\":\"d5c666b8-87ef-4062-bd3b-e93f8b936e4e\",\"deviceId\":\"device-1\",\"timestamp\":{},\"temperature\":\"66.08\",\"humidity\":\"35.42\",\"battery\":\"65.83\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\",\"__localRoutineExecId\":\"294a05f1-a16d-47a1-8ddd-d370e0f853a0\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"bf957906-fca6-4d1f-ac6a-256c5b710461\",\"__executionTraceId\":\"e6368742-3ace-4d76-948b-b2c9fd92d6cc\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"be83cc70-482a-4bc3-8069-a15752522fc2\",\"__routineExecId\":\"294a05f1-a16d-47a1-8ddd-d370e0f853a0\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"4c04fdad-f202-45ed-9023-b12c494bc7a1\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:05.474Z\",\"consumed\":true,\"consumedBy\":\"17c9b821-964f-4164-9c9e-12c282286506\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:05.557554"
+  },
+  {
+    "uuid": "14279d0e-a11a-4ba5-a7d5-124ebbc8544a",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:33:51.867Z\",\"consumed\":true,\"consumedBy\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:51.881500"
+  },
+  {
+    "uuid": "270909c2-7925-4b93-8348-bda45603aaee",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__localRoutineExecId\":\"76813c23-9092-40de-85b6-dd2180747cbb\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:51.869Z\",\"consumed\":true,\"consumedBy\":\"7a27d573-2c59-4c71-b485-7819e6662fba\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"77bbbd52-f5f0-476f-8b76-8687572fb136\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"7a8b7b92-9cf2-43e6-bc34-93ba911ea9e5\"},\"queryData\":{\"data\":{\"temperature\":49.10075216426009,\"humidity\":46.9348831917264,\"battery\":63.117303405556534,\"deviceId\":\"device-24\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"7a8b7b92-9cf2-43e6-bc34-93ba911ea9e5\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:51.910674"
+  },
+  {
+    "uuid": "d398f868-cd67-46ab-93e7-77968c5dd7b5",
+    "context": "{\"deviceId\":\"device-24\",\"readings\":{\"temperature\":49.10075216426009,\"humidity\":46.9348831917264,\"battery\":63.117303405556534},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:51.869Z\",\"consumed\":true,\"consumedBy\":\"7a27d573-2c59-4c71-b485-7819e6662fba\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\"},\"__isSubMeta\":true,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"76813c23-9092-40de-85b6-dd2180747cbb\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:51.914438"
+  },
+  {
+    "uuid": "75450515-1be1-4fd9-a296-c8ba91a0795b",
+    "context": "{\"deviceId\":\"device-24\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"signalName\":\"health.check\",\"emittedAt\":\"2025-10-16T15:33:51.869Z\",\"consumed\":true,\"consumedBy\":\"a4758b7c-1f48-47a4-ac17-bca835b232b9\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\"},\"__isSubMeta\":true,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"966e7c8b-57c0-4e50-973d-d8691bc5770c\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:51.921461"
+  },
+  {
+    "uuid": "e2e02ad2-674e-4212-b848-9ba645450994",
+    "context": "{\"deviceId\":\"device-24\",\"triggerType\":\"scheduled\",\"__signalEmission\":{\"taskName\":\"EmitHealthCheckSignal\",\"taskVersion\":1,\"taskExecutionId\":\"a4758b7c-1f48-47a4-ac17-bca835b232b9\",\"signalName\":\"runner.health_check_triggered\",\"emittedAt\":\"2025-10-16T15:33:51.871Z\",\"consumed\":false,\"consumedBy\":null,\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"966e7c8b-57c0-4e50-973d-d8691bc5770c\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\"},\"__isSubMeta\":true,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"ea2326fd-b934-4dd1-a240-6e54c0e24ccb\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:33:51.932142"
+  },
+  {
+    "uuid": "f1d476f5-e87c-48b7-a37b-b2d57827046c",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:33:51.867Z\",\"consumed\":true,\"consumedBy\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:51.935172"
+  },
+  {
+    "uuid": "878586d7-60b5-4364-96f9-d1e1ed7fb407",
+    "context": "{\"data\":{\"temperature\":49.10075216426009,\"humidity\":46.9348831917264,\"battery\":63.117303405556534,\"deviceId\":\"device-24\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:51.869Z\",\"consumed\":true,\"consumedBy\":\"7a27d573-2c59-4c71-b485-7819e6662fba\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"76813c23-9092-40de-85b6-dd2180747cbb\",\"__nextNodes\":[\"13620a48-3024-415d-9f64-ab75651a2b24\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:51.940137"
+  },
+  {
+    "uuid": "3c3f2b6c-497e-463f-b69f-24fe715f75ba",
+    "context": "{\"data\":{\"temperature\":49.10075216426009,\"humidity\":46.9348831917264,\"battery\":63.117303405556534,\"deviceId\":\"device-24\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:51.869Z\",\"consumed\":true,\"consumedBy\":\"7a27d573-2c59-4c71-b485-7819e6662fba\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"76813c23-9092-40de-85b6-dd2180747cbb\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:51.947160"
+  },
+  {
+    "uuid": "a546a82f-0527-49bd-99c9-b7694e97250a",
+    "context": "{\"telemetry\":{\"uuid\":\"6ac9b5f0-a316-4e49-bd46-35388c549343\",\"deviceId\":\"device-24\",\"timestamp\":{},\"temperature\":\"49.10\",\"humidity\":\"46.93\",\"battery\":\"63.12\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__localRoutineExecId\":\"76813c23-9092-40de-85b6-dd2180747cbb\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:51.869Z\",\"consumed\":true,\"consumedBy\":\"7a27d573-2c59-4c71-b485-7819e6662fba\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"7a8b7b92-9cf2-43e6-bc34-93ba911ea9e5\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"7a8b7b92-9cf2-43e6-bc34-93ba911ea9e5\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"a2800c8c-0ab0-498e-a5cd-892bd5a8c4da\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:33:51.958929"
+  },
+  {
+    "uuid": "6f4b97c8-5c8c-4abe-b162-1b0c51ceddd3",
+    "context": "{\"telemetry\":{\"uuid\":\"6ac9b5f0-a316-4e49-bd46-35388c549343\",\"deviceId\":\"device-24\",\"timestamp\":{},\"temperature\":\"49.10\",\"humidity\":\"46.93\",\"battery\":\"63.12\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__localRoutineExecId\":\"76813c23-9092-40de-85b6-dd2180747cbb\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:51.869Z\",\"consumed\":true,\"consumedBy\":\"7a27d573-2c59-4c71-b485-7819e6662fba\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\"},\"__isSubMeta\":false,\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__routineExecId\":\"7a8b7b92-9cf2-43e6-bc34-93ba911ea9e5\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"7a8b7b92-9cf2-43e6-bc34-93ba911ea9e5\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"a2800c8c-0ab0-498e-a5cd-892bd5a8c4da\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:51.962074"
+  },
+  {
+    "uuid": "01f64eed-aa37-407a-8028-b327b5cb6802",
+    "context": "{\"telemetry\":{\"uuid\":\"6ac9b5f0-a316-4e49-bd46-35388c549343\",\"deviceId\":\"device-24\",\"timestamp\":{},\"temperature\":\"49.10\",\"humidity\":\"46.93\",\"battery\":\"63.12\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\",\"__localRoutineExecId\":\"76813c23-9092-40de-85b6-dd2180747cbb\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"86d51a56-8600-413b-8ffb-3200a4d02baa\",\"__executionTraceId\":\"bf1b41cd-97c1-49ec-a020-8193286ea9cc\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"7a8b7b92-9cf2-43e6-bc34-93ba911ea9e5\",\"__routineExecId\":\"76813c23-9092-40de-85b6-dd2180747cbb\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"caf79fdf-f8e3-4dfd-b801-a444670fc30a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:33:51.869Z\",\"consumed\":true,\"consumedBy\":\"7a27d573-2c59-4c71-b485-7819e6662fba\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:33:51.965143"
+  },
+  {
+    "uuid": "57adc827-65f3-4711-82b7-c016d7a9a0ad",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:34:02.424Z\",\"consumed\":true,\"consumedBy\":\"ff5df7b4-559b-4922-80a7-d1a8b6674c5e\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__routineExecId\":\"cee5a099-ab1e-4c12-8859-285f4c5a85ee\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:02.465107"
+  },
+  {
+    "uuid": "0e69ab73-d1ee-4e34-9409-a8b1eeadc367",
+    "context": "{\"deviceId\":\"device-9\",\"readings\":{\"temperature\":40.06052233092299,\"humidity\":50.55161467328024,\"battery\":62.459581574863975},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"ff5df7b4-559b-4922-80a7-d1a8b6674c5e\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:02.426Z\",\"consumed\":true,\"consumedBy\":\"b5b71ede-dbfc-40be-87a3-5bdd77c9217c\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"cee5a099-ab1e-4c12-8859-285f4c5a85ee\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\"},\"__isSubMeta\":true,\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__routineExecId\":\"2edb7ac5-e0c2-4dfa-b8ed-7a3289f62886\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:02.475839"
+  },
+  {
+    "uuid": "8ff2197b-7682-48cd-94c2-0b035f6e96ea",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:34:02.424Z\",\"consumed\":true,\"consumedBy\":\"ff5df7b4-559b-4922-80a7-d1a8b6674c5e\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__routineExecId\":\"cee5a099-ab1e-4c12-8859-285f4c5a85ee\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:02.484036"
+  },
+  {
+    "uuid": "3582da8f-7674-45cf-b90c-df9e6bc9976d",
+    "context": "{\"data\":{\"temperature\":40.06052233092299,\"humidity\":50.55161467328024,\"battery\":62.459581574863975,\"deviceId\":\"device-9\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"ff5df7b4-559b-4922-80a7-d1a8b6674c5e\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:02.426Z\",\"consumed\":true,\"consumedBy\":\"b5b71ede-dbfc-40be-87a3-5bdd77c9217c\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"cee5a099-ab1e-4c12-8859-285f4c5a85ee\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\"},\"__isSubMeta\":false,\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__routineExecId\":\"2edb7ac5-e0c2-4dfa-b8ed-7a3289f62886\",\"__nextNodes\":[\"a7aa44a8-2cc7-4ed2-afc2-f425de579a0d\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:02.488402"
+  },
+  {
+    "uuid": "f855244b-7c27-481b-9090-68f2d5306216",
+    "context": "{\"deviceId\":\"device-36\",\"triggerType\":\"scheduled\",\"__signalEmission\":{\"taskName\":\"EmitHealthCheckSignal\",\"taskVersion\":1,\"taskExecutionId\":\"dfd9c1b2-1f87-4545-8637-0a330cb3bc4f\",\"signalName\":\"runner.health_check_triggered\",\"emittedAt\":\"2025-10-16T15:43:25.433Z\",\"consumed\":false,\"consumedBy\":null,\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a06498c6-3042-4b91-a105-72d92b50903e\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":true,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"0aefa5d7-dc10-4a14-8ea2-748c3af2894f\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:43:25.497733"
+  },
+  {
+    "uuid": "1038614e-e55f-4dbc-93b2-04ac35f0ffa7",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__localRoutineExecId\":\"2edb7ac5-e0c2-4dfa-b8ed-7a3289f62886\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"ff5df7b4-559b-4922-80a7-d1a8b6674c5e\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:02.426Z\",\"consumed\":true,\"consumedBy\":\"b5b71ede-dbfc-40be-87a3-5bdd77c9217c\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"cee5a099-ab1e-4c12-8859-285f4c5a85ee\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\"},\"__isSubMeta\":false,\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__routineExecId\":\"6e7b0c2d-097b-4b6e-9e52-401433a6f763\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"35cfda7c-9edc-4b5b-b20a-0094cb75993d\"},\"queryData\":{\"data\":{\"temperature\":40.06052233092299,\"humidity\":50.55161467328024,\"battery\":62.459581574863975,\"deviceId\":\"device-9\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"35cfda7c-9edc-4b5b-b20a-0094cb75993d\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:02.491545"
+  },
+  {
+    "uuid": "951e2b1e-4333-434e-a5aa-6eec5a0268cd",
+    "context": "{\"data\":{\"temperature\":40.06052233092299,\"humidity\":50.55161467328024,\"battery\":62.459581574863975,\"deviceId\":\"device-9\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"ff5df7b4-559b-4922-80a7-d1a8b6674c5e\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:02.426Z\",\"consumed\":true,\"consumedBy\":\"b5b71ede-dbfc-40be-87a3-5bdd77c9217c\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"cee5a099-ab1e-4c12-8859-285f4c5a85ee\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\"},\"__isSubMeta\":false,\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__routineExecId\":\"2edb7ac5-e0c2-4dfa-b8ed-7a3289f62886\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:02.494919"
+  },
+  {
+    "uuid": "e68d740c-f09b-4dc3-afc7-10a5078a8a67",
+    "context": "{\"telemetry\":{\"uuid\":\"4ecb00ba-8ba8-47bd-bd51-5b87befac9cc\",\"deviceId\":\"device-9\",\"timestamp\":{},\"temperature\":\"40.06\",\"humidity\":\"50.55\",\"battery\":\"62.46\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__localRoutineExecId\":\"2edb7ac5-e0c2-4dfa-b8ed-7a3289f62886\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"ff5df7b4-559b-4922-80a7-d1a8b6674c5e\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:02.426Z\",\"consumed\":true,\"consumedBy\":\"b5b71ede-dbfc-40be-87a3-5bdd77c9217c\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"cee5a099-ab1e-4c12-8859-285f4c5a85ee\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\"},\"__isSubMeta\":false,\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__routineExecId\":\"35cfda7c-9edc-4b5b-b20a-0094cb75993d\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"35cfda7c-9edc-4b5b-b20a-0094cb75993d\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"c1fe4fc4-1a83-4dc3-8c38-bba81cd9f5f4\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:34:02.512025"
+  },
+  {
+    "uuid": "99f791bb-318f-4551-8204-2d02dc2a4b3f",
+    "context": "{\"telemetry\":{\"uuid\":\"4ecb00ba-8ba8-47bd-bd51-5b87befac9cc\",\"deviceId\":\"device-9\",\"timestamp\":{},\"temperature\":\"40.06\",\"humidity\":\"50.55\",\"battery\":\"62.46\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__localRoutineExecId\":\"2edb7ac5-e0c2-4dfa-b8ed-7a3289f62886\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"ff5df7b4-559b-4922-80a7-d1a8b6674c5e\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:02.426Z\",\"consumed\":true,\"consumedBy\":\"b5b71ede-dbfc-40be-87a3-5bdd77c9217c\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"cee5a099-ab1e-4c12-8859-285f4c5a85ee\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\"},\"__isSubMeta\":false,\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__routineExecId\":\"35cfda7c-9edc-4b5b-b20a-0094cb75993d\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"35cfda7c-9edc-4b5b-b20a-0094cb75993d\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"c1fe4fc4-1a83-4dc3-8c38-bba81cd9f5f4\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:02.515104"
+  },
+  {
+    "uuid": "21b25f0c-8ba7-4ba5-9423-4ccc571c383d",
+    "context": "{\"telemetry\":{\"uuid\":\"4ecb00ba-8ba8-47bd-bd51-5b87befac9cc\",\"deviceId\":\"device-9\",\"timestamp\":{},\"temperature\":\"40.06\",\"humidity\":\"50.55\",\"battery\":\"62.46\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\",\"__localRoutineExecId\":\"2edb7ac5-e0c2-4dfa-b8ed-7a3289f62886\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"cee5a099-ab1e-4c12-8859-285f4c5a85ee\",\"__executionTraceId\":\"fe5cacfd-6467-4e45-a040-1bc7b3c6243e\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"35cfda7c-9edc-4b5b-b20a-0094cb75993d\",\"__routineExecId\":\"2edb7ac5-e0c2-4dfa-b8ed-7a3289f62886\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"ff5df7b4-559b-4922-80a7-d1a8b6674c5e\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:02.426Z\",\"consumed\":true,\"consumedBy\":\"b5b71ede-dbfc-40be-87a3-5bdd77c9217c\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:02.520044"
+  },
+  {
+    "uuid": "c7bf00e6-da1e-40d7-980d-da742bc76581",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:34:45.031Z\",\"consumed\":true,\"consumedBy\":\"5e378139-b5a2-4e92-b0ff-2a5651edab3d\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__routineExecId\":\"d480909d-fde1-4853-8ccc-6c3a2eaf812a\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:45.059230"
+  },
+  {
+    "uuid": "5e47e4b6-891b-421c-8379-180498bd2f7b",
+    "context": "{\"deviceId\":\"device-28\",\"readings\":{\"temperature\":47.173870976579835,\"humidity\":68.52130905605536,\"battery\":58.22837761016571},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"5e378139-b5a2-4e92-b0ff-2a5651edab3d\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:45.033Z\",\"consumed\":true,\"consumedBy\":\"e29443c4-ab52-4d8f-9935-945afa36e75b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"d480909d-fde1-4853-8ccc-6c3a2eaf812a\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\"},\"__isSubMeta\":true,\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__routineExecId\":\"0d5ff1c1-0952-44a2-90ab-efcefb4993fa\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:45.070554"
+  },
+  {
+    "uuid": "36a23bae-adcc-4f4c-b6d2-4aad44cbff21",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:34:45.031Z\",\"consumed\":true,\"consumedBy\":\"5e378139-b5a2-4e92-b0ff-2a5651edab3d\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__routineExecId\":\"d480909d-fde1-4853-8ccc-6c3a2eaf812a\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:45.078394"
+  },
+  {
+    "uuid": "68cb40f5-9297-41dd-b30b-44297ba871f6",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__localRoutineExecId\":\"0d5ff1c1-0952-44a2-90ab-efcefb4993fa\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"5e378139-b5a2-4e92-b0ff-2a5651edab3d\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:45.033Z\",\"consumed\":true,\"consumedBy\":\"e29443c4-ab52-4d8f-9935-945afa36e75b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"d480909d-fde1-4853-8ccc-6c3a2eaf812a\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\"},\"__isSubMeta\":false,\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__routineExecId\":\"1cdf3c75-feab-4152-91f0-fdc4d30b2f9f\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"54c2e001-980c-4663-b7ac-541100a8cc6d\"},\"queryData\":{\"data\":{\"temperature\":47.173870976579835,\"humidity\":68.52130905605536,\"battery\":58.22837761016571,\"deviceId\":\"device-28\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"54c2e001-980c-4663-b7ac-541100a8cc6d\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:45.081114"
+  },
+  {
+    "uuid": "c5b427ca-e760-4c5a-b64e-f615c5dc30cc",
+    "context": "{\"data\":{\"temperature\":47.173870976579835,\"humidity\":68.52130905605536,\"battery\":58.22837761016571,\"deviceId\":\"device-28\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"5e378139-b5a2-4e92-b0ff-2a5651edab3d\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:45.033Z\",\"consumed\":true,\"consumedBy\":\"e29443c4-ab52-4d8f-9935-945afa36e75b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"d480909d-fde1-4853-8ccc-6c3a2eaf812a\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\"},\"__isSubMeta\":false,\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__routineExecId\":\"0d5ff1c1-0952-44a2-90ab-efcefb4993fa\",\"__nextNodes\":[\"ef9272ba-1324-4430-be22-b8f39e903fc3\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:45.085356"
+  },
+  {
+    "uuid": "1aa829de-f5a4-4427-ab13-11e248ef85de",
+    "context": "{\"data\":{\"temperature\":47.173870976579835,\"humidity\":68.52130905605536,\"battery\":58.22837761016571,\"deviceId\":\"device-28\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"5e378139-b5a2-4e92-b0ff-2a5651edab3d\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:45.033Z\",\"consumed\":true,\"consumedBy\":\"e29443c4-ab52-4d8f-9935-945afa36e75b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"d480909d-fde1-4853-8ccc-6c3a2eaf812a\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\"},\"__isSubMeta\":false,\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__routineExecId\":\"0d5ff1c1-0952-44a2-90ab-efcefb4993fa\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:45.089544"
+  },
+  {
+    "uuid": "332df6c7-0329-4b56-8bb3-4b787b3c5cc5",
+    "context": "{\"telemetry\":{\"uuid\":\"b23fcd19-d3b8-418c-a97c-52d53f86cd92\",\"deviceId\":\"device-28\",\"timestamp\":{},\"temperature\":\"47.17\",\"humidity\":\"68.52\",\"battery\":\"58.23\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__localRoutineExecId\":\"0d5ff1c1-0952-44a2-90ab-efcefb4993fa\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"5e378139-b5a2-4e92-b0ff-2a5651edab3d\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:45.033Z\",\"consumed\":true,\"consumedBy\":\"e29443c4-ab52-4d8f-9935-945afa36e75b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"d480909d-fde1-4853-8ccc-6c3a2eaf812a\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\"},\"__isSubMeta\":false,\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__routineExecId\":\"54c2e001-980c-4663-b7ac-541100a8cc6d\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"54c2e001-980c-4663-b7ac-541100a8cc6d\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"0b3740a7-b2cd-47b9-8a04-db199e60f5fa\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:34:45.102883"
+  },
+  {
+    "uuid": "ba0f93a4-b595-4c09-9cdf-ba249643b12b",
+    "context": "{\"telemetry\":{\"uuid\":\"b23fcd19-d3b8-418c-a97c-52d53f86cd92\",\"deviceId\":\"device-28\",\"timestamp\":{},\"temperature\":\"47.17\",\"humidity\":\"68.52\",\"battery\":\"58.23\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__localRoutineExecId\":\"0d5ff1c1-0952-44a2-90ab-efcefb4993fa\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"d480909d-fde1-4853-8ccc-6c3a2eaf812a\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"54c2e001-980c-4663-b7ac-541100a8cc6d\",\"__routineExecId\":\"0d5ff1c1-0952-44a2-90ab-efcefb4993fa\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"5e378139-b5a2-4e92-b0ff-2a5651edab3d\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:45.033Z\",\"consumed\":true,\"consumedBy\":\"e29443c4-ab52-4d8f-9935-945afa36e75b\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:45.105795"
+  },
+  {
+    "uuid": "6421a278-6ac3-4d2e-824b-1df0ab153d2e",
+    "context": "{\"telemetry\":{\"uuid\":\"b23fcd19-d3b8-418c-a97c-52d53f86cd92\",\"deviceId\":\"device-28\",\"timestamp\":{},\"temperature\":\"47.17\",\"humidity\":\"68.52\",\"battery\":\"58.23\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__localRoutineExecId\":\"0d5ff1c1-0952-44a2-90ab-efcefb4993fa\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"5e378139-b5a2-4e92-b0ff-2a5651edab3d\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:34:45.033Z\",\"consumed\":true,\"consumedBy\":\"e29443c4-ab52-4d8f-9935-945afa36e75b\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"d480909d-fde1-4853-8ccc-6c3a2eaf812a\",\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\"},\"__isSubMeta\":false,\"__executionTraceId\":\"1d03db85-b4d7-48d0-a786-78a0fee73a10\",\"__routineExecId\":\"54c2e001-980c-4663-b7ac-541100a8cc6d\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"54c2e001-980c-4663-b7ac-541100a8cc6d\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"0b3740a7-b2cd-47b9-8a04-db199e60f5fa\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:34:45.108475"
+  },
+  {
+    "uuid": "ec8ccf33-95ff-4c46-a092-bccc7437a5c8",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:36:19.814Z\",\"consumed\":true,\"consumedBy\":\"abcea8c9-0f2d-4a28-ba4c-949396e75e6b\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__routineExecId\":\"0953fba4-9a0f-4051-be99-86f821112af1\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:36:19.839382"
+  },
+  {
+    "uuid": "95f053db-4b69-4959-a281-4d64555b1fd4",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:43:25.429Z\",\"consumed\":true,\"consumedBy\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.504451"
+  },
+  {
+    "uuid": "eabbffb3-54b1-4ce0-b2c0-da513c436fc5",
+    "context": "{\"deviceId\":\"device-15\",\"readings\":{\"temperature\":23.61991655140923,\"humidity\":51.70219808362453,\"battery\":50.58646515444438},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"abcea8c9-0f2d-4a28-ba4c-949396e75e6b\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:36:19.816Z\",\"consumed\":true,\"consumedBy\":\"b8a144ae-7860-4b5c-9f71-33564dad2c24\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"0953fba4-9a0f-4051-be99-86f821112af1\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\"},\"__isSubMeta\":true,\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__routineExecId\":\"1d7e82d7-60a5-4cc7-b72a-69fa4d59f2db\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:36:19.850017"
+  },
+  {
+    "uuid": "8a973ff0-4669-4b06-bb3b-603589108385",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:36:19.814Z\",\"consumed\":true,\"consumedBy\":\"abcea8c9-0f2d-4a28-ba4c-949396e75e6b\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__routineExecId\":\"0953fba4-9a0f-4051-be99-86f821112af1\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:36:19.856978"
+  },
+  {
+    "uuid": "b9da40b6-2935-429e-9573-145cffc3fea0",
+    "context": "{\"data\":{\"temperature\":23.61991655140923,\"humidity\":51.70219808362453,\"battery\":50.58646515444438,\"deviceId\":\"device-15\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"abcea8c9-0f2d-4a28-ba4c-949396e75e6b\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:36:19.816Z\",\"consumed\":true,\"consumedBy\":\"b8a144ae-7860-4b5c-9f71-33564dad2c24\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"0953fba4-9a0f-4051-be99-86f821112af1\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\"},\"__isSubMeta\":false,\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__routineExecId\":\"1d7e82d7-60a5-4cc7-b72a-69fa4d59f2db\",\"__nextNodes\":[\"44e65b5a-e474-4296-9cb3-531ca1881411\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:36:19.861405"
+  },
+  {
+    "uuid": "579d4821-677c-4a74-bc17-bcd7d336b558",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__localRoutineExecId\":\"1d7e82d7-60a5-4cc7-b72a-69fa4d59f2db\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"abcea8c9-0f2d-4a28-ba4c-949396e75e6b\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:36:19.816Z\",\"consumed\":true,\"consumedBy\":\"b8a144ae-7860-4b5c-9f71-33564dad2c24\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"0953fba4-9a0f-4051-be99-86f821112af1\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\"},\"__isSubMeta\":false,\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__routineExecId\":\"07e92937-0bf7-4c9b-8ff5-246675c415d3\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"71577022-2a82-417d-939e-8f70d258f63e\"},\"queryData\":{\"data\":{\"temperature\":23.61991655140923,\"humidity\":51.70219808362453,\"battery\":50.58646515444438,\"deviceId\":\"device-15\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"71577022-2a82-417d-939e-8f70d258f63e\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:36:19.863666"
+  },
+  {
+    "uuid": "db323ec2-8896-461d-91c4-7a13d4b42aeb",
+    "context": "{\"data\":{\"temperature\":23.61991655140923,\"humidity\":51.70219808362453,\"battery\":50.58646515444438,\"deviceId\":\"device-15\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"abcea8c9-0f2d-4a28-ba4c-949396e75e6b\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:36:19.816Z\",\"consumed\":true,\"consumedBy\":\"b8a144ae-7860-4b5c-9f71-33564dad2c24\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"0953fba4-9a0f-4051-be99-86f821112af1\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\"},\"__isSubMeta\":false,\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__routineExecId\":\"1d7e82d7-60a5-4cc7-b72a-69fa4d59f2db\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:36:19.866381"
+  },
+  {
+    "uuid": "38c88cfa-59bd-473a-8a33-5f2e2c0877fd",
+    "context": "{\"telemetry\":{\"uuid\":\"4d2d78d2-cde8-4401-9cff-15bef57ccaff\",\"deviceId\":\"device-15\",\"timestamp\":{},\"temperature\":\"23.62\",\"humidity\":\"51.70\",\"battery\":\"50.59\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__localRoutineExecId\":\"1d7e82d7-60a5-4cc7-b72a-69fa4d59f2db\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"abcea8c9-0f2d-4a28-ba4c-949396e75e6b\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:36:19.816Z\",\"consumed\":true,\"consumedBy\":\"b8a144ae-7860-4b5c-9f71-33564dad2c24\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"0953fba4-9a0f-4051-be99-86f821112af1\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\"},\"__isSubMeta\":false,\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__routineExecId\":\"71577022-2a82-417d-939e-8f70d258f63e\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"71577022-2a82-417d-939e-8f70d258f63e\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"d4de5072-f4f5-45e2-9765-76d81da2aca5\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:36:19.881923"
+  },
+  {
+    "uuid": "85cb7bba-e824-42ba-83cf-cc9bdc00c122",
+    "context": "{\"telemetry\":{\"uuid\":\"4d2d78d2-cde8-4401-9cff-15bef57ccaff\",\"deviceId\":\"device-15\",\"timestamp\":{},\"temperature\":\"23.62\",\"humidity\":\"51.70\",\"battery\":\"50.59\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__localRoutineExecId\":\"1d7e82d7-60a5-4cc7-b72a-69fa4d59f2db\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"abcea8c9-0f2d-4a28-ba4c-949396e75e6b\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:36:19.816Z\",\"consumed\":true,\"consumedBy\":\"b8a144ae-7860-4b5c-9f71-33564dad2c24\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"0953fba4-9a0f-4051-be99-86f821112af1\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\"},\"__isSubMeta\":false,\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__routineExecId\":\"71577022-2a82-417d-939e-8f70d258f63e\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"71577022-2a82-417d-939e-8f70d258f63e\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"d4de5072-f4f5-45e2-9765-76d81da2aca5\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:36:19.884847"
+  },
+  {
+    "uuid": "31862111-6191-4532-8c88-33ba50861854",
+    "context": "{\"data\":{\"temperature\":71.41179422600331,\"humidity\":46.62372349619773,\"battery\":76.91490782768737,\"deviceId\":\"device-41\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"97958730-6666-4c53-9881-866c8a81a5b9\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:31.729Z\",\"consumed\":true,\"consumedBy\":\"b69ce0cd-1635-4c0d-a62d-1ea4c640629f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"96127f5e-3f80-448f-92cf-ec11ac50f9bb\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\"},\"__isSubMeta\":false,\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__routineExecId\":\"eee17911-0199-4ea7-ab7e-691f5ddefbdf\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:31.774297"
+  },
+  {
+    "uuid": "29d6812b-5f3e-4cd4-b4cd-58a90ee612e8",
+    "context": "{\"telemetry\":{\"uuid\":\"4d2d78d2-cde8-4401-9cff-15bef57ccaff\",\"deviceId\":\"device-15\",\"timestamp\":{},\"temperature\":\"23.62\",\"humidity\":\"51.70\",\"battery\":\"50.59\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\",\"__localRoutineExecId\":\"1d7e82d7-60a5-4cc7-b72a-69fa4d59f2db\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"0953fba4-9a0f-4051-be99-86f821112af1\",\"__executionTraceId\":\"3a3301bb-7764-4f67-9367-81cd60f30d31\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"71577022-2a82-417d-939e-8f70d258f63e\",\"__routineExecId\":\"1d7e82d7-60a5-4cc7-b72a-69fa4d59f2db\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"abcea8c9-0f2d-4a28-ba4c-949396e75e6b\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:36:19.816Z\",\"consumed\":true,\"consumedBy\":\"b8a144ae-7860-4b5c-9f71-33564dad2c24\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:36:19.887600"
+  },
+  {
+    "uuid": "49943174-6f2b-4d43-900f-659b61ddd478",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:37:11.438Z\",\"consumed\":true,\"consumedBy\":\"141a846a-6c28-499c-b177-43c117a7b57c\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__routineExecId\":\"08ab9754-67b7-4fae-a121-586fd74bf773\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:37:11.469699"
+  },
+  {
+    "uuid": "a2247466-0842-4c74-9850-a1ef778ed26c",
+    "context": "{\"deviceId\":\"device-17\",\"readings\":{\"temperature\":23.7264674975023,\"humidity\":43.074193151054644,\"battery\":52.743365601859935},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"141a846a-6c28-499c-b177-43c117a7b57c\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:37:11.439Z\",\"consumed\":true,\"consumedBy\":\"81753a19-6e6a-43c8-a301-22b9820a6038\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"08ab9754-67b7-4fae-a121-586fd74bf773\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\"},\"__isSubMeta\":true,\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__routineExecId\":\"0008a3f8-57d5-40b5-b1b8-bd7e4f792257\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:37:11.481056"
+  },
+  {
+    "uuid": "d20b5735-4ac7-463f-a4ec-ed04b39ad105",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__localRoutineExecId\":\"0008a3f8-57d5-40b5-b1b8-bd7e4f792257\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"141a846a-6c28-499c-b177-43c117a7b57c\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:37:11.439Z\",\"consumed\":true,\"consumedBy\":\"81753a19-6e6a-43c8-a301-22b9820a6038\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"08ab9754-67b7-4fae-a121-586fd74bf773\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\"},\"__isSubMeta\":false,\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__routineExecId\":\"655d28fd-938c-49c4-917f-f58985ea0061\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"3d78c777-4989-4958-a341-6263a74cd334\"},\"queryData\":{\"data\":{\"temperature\":23.7264674975023,\"humidity\":43.074193151054644,\"battery\":52.743365601859935,\"deviceId\":\"device-17\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"3d78c777-4989-4958-a341-6263a74cd334\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:37:11.487442"
+  },
+  {
+    "uuid": "5c138c32-79f5-4901-9642-63b720ef0981",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:37:11.438Z\",\"consumed\":true,\"consumedBy\":\"141a846a-6c28-499c-b177-43c117a7b57c\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__routineExecId\":\"08ab9754-67b7-4fae-a121-586fd74bf773\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:37:11.490155"
+  },
+  {
+    "uuid": "fd73d536-c7bd-4d57-bb5e-3c123d7d072c",
+    "context": "{\"data\":{\"temperature\":23.7264674975023,\"humidity\":43.074193151054644,\"battery\":52.743365601859935,\"deviceId\":\"device-17\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"141a846a-6c28-499c-b177-43c117a7b57c\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:37:11.439Z\",\"consumed\":true,\"consumedBy\":\"81753a19-6e6a-43c8-a301-22b9820a6038\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"08ab9754-67b7-4fae-a121-586fd74bf773\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\"},\"__isSubMeta\":false,\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__routineExecId\":\"0008a3f8-57d5-40b5-b1b8-bd7e4f792257\",\"__nextNodes\":[\"1cd4fa05-d500-4c65-b807-d179d6dc0137\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:37:11.496065"
+  },
+  {
+    "uuid": "d5491ab5-1393-4489-aec8-adc1d5ea9d31",
+    "context": "{\"data\":{\"temperature\":23.7264674975023,\"humidity\":43.074193151054644,\"battery\":52.743365601859935,\"deviceId\":\"device-17\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"141a846a-6c28-499c-b177-43c117a7b57c\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:37:11.439Z\",\"consumed\":true,\"consumedBy\":\"81753a19-6e6a-43c8-a301-22b9820a6038\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"08ab9754-67b7-4fae-a121-586fd74bf773\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\"},\"__isSubMeta\":false,\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__routineExecId\":\"0008a3f8-57d5-40b5-b1b8-bd7e4f792257\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:37:11.499871"
+  },
+  {
+    "uuid": "e25af647-01c9-4cd3-9d57-4dd2879b43cc",
+    "context": "{\"telemetry\":{\"uuid\":\"f7fac31d-e6d2-43f5-baf8-f2e57e527b58\",\"deviceId\":\"device-17\",\"timestamp\":{},\"temperature\":\"23.73\",\"humidity\":\"43.07\",\"battery\":\"52.74\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__localRoutineExecId\":\"0008a3f8-57d5-40b5-b1b8-bd7e4f792257\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"141a846a-6c28-499c-b177-43c117a7b57c\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:37:11.439Z\",\"consumed\":true,\"consumedBy\":\"81753a19-6e6a-43c8-a301-22b9820a6038\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"08ab9754-67b7-4fae-a121-586fd74bf773\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\"},\"__isSubMeta\":false,\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__routineExecId\":\"3d78c777-4989-4958-a341-6263a74cd334\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"3d78c777-4989-4958-a341-6263a74cd334\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"acf0f64a-bcb9-4321-bbb6-a8bd40755fde\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:37:11.511844"
+  },
+  {
+    "uuid": "160e75ad-8e1c-4b40-b565-f9cdc4aa217a",
+    "context": "{\"data\":{\"temperature\":37.956043139195195,\"humidity\":37.0879061999883,\"battery\":85.2334131869645,\"deviceId\":\"device-40\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"71e06755-694f-4851-b619-f309c0af4dd7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:42:23.126Z\",\"consumed\":true,\"consumedBy\":\"82cd5d78-298a-481e-9145-eb09cb9ffebe\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"45c8a41c-6e81-49a9-8c87-96470165c41b\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\"},\"__isSubMeta\":false,\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__routineExecId\":\"7b96e7dc-41e9-4c84-9232-078cac55babb\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:42:23.179687"
+  },
+  {
+    "uuid": "8e9d9528-4430-4ae2-96ad-3f8a330874a6",
+    "context": "{\"telemetry\":{\"uuid\":\"f7fac31d-e6d2-43f5-baf8-f2e57e527b58\",\"deviceId\":\"device-17\",\"timestamp\":{},\"temperature\":\"23.73\",\"humidity\":\"43.07\",\"battery\":\"52.74\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__localRoutineExecId\":\"0008a3f8-57d5-40b5-b1b8-bd7e4f792257\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"141a846a-6c28-499c-b177-43c117a7b57c\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:37:11.439Z\",\"consumed\":true,\"consumedBy\":\"81753a19-6e6a-43c8-a301-22b9820a6038\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"08ab9754-67b7-4fae-a121-586fd74bf773\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\"},\"__isSubMeta\":false,\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__routineExecId\":\"3d78c777-4989-4958-a341-6263a74cd334\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"3d78c777-4989-4958-a341-6263a74cd334\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"acf0f64a-bcb9-4321-bbb6-a8bd40755fde\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:37:11.514445"
+  },
+  {
+    "uuid": "43cd65bd-3142-46b2-bef9-28ac093d5719",
+    "context": "{\"telemetry\":{\"uuid\":\"f7fac31d-e6d2-43f5-baf8-f2e57e527b58\",\"deviceId\":\"device-17\",\"timestamp\":{},\"temperature\":\"23.73\",\"humidity\":\"43.07\",\"battery\":\"52.74\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\",\"__localRoutineExecId\":\"0008a3f8-57d5-40b5-b1b8-bd7e4f792257\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"08ab9754-67b7-4fae-a121-586fd74bf773\",\"__executionTraceId\":\"236a8fee-2574-4bf8-9d88-69da2155b51e\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"3d78c777-4989-4958-a341-6263a74cd334\",\"__routineExecId\":\"0008a3f8-57d5-40b5-b1b8-bd7e4f792257\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"141a846a-6c28-499c-b177-43c117a7b57c\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:37:11.439Z\",\"consumed\":true,\"consumedBy\":\"81753a19-6e6a-43c8-a301-22b9820a6038\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:37:11.518884"
+  },
+  {
+    "uuid": "dfeedc17-6ef1-440b-b1c8-8a750d609bcd",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:39:30.265Z\",\"consumed\":true,\"consumedBy\":\"1d7d9105-fc74-40e2-acd2-1c7915258521\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__routineExecId\":\"27068123-6b93-4401-9185-364655457715\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:30.281638"
+  },
+  {
+    "uuid": "621457fa-93b6-4d8f-bb1e-d9f09ea759a2",
+    "context": "{\"deviceId\":\"device-25\",\"readings\":{\"temperature\":5,\"humidity\":15,\"battery\":82.54428121836555},\"timestamp\":{},\"anomalyFlag\":true,\"anomalyReason\":\"Dual anomaly: Temp 5°C, Humidity 15%\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"1d7d9105-fc74-40e2-acd2-1c7915258521\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:30.269Z\",\"consumed\":true,\"consumedBy\":\"baee3c38-bcb4-4679-b600-c9de1f54517f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"27068123-6b93-4401-9185-364655457715\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\"},\"__isSubMeta\":true,\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__routineExecId\":\"7f8eae1e-1925-436f-af7b-d087206403dd\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:30.312609"
+  },
+  {
+    "uuid": "bc1f1645-557e-4383-9628-541b8c1efa7d",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:39:30.265Z\",\"consumed\":true,\"consumedBy\":\"1d7d9105-fc74-40e2-acd2-1c7915258521\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__routineExecId\":\"27068123-6b93-4401-9185-364655457715\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:30.319172"
+  },
+  {
+    "uuid": "8449bcc0-e8e5-4b96-a5f2-e814b4d203f7",
+    "context": "{\"data\":{\"temperature\":5,\"humidity\":15,\"battery\":82.54428121836555,\"deviceId\":\"device-25\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"1d7d9105-fc74-40e2-acd2-1c7915258521\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:30.269Z\",\"consumed\":true,\"consumedBy\":\"baee3c38-bcb4-4679-b600-c9de1f54517f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"27068123-6b93-4401-9185-364655457715\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\"},\"__isSubMeta\":false,\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__routineExecId\":\"7f8eae1e-1925-436f-af7b-d087206403dd\",\"__nextNodes\":[\"f0067973-2f05-4933-bdfd-bd61f657c0d1\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:30.322994"
+  },
+  {
+    "uuid": "31f3668f-1173-4cd8-bbb8-1a7b0750dd82",
+    "context": "{\"data\":{\"temperature\":5,\"humidity\":15,\"battery\":82.54428121836555,\"deviceId\":\"device-25\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"1d7d9105-fc74-40e2-acd2-1c7915258521\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:30.269Z\",\"consumed\":true,\"consumedBy\":\"baee3c38-bcb4-4679-b600-c9de1f54517f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"27068123-6b93-4401-9185-364655457715\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\"},\"__isSubMeta\":false,\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__routineExecId\":\"7f8eae1e-1925-436f-af7b-d087206403dd\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:30.325636"
+  },
+  {
+    "uuid": "d5b369bf-0ac0-4310-bc80-4d4d7ebced7c",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__localRoutineExecId\":\"7f8eae1e-1925-436f-af7b-d087206403dd\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"1d7d9105-fc74-40e2-acd2-1c7915258521\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:30.269Z\",\"consumed\":true,\"consumedBy\":\"baee3c38-bcb4-4679-b600-c9de1f54517f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"27068123-6b93-4401-9185-364655457715\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\"},\"__isSubMeta\":false,\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__routineExecId\":\"e8e5d46b-c434-4094-ac7b-26fd7fa0f9e2\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"595c2371-e9d8-4d4a-ac98-e348cd52b58c\"},\"queryData\":{\"data\":{\"temperature\":5,\"humidity\":15,\"battery\":82.54428121836555,\"deviceId\":\"device-25\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"595c2371-e9d8-4d4a-ac98-e348cd52b58c\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:30.331390"
+  },
+  {
+    "uuid": "7673bf5b-c70b-4e84-a484-1a47aca20f5c",
+    "context": "{\"deviceId\":\"device-36\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"predictor.maintenance_needed\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"9992dbd8-d970-4c6a-be41-2145a591cff4\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":true,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"cb04352b-1d80-40e9-a860-28fcc05602f8\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.488471"
+  },
+  {
+    "uuid": "cde00ba7-b499-44b4-870a-f213e82a7e38",
+    "context": "{\"telemetry\":{\"uuid\":\"af89daa3-7183-4fd0-bf47-b5c1f5e822ba\",\"deviceId\":\"device-25\",\"timestamp\":{},\"temperature\":\"5.00\",\"humidity\":\"15.00\",\"battery\":\"82.54\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__localRoutineExecId\":\"7f8eae1e-1925-436f-af7b-d087206403dd\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"1d7d9105-fc74-40e2-acd2-1c7915258521\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:30.269Z\",\"consumed\":true,\"consumedBy\":\"baee3c38-bcb4-4679-b600-c9de1f54517f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"27068123-6b93-4401-9185-364655457715\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\"},\"__isSubMeta\":false,\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__routineExecId\":\"595c2371-e9d8-4d4a-ac98-e348cd52b58c\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"595c2371-e9d8-4d4a-ac98-e348cd52b58c\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"11377471-91c1-4419-a58c-7f742a646219\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:39:30.341020"
+  },
+  {
+    "uuid": "2a7a8bd9-3730-4987-ba03-f7bb3655c99b",
+    "context": "{\"telemetry\":{\"uuid\":\"af89daa3-7183-4fd0-bf47-b5c1f5e822ba\",\"deviceId\":\"device-25\",\"timestamp\":{},\"temperature\":\"5.00\",\"humidity\":\"15.00\",\"battery\":\"82.54\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__localRoutineExecId\":\"7f8eae1e-1925-436f-af7b-d087206403dd\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"1d7d9105-fc74-40e2-acd2-1c7915258521\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:30.269Z\",\"consumed\":true,\"consumedBy\":\"baee3c38-bcb4-4679-b600-c9de1f54517f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"27068123-6b93-4401-9185-364655457715\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\"},\"__isSubMeta\":false,\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__routineExecId\":\"595c2371-e9d8-4d4a-ac98-e348cd52b58c\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"595c2371-e9d8-4d4a-ac98-e348cd52b58c\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"11377471-91c1-4419-a58c-7f742a646219\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:30.343695"
+  },
+  {
+    "uuid": "a403c89b-62c2-42aa-b8a8-40f53ddfc371",
+    "context": "{\"telemetry\":{\"uuid\":\"af89daa3-7183-4fd0-bf47-b5c1f5e822ba\",\"deviceId\":\"device-25\",\"timestamp\":{},\"temperature\":\"5.00\",\"humidity\":\"15.00\",\"battery\":\"82.54\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\",\"__localRoutineExecId\":\"7f8eae1e-1925-436f-af7b-d087206403dd\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"27068123-6b93-4401-9185-364655457715\",\"__executionTraceId\":\"b768942b-18b4-4c04-be71-94f1b1e210d2\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"595c2371-e9d8-4d4a-ac98-e348cd52b58c\",\"__routineExecId\":\"7f8eae1e-1925-436f-af7b-d087206403dd\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"1d7d9105-fc74-40e2-acd2-1c7915258521\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:30.269Z\",\"consumed\":true,\"consumedBy\":\"baee3c38-bcb4-4679-b600-c9de1f54517f\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:30.347555"
+  },
+  {
+    "uuid": "789eda83-da82-40c2-9adc-91ae9f4ae70c",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:39:31.727Z\",\"consumed\":true,\"consumedBy\":\"97958730-6666-4c53-9881-866c8a81a5b9\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__routineExecId\":\"96127f5e-3f80-448f-92cf-ec11ac50f9bb\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:31.748230"
+  },
+  {
+    "uuid": "2d87e3b4-44d3-40d6-aec8-41b944d3249c",
+    "context": "{\"deviceId\":\"device-41\",\"readings\":{\"temperature\":71.41179422600331,\"humidity\":46.62372349619773,\"battery\":76.91490782768737},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"97958730-6666-4c53-9881-866c8a81a5b9\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:31.729Z\",\"consumed\":true,\"consumedBy\":\"b69ce0cd-1635-4c0d-a62d-1ea4c640629f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"96127f5e-3f80-448f-92cf-ec11ac50f9bb\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\"},\"__isSubMeta\":true,\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__routineExecId\":\"eee17911-0199-4ea7-ab7e-691f5ddefbdf\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:31.758337"
+  },
+  {
+    "uuid": "ae49a4dc-4c21-4779-a587-cf065556f3b3",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:39:31.727Z\",\"consumed\":true,\"consumedBy\":\"97958730-6666-4c53-9881-866c8a81a5b9\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__routineExecId\":\"96127f5e-3f80-448f-92cf-ec11ac50f9bb\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:31.765101"
+  },
+  {
+    "uuid": "c77d772b-5b1c-479e-bbc8-dfa6ef9546c2",
+    "context": "{\"data\":{\"temperature\":71.41179422600331,\"humidity\":46.62372349619773,\"battery\":76.91490782768737,\"deviceId\":\"device-41\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"97958730-6666-4c53-9881-866c8a81a5b9\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:31.729Z\",\"consumed\":true,\"consumedBy\":\"b69ce0cd-1635-4c0d-a62d-1ea4c640629f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"96127f5e-3f80-448f-92cf-ec11ac50f9bb\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\"},\"__isSubMeta\":false,\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__routineExecId\":\"eee17911-0199-4ea7-ab7e-691f5ddefbdf\",\"__nextNodes\":[\"7d7e6739-8123-4c49-8ff4-1bc9bf2cf7c7\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:31.769344"
+  },
+  {
+    "uuid": "fcbcebb1-e148-446f-8773-0b4b299dd4d5",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__localRoutineExecId\":\"eee17911-0199-4ea7-ab7e-691f5ddefbdf\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"97958730-6666-4c53-9881-866c8a81a5b9\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:31.729Z\",\"consumed\":true,\"consumedBy\":\"b69ce0cd-1635-4c0d-a62d-1ea4c640629f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"96127f5e-3f80-448f-92cf-ec11ac50f9bb\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\"},\"__isSubMeta\":false,\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__routineExecId\":\"4fe0b88e-062e-4fa3-b50b-d42fa1087343\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"aa42a4df-b8be-4ef6-a1dd-e2fc94d60582\"},\"queryData\":{\"data\":{\"temperature\":71.41179422600331,\"humidity\":46.62372349619773,\"battery\":76.91490782768737,\"deviceId\":\"device-41\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"aa42a4df-b8be-4ef6-a1dd-e2fc94d60582\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:31.771897"
+  },
+  {
+    "uuid": "322a1649-2845-4541-ba5a-4575428db088",
+    "context": "{\"telemetry\":{\"uuid\":\"d295db74-c927-4623-b549-5790b54125ac\",\"deviceId\":\"device-41\",\"timestamp\":{},\"temperature\":\"71.41\",\"humidity\":\"46.62\",\"battery\":\"76.91\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__localRoutineExecId\":\"eee17911-0199-4ea7-ab7e-691f5ddefbdf\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"97958730-6666-4c53-9881-866c8a81a5b9\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:31.729Z\",\"consumed\":true,\"consumedBy\":\"b69ce0cd-1635-4c0d-a62d-1ea4c640629f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"96127f5e-3f80-448f-92cf-ec11ac50f9bb\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\"},\"__isSubMeta\":false,\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__routineExecId\":\"aa42a4df-b8be-4ef6-a1dd-e2fc94d60582\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"aa42a4df-b8be-4ef6-a1dd-e2fc94d60582\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"92a262ba-9dab-40a1-bc88-a5c4a38978d1\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:39:31.787994"
+  },
+  {
+    "uuid": "23e2d5a9-f5fc-49f5-88cc-672d918ee6a2",
+    "context": "{\"telemetry\":{\"uuid\":\"d295db74-c927-4623-b549-5790b54125ac\",\"deviceId\":\"device-41\",\"timestamp\":{},\"temperature\":\"71.41\",\"humidity\":\"46.62\",\"battery\":\"76.91\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__localRoutineExecId\":\"eee17911-0199-4ea7-ab7e-691f5ddefbdf\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"97958730-6666-4c53-9881-866c8a81a5b9\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:31.729Z\",\"consumed\":true,\"consumedBy\":\"b69ce0cd-1635-4c0d-a62d-1ea4c640629f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"96127f5e-3f80-448f-92cf-ec11ac50f9bb\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\"},\"__isSubMeta\":false,\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__routineExecId\":\"aa42a4df-b8be-4ef6-a1dd-e2fc94d60582\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"aa42a4df-b8be-4ef6-a1dd-e2fc94d60582\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"92a262ba-9dab-40a1-bc88-a5c4a38978d1\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:31.790526"
+  },
+  {
+    "uuid": "f97b0959-55eb-4d2e-a9f3-1fd91655ab53",
+    "context": "{\"telemetry\":{\"uuid\":\"d295db74-c927-4623-b549-5790b54125ac\",\"deviceId\":\"device-41\",\"timestamp\":{},\"temperature\":\"71.41\",\"humidity\":\"46.62\",\"battery\":\"76.91\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\",\"__localRoutineExecId\":\"eee17911-0199-4ea7-ab7e-691f5ddefbdf\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"96127f5e-3f80-448f-92cf-ec11ac50f9bb\",\"__executionTraceId\":\"65bb0014-865b-4d6f-99fc-4fa9c32594e5\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"aa42a4df-b8be-4ef6-a1dd-e2fc94d60582\",\"__routineExecId\":\"eee17911-0199-4ea7-ab7e-691f5ddefbdf\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"97958730-6666-4c53-9881-866c8a81a5b9\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:39:31.729Z\",\"consumed\":true,\"consumedBy\":\"b69ce0cd-1635-4c0d-a62d-1ea4c640629f\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:39:31.794763"
+  },
+  {
+    "uuid": "c0fc8ada-88f5-40a7-99de-b816bfb29f7e",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:42:23.124Z\",\"consumed\":true,\"consumedBy\":\"71e06755-694f-4851-b619-f309c0af4dd7\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__routineExecId\":\"45c8a41c-6e81-49a9-8c87-96470165c41b\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:42:23.149820"
+  },
+  {
+    "uuid": "c59e1318-d89e-49e2-a819-d9906adaea59",
+    "context": "{\"deviceId\":\"device-40\",\"readings\":{\"temperature\":37.956043139195195,\"humidity\":37.0879061999883,\"battery\":85.2334131869645},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"71e06755-694f-4851-b619-f309c0af4dd7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:42:23.126Z\",\"consumed\":true,\"consumedBy\":\"82cd5d78-298a-481e-9145-eb09cb9ffebe\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"45c8a41c-6e81-49a9-8c87-96470165c41b\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\"},\"__isSubMeta\":true,\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__routineExecId\":\"7b96e7dc-41e9-4c84-9232-078cac55babb\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:42:23.161059"
+  },
+  {
+    "uuid": "98c1b9e1-5762-42d2-9060-7dca0dd3b32d",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:42:23.124Z\",\"consumed\":true,\"consumedBy\":\"71e06755-694f-4851-b619-f309c0af4dd7\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__routineExecId\":\"45c8a41c-6e81-49a9-8c87-96470165c41b\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:42:23.168763"
+  },
+  {
+    "uuid": "e17f74bf-198f-42c3-981d-8cb2c5b54f9a",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__localRoutineExecId\":\"7b96e7dc-41e9-4c84-9232-078cac55babb\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"71e06755-694f-4851-b619-f309c0af4dd7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:42:23.126Z\",\"consumed\":true,\"consumedBy\":\"82cd5d78-298a-481e-9145-eb09cb9ffebe\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"45c8a41c-6e81-49a9-8c87-96470165c41b\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\"},\"__isSubMeta\":false,\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__routineExecId\":\"ccdb93d3-874a-426b-b5dd-4bacb692df25\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"8286d260-69bc-4362-96e9-268bfd078f62\"},\"queryData\":{\"data\":{\"temperature\":37.956043139195195,\"humidity\":37.0879061999883,\"battery\":85.2334131869645,\"deviceId\":\"device-40\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"8286d260-69bc-4362-96e9-268bfd078f62\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:42:23.171223"
+  },
+  {
+    "uuid": "e69566fe-3914-4891-b50a-3840366071de",
+    "context": "{\"data\":{\"temperature\":37.956043139195195,\"humidity\":37.0879061999883,\"battery\":85.2334131869645,\"deviceId\":\"device-40\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"71e06755-694f-4851-b619-f309c0af4dd7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:42:23.126Z\",\"consumed\":true,\"consumedBy\":\"82cd5d78-298a-481e-9145-eb09cb9ffebe\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"45c8a41c-6e81-49a9-8c87-96470165c41b\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\"},\"__isSubMeta\":false,\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__routineExecId\":\"7b96e7dc-41e9-4c84-9232-078cac55babb\",\"__nextNodes\":[\"22732f51-9fb1-4fa3-b53a-96f3931d30ab\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:42:23.175217"
+  },
+  {
+    "uuid": "16abeb2c-42fc-4612-8a9e-b0b8565b7b02",
+    "context": "{\"telemetry\":{\"uuid\":\"b572aca6-b7b8-4b58-b031-3067ae9af7b0\",\"deviceId\":\"device-40\",\"timestamp\":{},\"temperature\":\"37.96\",\"humidity\":\"37.09\",\"battery\":\"85.23\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__localRoutineExecId\":\"7b96e7dc-41e9-4c84-9232-078cac55babb\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"71e06755-694f-4851-b619-f309c0af4dd7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:42:23.126Z\",\"consumed\":true,\"consumedBy\":\"82cd5d78-298a-481e-9145-eb09cb9ffebe\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"45c8a41c-6e81-49a9-8c87-96470165c41b\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\"},\"__isSubMeta\":false,\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__routineExecId\":\"8286d260-69bc-4362-96e9-268bfd078f62\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"8286d260-69bc-4362-96e9-268bfd078f62\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"29146eaa-6409-4d41-9cd8-48c4874a8e43\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:42:23.193393"
+  },
+  {
+    "uuid": "49d8398c-410f-4eb5-9d18-2c2beba9f182",
+    "context": "{\"telemetry\":{\"uuid\":\"b572aca6-b7b8-4b58-b031-3067ae9af7b0\",\"deviceId\":\"device-40\",\"timestamp\":{},\"temperature\":\"37.96\",\"humidity\":\"37.09\",\"battery\":\"85.23\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__localRoutineExecId\":\"7b96e7dc-41e9-4c84-9232-078cac55babb\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"71e06755-694f-4851-b619-f309c0af4dd7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:42:23.126Z\",\"consumed\":true,\"consumedBy\":\"82cd5d78-298a-481e-9145-eb09cb9ffebe\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"45c8a41c-6e81-49a9-8c87-96470165c41b\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\"},\"__isSubMeta\":false,\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__routineExecId\":\"8286d260-69bc-4362-96e9-268bfd078f62\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"8286d260-69bc-4362-96e9-268bfd078f62\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"29146eaa-6409-4d41-9cd8-48c4874a8e43\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:42:23.196215"
+  },
+  {
+    "uuid": "451dcfc8-2151-4269-b86b-3665ea5c0e0f",
+    "context": "{\"telemetry\":{\"uuid\":\"b572aca6-b7b8-4b58-b031-3067ae9af7b0\",\"deviceId\":\"device-40\",\"timestamp\":{},\"temperature\":\"37.96\",\"humidity\":\"37.09\",\"battery\":\"85.23\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\",\"__localRoutineExecId\":\"7b96e7dc-41e9-4c84-9232-078cac55babb\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"45c8a41c-6e81-49a9-8c87-96470165c41b\",\"__executionTraceId\":\"ebe276c8-2dad-4982-a818-b873533e66b1\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"8286d260-69bc-4362-96e9-268bfd078f62\",\"__routineExecId\":\"7b96e7dc-41e9-4c84-9232-078cac55babb\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"71e06755-694f-4851-b619-f309c0af4dd7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:42:23.126Z\",\"consumed\":true,\"consumedBy\":\"82cd5d78-298a-481e-9145-eb09cb9ffebe\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:42:23.200146"
+  },
+  {
+    "uuid": "ce8d2a41-807b-45f2-aa64-758b0e3ca43e",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:43:25.429Z\",\"consumed\":true,\"consumedBy\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.441758"
+  },
+  {
+    "uuid": "93ab115c-1944-4f70-a56b-5fff79ad294a",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__localRoutineExecId\":\"b2d7bccc-aeec-4e0d-8833-d13568a4b3c3\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"c6e390ba-453b-423f-ae72-7411fa94dd19\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":false,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"99bae7d7-cae5-432b-a046-fd52840b56ec\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"d3af7b4b-f5d3-4102-aba6-9d9a33a9d855\"},\"queryData\":{\"data\":{\"temperature\":95.45421122722202,\"humidity\":50.49420300292929,\"battery\":64.44439956908144,\"deviceId\":\"device-36\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"d3af7b4b-f5d3-4102-aba6-9d9a33a9d855\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.475962"
+  },
+  {
+    "uuid": "9a8091f1-f864-4474-94d6-d5822e15651e",
+    "context": "{\"deviceId\":\"device-36\",\"readings\":{\"temperature\":95.45421122722202,\"humidity\":50.49420300292929,\"battery\":64.44439956908144},\"timestamp\":{},\"anomalyFlag\":true,\"anomalyReason\":\"Temperature out of range: 95.45421122722202°C\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"c6e390ba-453b-423f-ae72-7411fa94dd19\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":true,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"b2d7bccc-aeec-4e0d-8833-d13568a4b3c3\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.478060"
+  },
+  {
+    "uuid": "c65177cf-c675-4f1d-80de-b1a6236aecd3",
+    "context": "{\"deviceId\":\"device-36\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"health.check\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"dfd9c1b2-1f87-4545-8637-0a330cb3bc4f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":true,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"a06498c6-3042-4b91-a105-72d92b50903e\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.483144"
+  },
+  {
+    "uuid": "16fd0050-1641-4f7b-b83c-8b4066054dd0",
+    "context": "{\"data\":{\"temperature\":95.45421122722202,\"humidity\":50.49420300292929,\"battery\":64.44439956908144,\"deviceId\":\"device-36\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"c6e390ba-453b-423f-ae72-7411fa94dd19\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":false,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"b2d7bccc-aeec-4e0d-8833-d13568a4b3c3\",\"__nextNodes\":[\"3d72f252-9347-4517-bf7f-8e3097c95072\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.508364"
+  },
+  {
+    "uuid": "557a48bd-1215-4830-aaf9-a7afa694fb5d",
+    "context": "{\"deviceId\":\"device-36\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"health.check\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"dfd9c1b2-1f87-4545-8637-0a330cb3bc4f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":false,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"a06498c6-3042-4b91-a105-72d92b50903e\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.511021"
+  },
+  {
+    "uuid": "6d8134c2-e0eb-412a-b8cd-6498fedc87b6",
+    "context": "{\"deviceId\":\"device-36\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"predictor.maintenance_needed\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"9992dbd8-d970-4c6a-be41-2145a591cff4\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":false,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"cb04352b-1d80-40e9-a860-28fcc05602f8\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.514774"
+  },
+  {
+    "uuid": "641fd8e9-05de-4008-b0c5-1e7e433ee482",
+    "context": "{\"data\":{\"temperature\":95.45421122722202,\"humidity\":50.49420300292929,\"battery\":64.44439956908144,\"deviceId\":\"device-36\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"c6e390ba-453b-423f-ae72-7411fa94dd19\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":false,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"b2d7bccc-aeec-4e0d-8833-d13568a4b3c3\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.518876"
+  },
+  {
+    "uuid": "a78cbc74-10d7-4432-9f2e-86d8af328191",
+    "context": "{\"telemetry\":{\"uuid\":\"2e9c18bb-8f2c-4206-994d-4716d84286ed\",\"deviceId\":\"device-36\",\"timestamp\":{},\"temperature\":\"95.45\",\"humidity\":\"50.49\",\"battery\":\"64.44\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__localRoutineExecId\":\"b2d7bccc-aeec-4e0d-8833-d13568a4b3c3\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"c6e390ba-453b-423f-ae72-7411fa94dd19\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":false,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"d3af7b4b-f5d3-4102-aba6-9d9a33a9d855\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"d3af7b4b-f5d3-4102-aba6-9d9a33a9d855\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"48b0ac3d-c00b-4855-ad53-a642b042a416\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:43:25.529940"
+  },
+  {
+    "uuid": "79b157e8-69f9-476f-83e7-c3ffab3cc383",
+    "context": "{\"telemetry\":{\"uuid\":\"2e9c18bb-8f2c-4206-994d-4716d84286ed\",\"deviceId\":\"device-36\",\"timestamp\":{},\"temperature\":\"95.45\",\"humidity\":\"50.49\",\"battery\":\"64.44\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__localRoutineExecId\":\"b2d7bccc-aeec-4e0d-8833-d13568a4b3c3\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"c6e390ba-453b-423f-ae72-7411fa94dd19\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__isSubMeta\":false,\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__routineExecId\":\"d3af7b4b-f5d3-4102-aba6-9d9a33a9d855\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"d3af7b4b-f5d3-4102-aba6-9d9a33a9d855\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"48b0ac3d-c00b-4855-ad53-a642b042a416\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.532353"
+  },
+  {
+    "uuid": "0f2ed5fe-9785-4cd5-9085-c26c63e3fba2",
+    "context": "{\"telemetry\":{\"uuid\":\"2e9c18bb-8f2c-4206-994d-4716d84286ed\",\"deviceId\":\"device-36\",\"timestamp\":{},\"temperature\":\"95.45\",\"humidity\":\"50.49\",\"battery\":\"64.44\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\",\"__localRoutineExecId\":\"b2d7bccc-aeec-4e0d-8833-d13568a4b3c3\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"a5612cc4-83be-46df-819d-79ee6fa21c85\",\"__executionTraceId\":\"c96bee3b-dd89-4f30-a0d1-984a5a4837e0\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"d3af7b4b-f5d3-4102-aba6-9d9a33a9d855\",\"__routineExecId\":\"b2d7bccc-aeec-4e0d-8833-d13568a4b3c3\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"fa58cfd7-2cd4-47df-8c1d-fd33c31061ce\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:43:25.431Z\",\"consumed\":true,\"consumedBy\":\"c6e390ba-453b-423f-ae72-7411fa94dd19\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:43:25.535145"
+  },
+  {
+    "uuid": "064222cc-b011-4303-8012-3752a4e4a104",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:45:28.563Z\",\"consumed\":true,\"consumedBy\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:45:28.571374"
+  },
+  {
+    "uuid": "8a63225a-1847-4107-8a0b-44b7cb6f727a",
+    "context": "{\"deviceId\":\"device-9\",\"readings\":{\"temperature\":44.87351722134477,\"humidity\":36.245538736933646,\"battery\":88.89909114093538},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:45:28.565Z\",\"consumed\":true,\"consumedBy\":\"b13601db-4978-4ed5-b86a-c5fc210add18\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\"},\"__isSubMeta\":true,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"8000b811-0e45-4de8-b268-f5825dfd9f3a\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:45:28.608444"
+  },
+  {
+    "uuid": "7e51a695-941e-403a-80e2-d02a03bec44e",
+    "context": "{\"deviceId\":\"device-9\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"signalName\":\"health.check\",\"emittedAt\":\"2025-10-16T15:45:28.565Z\",\"consumed\":true,\"consumedBy\":\"5bdbb491-9ec3-4b67-9c83-2eb977b9efa4\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\"},\"__isSubMeta\":true,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"639adf97-6eaa-41b5-a616-9feb9c8d6a63\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:45:28.613205"
+  },
+  {
+    "uuid": "4df8d909-5dd4-4e27-8bc7-e9b996c0303c",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__localRoutineExecId\":\"8000b811-0e45-4de8-b268-f5825dfd9f3a\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:45:28.565Z\",\"consumed\":true,\"consumedBy\":\"b13601db-4978-4ed5-b86a-c5fc210add18\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\"},\"__isSubMeta\":false,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"459e5f73-b02d-4c96-ae6f-a2c88ee75039\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"778e2537-1284-40b6-a598-ba7b3eac1321\"},\"queryData\":{\"data\":{\"temperature\":44.87351722134477,\"humidity\":36.245538736933646,\"battery\":88.89909114093538,\"deviceId\":\"device-9\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"778e2537-1284-40b6-a598-ba7b3eac1321\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:45:28.615753"
+  },
+  {
+    "uuid": "379fdc68-284c-492d-a3f2-29a3b84117d5",
+    "context": "{\"deviceId\":\"device-9\",\"triggerType\":\"scheduled\",\"__signalEmission\":{\"taskName\":\"EmitHealthCheckSignal\",\"taskVersion\":1,\"taskExecutionId\":\"5bdbb491-9ec3-4b67-9c83-2eb977b9efa4\",\"signalName\":\"runner.health_check_triggered\",\"emittedAt\":\"2025-10-16T15:45:28.567Z\",\"consumed\":false,\"consumedBy\":null,\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"639adf97-6eaa-41b5-a616-9feb9c8d6a63\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\"},\"__isSubMeta\":true,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"c01d4f19-1ead-4ade-82ca-15a44299e4fa\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:45:28.628950"
+  },
+  {
+    "uuid": "571b5ef5-a0ce-46f9-a6ce-e3151bd571bc",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:45:28.563Z\",\"consumed\":true,\"consumedBy\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:45:28.631265"
+  },
+  {
+    "uuid": "6d022b02-c06a-4dad-9098-64fcc4f81216",
+    "context": "{\"data\":{\"temperature\":44.87351722134477,\"humidity\":36.245538736933646,\"battery\":88.89909114093538,\"deviceId\":\"device-9\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:45:28.565Z\",\"consumed\":true,\"consumedBy\":\"b13601db-4978-4ed5-b86a-c5fc210add18\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\"},\"__isSubMeta\":false,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"8000b811-0e45-4de8-b268-f5825dfd9f3a\",\"__nextNodes\":[\"74fdd95b-a232-4550-9cd8-7d2b5a5ebac6\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:45:28.635031"
+  },
+  {
+    "uuid": "3c28e4ee-a19a-434f-b256-eb89553eb383",
+    "context": "{\"deviceId\":\"device-9\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"signalName\":\"health.check\",\"emittedAt\":\"2025-10-16T15:45:28.565Z\",\"consumed\":true,\"consumedBy\":\"5bdbb491-9ec3-4b67-9c83-2eb977b9efa4\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\"},\"__isSubMeta\":false,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"639adf97-6eaa-41b5-a616-9feb9c8d6a63\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:45:28.637977"
+  },
+  {
+    "uuid": "ad275d42-bfb5-42df-b2b6-239d42286057",
+    "context": "{\"data\":{\"temperature\":44.87351722134477,\"humidity\":36.245538736933646,\"battery\":88.89909114093538,\"deviceId\":\"device-9\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:45:28.565Z\",\"consumed\":true,\"consumedBy\":\"b13601db-4978-4ed5-b86a-c5fc210add18\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\"},\"__isSubMeta\":false,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"8000b811-0e45-4de8-b268-f5825dfd9f3a\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:45:28.641722"
+  },
+  {
+    "uuid": "93e976f9-0fab-4185-9c5e-4f0b511ba856",
+    "context": "{\"telemetry\":{\"uuid\":\"c994cf08-ef0c-4e71-817c-cc09400167ac\",\"deviceId\":\"device-9\",\"timestamp\":{},\"temperature\":\"44.87\",\"humidity\":\"36.25\",\"battery\":\"88.90\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__localRoutineExecId\":\"8000b811-0e45-4de8-b268-f5825dfd9f3a\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:45:28.565Z\",\"consumed\":true,\"consumedBy\":\"b13601db-4978-4ed5-b86a-c5fc210add18\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\"},\"__isSubMeta\":false,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"778e2537-1284-40b6-a598-ba7b3eac1321\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"778e2537-1284-40b6-a598-ba7b3eac1321\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"01d0e7c4-e592-4d26-a146-5e8923510d68\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:45:28.651755"
+  },
+  {
+    "uuid": "e8b3ffc2-b39e-4eee-9f44-efc21d2d9c88",
+    "context": "{\"telemetry\":{\"uuid\":\"c994cf08-ef0c-4e71-817c-cc09400167ac\",\"deviceId\":\"device-9\",\"timestamp\":{},\"temperature\":\"44.87\",\"humidity\":\"36.25\",\"battery\":\"88.90\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__localRoutineExecId\":\"8000b811-0e45-4de8-b268-f5825dfd9f3a\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"778e2537-1284-40b6-a598-ba7b3eac1321\",\"__routineExecId\":\"8000b811-0e45-4de8-b268-f5825dfd9f3a\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:45:28.565Z\",\"consumed\":true,\"consumedBy\":\"b13601db-4978-4ed5-b86a-c5fc210add18\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:45:28.654347"
+  },
+  {
+    "uuid": "711365c1-b2a6-4da4-9e31-ac21875d8739",
+    "context": "{\"telemetry\":{\"uuid\":\"c994cf08-ef0c-4e71-817c-cc09400167ac\",\"deviceId\":\"device-9\",\"timestamp\":{},\"temperature\":\"44.87\",\"humidity\":\"36.25\",\"battery\":\"88.90\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__localRoutineExecId\":\"8000b811-0e45-4de8-b268-f5825dfd9f3a\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"b0dcb056-f37b-4aeb-9f9b-ed7b67be343f\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:45:28.565Z\",\"consumed\":true,\"consumedBy\":\"b13601db-4978-4ed5-b86a-c5fc210add18\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"ba997652-553a-46f8-a01c-e0cc93405ff9\",\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\"},\"__isSubMeta\":false,\"__executionTraceId\":\"4ab06d87-2976-4f0c-ac7c-edb763a39fdf\",\"__routineExecId\":\"778e2537-1284-40b6-a598-ba7b3eac1321\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"778e2537-1284-40b6-a598-ba7b3eac1321\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"01d0e7c4-e592-4d26-a146-5e8923510d68\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:45:28.656918"
+  },
+  {
+    "uuid": "f4052ce8-0cec-45a4-a0fd-ad471ade3d04",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:47:10.911Z\",\"consumed\":true,\"consumedBy\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:47:10.925506"
+  },
+  {
+    "uuid": "12a9c9cc-3473-4d5c-bd92-9b1d1c14f1f8",
+    "context": "{\"deviceId\":\"device-34\",\"readings\":{\"temperature\":16.607022025931645,\"humidity\":40.526852005274854,\"battery\":53.232880736286106},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:47:10.913Z\",\"consumed\":true,\"consumedBy\":\"99ef3d42-f9b9-4e52-b2cc-dc5de47a0e1f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\"},\"__isSubMeta\":true,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"cf8c3091-9d73-44af-8f94-3fe2315d03ec\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:47:10.958136"
+  },
+  {
+    "uuid": "1efd73ae-9968-45a6-b31f-727022b7cb37",
+    "context": "{\"deviceId\":\"device-34\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"signalName\":\"health.check\",\"emittedAt\":\"2025-10-16T15:47:10.913Z\",\"consumed\":true,\"consumedBy\":\"b7e79a97-3ffd-44c2-97ff-2384ef4a8855\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\"},\"__isSubMeta\":true,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"effad527-ce11-425b-8414-2e9a3dac973b\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:47:10.962124"
+  },
+  {
+    "uuid": "13e81aa4-b46b-43c2-b707-1fc6fd7113f9",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__localRoutineExecId\":\"cf8c3091-9d73-44af-8f94-3fe2315d03ec\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:47:10.913Z\",\"consumed\":true,\"consumedBy\":\"99ef3d42-f9b9-4e52-b2cc-dc5de47a0e1f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"e5bd1663-fff8-4e33-9dab-ed104099cb7b\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"8683cd0d-0d3a-4c34-9146-b1a461ed1744\"},\"queryData\":{\"data\":{\"temperature\":16.607022025931645,\"humidity\":40.526852005274854,\"battery\":53.232880736286106,\"deviceId\":\"device-34\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"8683cd0d-0d3a-4c34-9146-b1a461ed1744\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:47:10.964457"
+  },
+  {
+    "uuid": "59790c16-fd2a-429b-b6a5-1272e5a6db99",
+    "context": "{\"deviceId\":\"device-34\",\"triggerType\":\"scheduled\",\"__signalEmission\":{\"taskName\":\"EmitHealthCheckSignal\",\"taskVersion\":1,\"taskExecutionId\":\"b7e79a97-3ffd-44c2-97ff-2384ef4a8855\",\"signalName\":\"runner.health_check_triggered\",\"emittedAt\":\"2025-10-16T15:47:10.914Z\",\"consumed\":false,\"consumedBy\":null,\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"effad527-ce11-425b-8414-2e9a3dac973b\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\"},\"__isSubMeta\":true,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"37a945bf-e84b-4b6c-aa49-1d1b460c3c8e\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:47:10.978253"
+  },
+  {
+    "uuid": "bafd32d9-06f1-4c50-9975-0f45a4dc5e6c",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:47:10.911Z\",\"consumed\":true,\"consumedBy\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:47:10.980815"
+  },
+  {
+    "uuid": "3d234096-aa28-46ad-9559-5cb870edff57",
+    "context": "{\"data\":{\"temperature\":16.607022025931645,\"humidity\":40.526852005274854,\"battery\":53.232880736286106,\"deviceId\":\"device-34\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:47:10.913Z\",\"consumed\":true,\"consumedBy\":\"99ef3d42-f9b9-4e52-b2cc-dc5de47a0e1f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"cf8c3091-9d73-44af-8f94-3fe2315d03ec\",\"__nextNodes\":[\"6f2fb8d1-0ca9-4e5a-b2ed-3e4d21238260\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:47:10.984962"
+  },
+  {
+    "uuid": "a266894f-2a13-432a-8a09-8a77326e483c",
+    "context": "{\"deviceId\":\"device-34\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"signalName\":\"health.check\",\"emittedAt\":\"2025-10-16T15:47:10.913Z\",\"consumed\":true,\"consumedBy\":\"b7e79a97-3ffd-44c2-97ff-2384ef4a8855\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"effad527-ce11-425b-8414-2e9a3dac973b\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:47:10.987525"
+  },
+  {
+    "uuid": "19fde350-05a2-4c56-bcc6-54572d479d50",
+    "context": "{\"data\":{\"temperature\":16.607022025931645,\"humidity\":40.526852005274854,\"battery\":53.232880736286106,\"deviceId\":\"device-34\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:47:10.913Z\",\"consumed\":true,\"consumedBy\":\"99ef3d42-f9b9-4e52-b2cc-dc5de47a0e1f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"cf8c3091-9d73-44af-8f94-3fe2315d03ec\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:47:10.991368"
+  },
+  {
+    "uuid": "65dedd83-291d-44b0-8a92-b9da8155cc3a",
+    "context": "{\"telemetry\":{\"uuid\":\"a33c9f32-51a9-4e2c-8970-2fc16c245988\",\"deviceId\":\"device-34\",\"timestamp\":{},\"temperature\":\"16.61\",\"humidity\":\"40.53\",\"battery\":\"53.23\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__localRoutineExecId\":\"cf8c3091-9d73-44af-8f94-3fe2315d03ec\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:47:10.913Z\",\"consumed\":true,\"consumedBy\":\"99ef3d42-f9b9-4e52-b2cc-dc5de47a0e1f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"8683cd0d-0d3a-4c34-9146-b1a461ed1744\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"8683cd0d-0d3a-4c34-9146-b1a461ed1744\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"dddc5496-e3ac-4071-b3f7-3f0300831044\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:47:11.001593"
+  },
+  {
+    "uuid": "777147e9-aff4-4a66-b519-5aaa4ee7f689",
+    "context": "{\"telemetry\":{\"uuid\":\"a33c9f32-51a9-4e2c-8970-2fc16c245988\",\"deviceId\":\"device-34\",\"timestamp\":{},\"temperature\":\"16.61\",\"humidity\":\"40.53\",\"battery\":\"53.23\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__localRoutineExecId\":\"cf8c3091-9d73-44af-8f94-3fe2315d03ec\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:47:10.913Z\",\"consumed\":true,\"consumedBy\":\"99ef3d42-f9b9-4e52-b2cc-dc5de47a0e1f\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__routineExecId\":\"8683cd0d-0d3a-4c34-9146-b1a461ed1744\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"8683cd0d-0d3a-4c34-9146-b1a461ed1744\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"dddc5496-e3ac-4071-b3f7-3f0300831044\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:47:11.004107"
+  },
+  {
+    "uuid": "f7497fad-7536-42fe-8b60-e761ad929900",
+    "context": "{\"telemetry\":{\"uuid\":\"a33c9f32-51a9-4e2c-8970-2fc16c245988\",\"deviceId\":\"device-34\",\"timestamp\":{},\"temperature\":\"16.61\",\"humidity\":\"40.53\",\"battery\":\"53.23\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\",\"__localRoutineExecId\":\"cf8c3091-9d73-44af-8f94-3fe2315d03ec\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"1818b3d3-a30d-42c5-9c04-a9f1bb15e9ea\",\"__executionTraceId\":\"f1cd39e3-d3c0-45cc-bdb7-e96ca4488692\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"8683cd0d-0d3a-4c34-9146-b1a461ed1744\",\"__routineExecId\":\"cf8c3091-9d73-44af-8f94-3fe2315d03ec\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"77ebde6a-a385-49b1-a862-e580a7ea607a\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:47:10.913Z\",\"consumed\":true,\"consumedBy\":\"99ef3d42-f9b9-4e52-b2cc-dc5de47a0e1f\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:47:11.006675"
+  },
+  {
+    "uuid": "2a1dcd81-5525-4e5a-b353-249d93d74ebe",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:49:54.326Z\",\"consumed\":true,\"consumedBy\":\"e9e7de83-d2b6-4a91-9993-6d9d5e9b09c7\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__routineExecId\":\"967b810c-fa17-45fa-9608-69886d962681\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:49:54.341907"
+  },
+  {
+    "uuid": "c9a273b7-335e-4016-bec8-8c5550c9abfb",
+    "context": "{\"deviceId\":\"device-17\",\"readings\":{\"temperature\":39.68991407864909,\"humidity\":33.702216556614665,\"battery\":62.398329302371295},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"e9e7de83-d2b6-4a91-9993-6d9d5e9b09c7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:49:54.329Z\",\"consumed\":true,\"consumedBy\":\"bd2addcb-76f6-4b58-92d0-e42245388250\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"967b810c-fa17-45fa-9608-69886d962681\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\"},\"__isSubMeta\":true,\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__routineExecId\":\"cd13476c-6e57-4634-90fa-6d9366292bbe\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:49:54.372653"
+  },
+  {
+    "uuid": "c0e6a5fe-99a4-4901-8ada-d0d6a6975086",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:49:54.326Z\",\"consumed\":true,\"consumedBy\":\"e9e7de83-d2b6-4a91-9993-6d9d5e9b09c7\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__routineExecId\":\"967b810c-fa17-45fa-9608-69886d962681\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:49:54.380373"
+  },
+  {
+    "uuid": "d1d4c748-8638-433c-a35d-6793e99ddcf1",
+    "context": "{\"deviceId\":\"device-38\",\"readings\":{\"temperature\":65.36045282520197,\"humidity\":40.57100886035394,\"battery\":73.67588270190501},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"6ed27ee8-8cc8-4399-b58e-9368e0fa7729\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:51:35.910Z\",\"consumed\":true,\"consumedBy\":\"64a3870a-f291-4676-886d-3b73705410e8\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"f81be898-a69d-4b71-8b61-f0ed3f25a8b6\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\"},\"__isSubMeta\":true,\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__routineExecId\":\"2946b4c5-8059-49db-a760-d2f7c76fd890\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:51:35.943554"
+  },
+  {
+    "uuid": "0391a687-f200-4fe9-b7cf-03b842e4d825",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__localRoutineExecId\":\"cd13476c-6e57-4634-90fa-6d9366292bbe\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"e9e7de83-d2b6-4a91-9993-6d9d5e9b09c7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:49:54.329Z\",\"consumed\":true,\"consumedBy\":\"bd2addcb-76f6-4b58-92d0-e42245388250\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"967b810c-fa17-45fa-9608-69886d962681\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\"},\"__isSubMeta\":false,\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__routineExecId\":\"b60bf20d-938f-4b4d-a213-567407f33962\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"97ce35b4-a219-46c4-9a72-3707492bfdc3\"},\"queryData\":{\"data\":{\"temperature\":39.68991407864909,\"humidity\":33.702216556614665,\"battery\":62.398329302371295,\"deviceId\":\"device-17\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"97ce35b4-a219-46c4-9a72-3707492bfdc3\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:49:54.383084"
+  },
+  {
+    "uuid": "baf06607-ee55-4903-aa79-3e4af310ba0e",
+    "context": "{\"data\":{\"temperature\":39.68991407864909,\"humidity\":33.702216556614665,\"battery\":62.398329302371295,\"deviceId\":\"device-17\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"e9e7de83-d2b6-4a91-9993-6d9d5e9b09c7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:49:54.329Z\",\"consumed\":true,\"consumedBy\":\"bd2addcb-76f6-4b58-92d0-e42245388250\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"967b810c-fa17-45fa-9608-69886d962681\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\"},\"__isSubMeta\":false,\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__routineExecId\":\"cd13476c-6e57-4634-90fa-6d9366292bbe\",\"__nextNodes\":[\"172218c6-ebe5-4859-b596-356684df0f5f\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:49:54.388520"
+  },
+  {
+    "uuid": "9c0d89c7-df97-4cb1-91ec-ea8f64c44c95",
+    "context": "{\"data\":{\"temperature\":39.68991407864909,\"humidity\":33.702216556614665,\"battery\":62.398329302371295,\"deviceId\":\"device-17\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"e9e7de83-d2b6-4a91-9993-6d9d5e9b09c7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:49:54.329Z\",\"consumed\":true,\"consumedBy\":\"bd2addcb-76f6-4b58-92d0-e42245388250\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"967b810c-fa17-45fa-9608-69886d962681\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\"},\"__isSubMeta\":false,\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__routineExecId\":\"cd13476c-6e57-4634-90fa-6d9366292bbe\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:49:54.392935"
+  },
+  {
+    "uuid": "e102fd96-1d3b-410b-b5e5-f71e98e7d18c",
+    "context": "{\"telemetry\":{\"uuid\":\"75bf5ac0-7dfc-4512-b536-d56c393483fe\",\"deviceId\":\"device-17\",\"timestamp\":{},\"temperature\":\"39.69\",\"humidity\":\"33.70\",\"battery\":\"62.40\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__localRoutineExecId\":\"cd13476c-6e57-4634-90fa-6d9366292bbe\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"e9e7de83-d2b6-4a91-9993-6d9d5e9b09c7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:49:54.329Z\",\"consumed\":true,\"consumedBy\":\"bd2addcb-76f6-4b58-92d0-e42245388250\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"967b810c-fa17-45fa-9608-69886d962681\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\"},\"__isSubMeta\":false,\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__routineExecId\":\"97ce35b4-a219-46c4-9a72-3707492bfdc3\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"97ce35b4-a219-46c4-9a72-3707492bfdc3\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"8a6b5411-7d6e-4606-94ec-3026092ada98\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:49:54.405062"
+  },
+  {
+    "uuid": "7219ba18-0185-4b32-a803-a3f8c716e07a",
+    "context": "{\"telemetry\":{\"uuid\":\"75bf5ac0-7dfc-4512-b536-d56c393483fe\",\"deviceId\":\"device-17\",\"timestamp\":{},\"temperature\":\"39.69\",\"humidity\":\"33.70\",\"battery\":\"62.40\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__localRoutineExecId\":\"cd13476c-6e57-4634-90fa-6d9366292bbe\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"e9e7de83-d2b6-4a91-9993-6d9d5e9b09c7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:49:54.329Z\",\"consumed\":true,\"consumedBy\":\"bd2addcb-76f6-4b58-92d0-e42245388250\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"967b810c-fa17-45fa-9608-69886d962681\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\"},\"__isSubMeta\":false,\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__routineExecId\":\"97ce35b4-a219-46c4-9a72-3707492bfdc3\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"97ce35b4-a219-46c4-9a72-3707492bfdc3\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"8a6b5411-7d6e-4606-94ec-3026092ada98\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:49:54.407429"
+  },
+  {
+    "uuid": "0e981281-fb82-47a0-b584-e25d26905a87",
+    "context": "{\"telemetry\":{\"uuid\":\"75bf5ac0-7dfc-4512-b536-d56c393483fe\",\"deviceId\":\"device-17\",\"timestamp\":{},\"temperature\":\"39.69\",\"humidity\":\"33.70\",\"battery\":\"62.40\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\",\"__localRoutineExecId\":\"cd13476c-6e57-4634-90fa-6d9366292bbe\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"967b810c-fa17-45fa-9608-69886d962681\",\"__executionTraceId\":\"79886f83-8bbf-40a0-ae36-27cacbf91817\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"97ce35b4-a219-46c4-9a72-3707492bfdc3\",\"__routineExecId\":\"cd13476c-6e57-4634-90fa-6d9366292bbe\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"e9e7de83-d2b6-4a91-9993-6d9d5e9b09c7\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:49:54.329Z\",\"consumed\":true,\"consumedBy\":\"bd2addcb-76f6-4b58-92d0-e42245388250\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:49:54.411289"
+  },
+  {
+    "uuid": "ac856b4f-4a22-408f-ac29-fefd436972fa",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:51:35.909Z\",\"consumed\":true,\"consumedBy\":\"6ed27ee8-8cc8-4399-b58e-9368e0fa7729\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__routineExecId\":\"f81be898-a69d-4b71-8b61-f0ed3f25a8b6\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:51:35.931879"
+  },
+  {
+    "uuid": "9049c1ad-26ac-4a7c-bccb-d6e5d61887c6",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__localRoutineExecId\":\"2946b4c5-8059-49db-a760-d2f7c76fd890\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"6ed27ee8-8cc8-4399-b58e-9368e0fa7729\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:51:35.910Z\",\"consumed\":true,\"consumedBy\":\"64a3870a-f291-4676-886d-3b73705410e8\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"f81be898-a69d-4b71-8b61-f0ed3f25a8b6\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\"},\"__isSubMeta\":false,\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__routineExecId\":\"597455a1-f327-4794-bb5f-02f3a0037bf0\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"7c82724b-32c8-4b94-8653-bee43bbe5a3d\"},\"queryData\":{\"data\":{\"temperature\":65.36045282520197,\"humidity\":40.57100886035394,\"battery\":73.67588270190501,\"deviceId\":\"device-38\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"7c82724b-32c8-4b94-8653-bee43bbe5a3d\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:51:35.948975"
+  },
+  {
+    "uuid": "fd1266f8-9c40-4d50-bfa0-43e59fe2030f",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:51:35.909Z\",\"consumed\":true,\"consumedBy\":\"6ed27ee8-8cc8-4399-b58e-9368e0fa7729\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__routineExecId\":\"f81be898-a69d-4b71-8b61-f0ed3f25a8b6\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:51:35.954743"
+  },
+  {
+    "uuid": "ffacf6f2-2229-4572-a38e-cfe96f022d67",
+    "context": "{\"data\":{\"temperature\":65.36045282520197,\"humidity\":40.57100886035394,\"battery\":73.67588270190501,\"deviceId\":\"device-38\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"6ed27ee8-8cc8-4399-b58e-9368e0fa7729\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:51:35.910Z\",\"consumed\":true,\"consumedBy\":\"64a3870a-f291-4676-886d-3b73705410e8\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"f81be898-a69d-4b71-8b61-f0ed3f25a8b6\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\"},\"__isSubMeta\":false,\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__routineExecId\":\"2946b4c5-8059-49db-a760-d2f7c76fd890\",\"__nextNodes\":[\"35ad54c2-1e63-4749-89d9-8a3b2e141ec5\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:51:35.961741"
+  },
+  {
+    "uuid": "6b6c1303-7e7d-41bf-b8ce-fce96a5cb1f8",
+    "context": "{\"data\":{\"temperature\":65.36045282520197,\"humidity\":40.57100886035394,\"battery\":73.67588270190501,\"deviceId\":\"device-38\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"6ed27ee8-8cc8-4399-b58e-9368e0fa7729\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:51:35.910Z\",\"consumed\":true,\"consumedBy\":\"64a3870a-f291-4676-886d-3b73705410e8\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"f81be898-a69d-4b71-8b61-f0ed3f25a8b6\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\"},\"__isSubMeta\":false,\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__routineExecId\":\"2946b4c5-8059-49db-a760-d2f7c76fd890\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:51:35.964205"
+  },
+  {
+    "uuid": "93047261-1f5c-440a-bb7a-e29a75912526",
+    "context": "{\"telemetry\":{\"uuid\":\"ad2585bb-e6b2-4472-bdcb-4110022e0df4\",\"deviceId\":\"device-38\",\"timestamp\":{},\"temperature\":\"65.36\",\"humidity\":\"40.57\",\"battery\":\"73.68\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__localRoutineExecId\":\"2946b4c5-8059-49db-a760-d2f7c76fd890\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"6ed27ee8-8cc8-4399-b58e-9368e0fa7729\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:51:35.910Z\",\"consumed\":true,\"consumedBy\":\"64a3870a-f291-4676-886d-3b73705410e8\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"f81be898-a69d-4b71-8b61-f0ed3f25a8b6\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\"},\"__isSubMeta\":false,\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__routineExecId\":\"7c82724b-32c8-4b94-8653-bee43bbe5a3d\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"7c82724b-32c8-4b94-8653-bee43bbe5a3d\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"201442ba-a884-4815-8004-3447e0b6a63b\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:51:35.975320"
+  },
+  {
+    "uuid": "7757fc8e-1b79-4923-8f07-2cdca1706bef",
+    "context": "{\"telemetry\":{\"uuid\":\"ad2585bb-e6b2-4472-bdcb-4110022e0df4\",\"deviceId\":\"device-38\",\"timestamp\":{},\"temperature\":\"65.36\",\"humidity\":\"40.57\",\"battery\":\"73.68\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__localRoutineExecId\":\"2946b4c5-8059-49db-a760-d2f7c76fd890\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"6ed27ee8-8cc8-4399-b58e-9368e0fa7729\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:51:35.910Z\",\"consumed\":true,\"consumedBy\":\"64a3870a-f291-4676-886d-3b73705410e8\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"f81be898-a69d-4b71-8b61-f0ed3f25a8b6\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\"},\"__isSubMeta\":false,\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__routineExecId\":\"7c82724b-32c8-4b94-8653-bee43bbe5a3d\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"7c82724b-32c8-4b94-8653-bee43bbe5a3d\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"201442ba-a884-4815-8004-3447e0b6a63b\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:51:35.977786"
+  },
+  {
+    "uuid": "28fed397-f319-4bc5-9708-87b3982a2a55",
+    "context": "{\"telemetry\":{\"uuid\":\"ad2585bb-e6b2-4472-bdcb-4110022e0df4\",\"deviceId\":\"device-38\",\"timestamp\":{},\"temperature\":\"65.36\",\"humidity\":\"40.57\",\"battery\":\"73.68\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\",\"__localRoutineExecId\":\"2946b4c5-8059-49db-a760-d2f7c76fd890\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"f81be898-a69d-4b71-8b61-f0ed3f25a8b6\",\"__executionTraceId\":\"3c58e55c-7b1b-4ac6-9cfe-0193bd0eb960\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"7c82724b-32c8-4b94-8653-bee43bbe5a3d\",\"__routineExecId\":\"2946b4c5-8059-49db-a760-d2f7c76fd890\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"6ed27ee8-8cc8-4399-b58e-9368e0fa7729\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:51:35.910Z\",\"consumed\":true,\"consumedBy\":\"64a3870a-f291-4676-886d-3b73705410e8\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:51:35.982250"
+  },
+  {
+    "uuid": "d1e0852b-2707-4a56-91e0-09d498f57f1f",
+    "context": "{\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:53:24.389Z\",\"consumed\":true,\"consumedBy\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"isMeta\":false},\"__isSubMeta\":true,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:53:24.414912"
+  },
+  {
+    "uuid": "850e4b74-830c-4e79-b68a-c235427f6fc2",
+    "context": "{\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__localRoutineExecId\":\"cddca5bc-47c9-4178-9ab3-955b44ca7f85\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:53:24.390Z\",\"consumed\":true,\"consumedBy\":\"b5f09775-57e2-4124-b9fe-aaa79705d11e\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"de78d8e3-2d4f-4fd4-91d9-a0dab44dca40\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"e5cecc57-cb82-4f82-813f-f0d60a522aa8\"},\"queryData\":{\"data\":{\"temperature\":47.11119659568713,\"humidity\":65.97719744634793,\"battery\":80.55254243083586,\"deviceId\":\"device-38\"}},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__routineExecId\":\"e5cecc57-cb82-4f82-813f-f0d60a522aa8\",\"__isDeputy\":true}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:53:24.425252"
+  },
+  {
+    "uuid": "da4df5c1-1cda-4aa9-92dc-8dbe101c3831",
+    "context": "{\"deviceId\":\"device-38\",\"readings\":{\"temperature\":47.11119659568713,\"humidity\":65.97719744634793,\"battery\":80.55254243083586},\"timestamp\":{},\"anomalyFlag\":false,\"anomalyReason\":null,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:53:24.390Z\",\"consumed\":true,\"consumedBy\":\"b5f09775-57e2-4124-b9fe-aaa79705d11e\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\"},\"__isSubMeta\":true,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"cddca5bc-47c9-4178-9ab3-955b44ca7f85\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:53:24.427744"
+  },
+  {
+    "uuid": "22390156-86a0-42aa-90e6-87be9b288456",
+    "context": "{\"deviceId\":\"device-38\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"signalName\":\"health.check\",\"emittedAt\":\"2025-10-16T15:53:24.390Z\",\"consumed\":true,\"consumedBy\":\"72253a0e-78b7-4dd1-b92c-73bdeeae97ee\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\"},\"__isSubMeta\":true,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"96b06416-ea40-4a9a-9bdf-044f4d664d25\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:53:24.433550"
+  },
+  {
+    "uuid": "4270ed89-1549-4ec1-b9a1-69d1491d7ad3",
+    "context": "{\"deviceId\":\"device-38\",\"triggerType\":\"scheduled\",\"__signalEmission\":{\"taskName\":\"EmitHealthCheckSignal\",\"taskVersion\":1,\"taskExecutionId\":\"72253a0e-78b7-4dd1-b92c-73bdeeae97ee\",\"signalName\":\"runner.health_check_triggered\",\"emittedAt\":\"2025-10-16T15:53:24.391Z\",\"consumed\":false,\"consumedBy\":null,\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"96b06416-ea40-4a9a-9bdf-044f4d664d25\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\"},\"__isSubMeta\":true,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"02b99843-ed4e-403a-9aa4-36b9c7c4ecd0\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:53:24.443632"
+  },
+  {
+    "uuid": "34a49002-4c3a-4622-b0d8-1e199337a439",
+    "context": "{\"success\":true,\"eventsGenerated\":1,\"__signalEmission\":{\"signalName\":\"tick.started\",\"emittedAt\":\"2025-10-16T15:53:24.389Z\",\"consumed\":true,\"consumedBy\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"isMeta\":false},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:53:24.445908"
+  },
+  {
+    "uuid": "0648323a-3b76-4a10-99cc-b77b422f7695",
+    "context": "{\"data\":{\"temperature\":47.11119659568713,\"humidity\":65.97719744634793,\"battery\":80.55254243083586,\"deviceId\":\"device-38\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:53:24.390Z\",\"consumed\":true,\"consumedBy\":\"b5f09775-57e2-4124-b9fe-aaa79705d11e\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"cddca5bc-47c9-4178-9ab3-955b44ca7f85\",\"__nextNodes\":[\"c49f3279-f113-40b9-a762-408caddcb185\"],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:53:24.449504"
+  },
+  {
+    "uuid": "b67b7ab4-35b0-4936-b8dd-112104688bbd",
+    "context": "{\"deviceId\":\"device-38\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"signalName\":\"health.check\",\"emittedAt\":\"2025-10-16T15:53:24.390Z\",\"consumed\":true,\"consumedBy\":\"72253a0e-78b7-4dd1-b92c-73bdeeae97ee\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"96b06416-ea40-4a9a-9bdf-044f4d664d25\",\"__nextNodes\":[],\"__retries\":0}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:53:24.452040"
+  },
+  {
+    "uuid": "02933b85-9803-4273-9465-c408a6070f91",
+    "context": "{\"data\":{\"temperature\":47.11119659568713,\"humidity\":65.97719744634793,\"battery\":80.55254243083586,\"deviceId\":\"device-38\"},\"validated\":true,\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:53:24.390Z\",\"consumed\":true,\"consumedBy\":\"b5f09775-57e2-4124-b9fe-aaa79705d11e\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"cddca5bc-47c9-4178-9ab3-955b44ca7f85\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:53:24.455553"
+  },
+  {
+    "uuid": "e932e9e7-4085-449c-ab8c-bf58681f4a16",
+    "context": "{\"telemetry\":{\"uuid\":\"ee6d2883-6b4a-4ad3-8efd-e4f77cbd8536\",\"deviceId\":\"device-38\",\"timestamp\":{},\"temperature\":\"47.11\",\"humidity\":\"65.98\",\"battery\":\"80.55\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__localRoutineExecId\":\"cddca5bc-47c9-4178-9ab3-955b44ca7f85\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:53:24.390Z\",\"consumed\":true,\"consumedBy\":\"b5f09775-57e2-4124-b9fe-aaa79705d11e\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"e5cecc57-cb82-4f82-813f-f0d60a522aa8\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"e5cecc57-cb82-4f82-813f-f0d60a522aa8\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"618d1f10-2a00-44a2-9636-3742931dd5fc\"}",
+    "context_schema_id": null,
+    "is_meta": true,
+    "created": "2025-10-16 15:53:24.466060"
+  },
+  {
+    "uuid": "b43e52f6-65d6-4d42-8e24-ff60cd8b15a7",
+    "context": "{\"telemetry\":{\"uuid\":\"ee6d2883-6b4a-4ad3-8efd-e4f77cbd8536\",\"deviceId\":\"device-38\",\"timestamp\":{},\"temperature\":\"47.11\",\"humidity\":\"65.98\",\"battery\":\"80.55\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__localRoutineExecId\":\"cddca5bc-47c9-4178-9ab3-955b44ca7f85\",\"__metadata\":{\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:53:24.390Z\",\"consumed\":true,\"consumedBy\":\"b5f09775-57e2-4124-b9fe-aaa79705d11e\",\"isMeta\":false},\"__metadata\":{\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\"},\"__isSubMeta\":false,\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__routineExecId\":\"e5cecc57-cb82-4f82-813f-f0d60a522aa8\",\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"e5cecc57-cb82-4f82-813f-f0d60a522aa8\"},\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":true,\"__isDeputy\":true,\"__nextNodes\":[],\"__routineExecId\":\"618d1f10-2a00-44a2-9636-3742931dd5fc\"}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:53:24.468422"
+  },
+  {
+    "uuid": "96d87261-3735-4b7e-a3fe-55318c8e4121",
+    "context": "{\"telemetry\":{\"uuid\":\"ee6d2883-6b4a-4ad3-8efd-e4f77cbd8536\",\"deviceId\":\"device-38\",\"timestamp\":{},\"temperature\":\"47.11\",\"humidity\":\"65.98\",\"battery\":\"80.55\",\"rawJson\":null},\"rowCount\":1,\"__inserted\":true,\"__localTaskName\":\"insert telemetry in IotDbService\",\"__remoteRoutineName\":\"dbInsertTelemetry\",\"__serviceName\":\"IotDbService\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\",\"__localRoutineExecId\":\"cddca5bc-47c9-4178-9ab3-955b44ca7f85\",\"__instance\":\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\",\"__fetchId\":\"iot-db-service_3001\",\"__triedInstances\":[\"dc1c6fca-bf2d-4f67-927b-0066ca2d6235\"],\"__retries\":0,\"__name\":\"dbInsertTelemetry\",\"__isSubMeta\":false,\"__nextNodes\":[],\"__metadata\":{\"__routineExecId\":\"8b37b171-60ca-434e-8b66-9e71be2df100\",\"__executionTraceId\":\"f1cc17fe-a90e-49a2-8a94-1712cb087ae8\"},\"__deputyTaskName\":\"insert telemetry in IotDbService\",\"__deputyExecId\":\"e5cecc57-cb82-4f82-813f-f0d60a522aa8\",\"__routineExecId\":\"cddca5bc-47c9-4178-9ab3-955b44ca7f85\",\"__signalEmission\":{\"taskName\":\"RunMockScheduler\",\"taskVersion\":1,\"taskExecutionId\":\"3c4e7554-1078-40f4-8a54-cd523ef90125\",\"signalName\":\"runner.new_telemetry\",\"emittedAt\":\"2025-10-16T15:53:24.390Z\",\"consumed\":true,\"consumedBy\":\"b5f09775-57e2-4124-b9fe-aaa79705d11e\",\"isMeta\":false}}",
+    "context_schema_id": null,
+    "is_meta": false,
+    "created": "2025-10-16 15:53:24.470936"
+  }
+]

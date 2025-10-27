@@ -115,7 +115,7 @@ async function loadRoutines(isLoadMore = false) {
     }
 
     const response = await fetch(
-      `/api/activity/routines/activeRoutines?page=${currentPage.value}&limit=${pageSize}`
+      `/api/activity/routines/activeRoutines?page=${currentPage.value}&limit=${pageSize}&isMeta=false`
     );
     if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();

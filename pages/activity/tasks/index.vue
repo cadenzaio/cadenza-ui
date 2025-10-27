@@ -27,6 +27,7 @@ import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
 
 interface task {
+  name: string;
   type: string;
   label: string;
   description: string;

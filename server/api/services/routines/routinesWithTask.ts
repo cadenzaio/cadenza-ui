@@ -18,7 +18,7 @@ async function getRoutineMap(
     FROM routine r
     JOIN task_to_routine_map trm ON r.name = trm.routine_name
     JOIN task t ON trm.task_name = t.name
-    WHERE t.name = $1
+    WHERE t.name = $1 AND is_meta = false
     ORDER BY r.name ASC
     LIMIT $2 OFFSET $3;
   `;

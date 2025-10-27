@@ -19,7 +19,7 @@ async function getTaskExecution(
     SELECT
         te.uuid,
         te.routine_execution_id,
-        te.task_id,
+        te.task_name,
         te.is_running,
         te.is_complete,
         te.errored,
@@ -28,8 +28,8 @@ async function getTaskExecution(
         te.created AS scheduled,
         te.started,
         te.ended,
-        re.server_id,
-        re.description AS routine_name,
+        re.service_name,
+        r.description AS routine_name,
         ctx.uuid AS context_id,
         ctx2.uuid AS result_context_id,
         ctx.context AS input_context,
@@ -37,17 +37,15 @@ async function getTaskExecution(
         t.name,
         t.description,
         t.is_unique,
-        t.function_string,
-        s.processing_graph,
-        s.address,
-        s.port
+        t.function_string
     FROM task_execution te
     LEFT JOIN routine_execution re ON te.routine_execution_id = re.uuid
+    LEFT JOIN routine r ON re.name = r.name
     LEFT JOIN context ctx ON te.context_id = ctx.uuid
     LEFT JOIN context ctx2 ON te.result_context_id = ctx2.uuid
-    LEFT JOIN task t ON te.task_id = t.uuid
-    LEFT JOIN server s ON re.server_id = s.uuid
-    ${id ? 'WHERE te.task_id = $1' : ''}
+    LEFT JOIN task t ON te.task_name = t.name
+    LEFT JOIN service s ON re.service_name = s.name
+    ${id ? 'WHERE te.task_name = $1 AND te.is_meta = false' : 'WHERE '}te.is_meta = false
     ORDER BY te.created DESC
     LIMIT $${id ? '2' : '1'} OFFSET $${id ? '3' : '2'}
     `;
@@ -61,7 +59,7 @@ async function getTaskExecution(
     id: row.uuid,
     type: 'task',
     routineExecutionId: row.routine_execution_id,
-    taskId: row.task_id,
+    taskId: row.task_name,
     isRunning: row.is_running,
     isComplete: row.is_complete,
     errored: row.errored,
@@ -73,7 +71,7 @@ async function getTaskExecution(
     duration: getDuration(row.started, row.ended),
     previousTaskExecutionIds: row.previous_task_execution_ids,
     previousTaskNames: row.previous_task_names,
-    serverId: row.server_id,
+    serviceDbName: row.service_name,
     routineName: row.routine_name,
     contextId: row.context_id,
     resultContextId: row.result_context_id,
@@ -83,15 +81,15 @@ async function getTaskExecution(
     description: row.description,
     isUnique: row.is_unique,
     functionString: row.function_string,
-    serverName: row.processing_graph + '@' + row.address + ':' + row.port,
-    server: row.processing_graph + '@' + row.address + ':' + row.port,
+    serviceName: row.service + '@' + row.address + ':' + row.port,
+    service: row.service + '@' + row.address + ':' + row.port,
     layerIndex: row.layer_index,
     previousTaskName: row.previous_task_name,
-    processingGraph: row.processing_graph,
+    processingGraph: row.service,
     referer: row.errored ? 'Errored' : null,
-    status: row.isComplete
+    status: row.is_complete
       ? 'check'
-      : row.isRunning
+      : row.is_running
       ? 'play_arrow'
       : row.errored
       ? 'close'

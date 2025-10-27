@@ -3,7 +3,7 @@
     <NuxtLayout name="dashboard-main-layout">
       <template #title> Welcome! </template>
       <div class="row justify-around q-ma-lg">
-        <InfoCard>
+        <InfoCard style="max-width: 45dvw;">
           <template #title> </template>
           <template #info>
             <h5>

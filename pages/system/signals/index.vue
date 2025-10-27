@@ -31,6 +31,7 @@ interface Signal {
   ended: string;
   duration: number;
   uuid: string;
+  service: string; // Added service field
 }
 
 const columns = [
@@ -98,11 +99,12 @@ async function loadSignals(isLoadMore = false) {
     const data = rows.map((r: any) => ({
       name: r.name,
       status: r.is_meta ? 'meta' : 'signal',
-      service: r.service_name || r.action || '',
+      service: r.service_name || '', // Ensure no duplicate property
       started: r.created || '',
       ended: '',
       duration: 0,
       uuid: r.name,
+      value: r.value || '', // Include the value field
     }));
 
     if (isLoadMore) {
@@ -129,13 +131,13 @@ async function loadMoreSignals() {
 const router = useRouter();
 
 function inspectSignal(signal: Signal) {
-  navigateToItem(`/system/signals/${signal.uuid}`);
+  navigateToItem(`/system/signals/${signal.uuid}?serviceName=${encodeURIComponent(signal.service)}`);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(signal: Signal) {
-  openLinkInNewTab(`/system/signals/${signal.uuid}`);
+  openLinkInNewTab(`/system/signals/${signal.uuid}?serviceName=${encodeURIComponent(signal.service)}`);
 }
 
 const navigateToItem = (route: string) => {

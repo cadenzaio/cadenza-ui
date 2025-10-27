@@ -116,25 +116,24 @@ async function createLayout(nodes: Node[], edges: Edge[]) {
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': 'RIGHT',
-      'elk.spacing.nodeNode': '40',
-      'elk.layered.spacing.nodeNodeBetweenLayers': '40',
+      'elk.layered.spacing.edgeNodeBetweenLayers': '30',
+      'elk.spacing.nodeNode': '60',
+      'elk.layered.nodePlacement.strategy': 'SIMPLE',
     },
     children: nodes.map((node) => ({
       id: node.id,
-      width: 100,
+      width: 120,
       height: 50,
-      // Only include properties allowed by ElkNode
-      // ELK expects only id, width, height, and optionally children/edges/layoutOptions
     })),
     edges: edges.map((edge) => ({
       id: edge.id,
       sources: [edge.source],
       targets: [edge.target],
-      type: edge.type || 'default',
-      style: edge.style || { stroke: '#1976d2', strokeWidth: 2 },
     })),
   };
+
   const layouted = await elk.layout(elkGraph);
+
   return nodes.map((node) => {
     const layoutNode = (layouted.children ?? []).find((n) => n.id === node.id);
     return {
@@ -147,64 +146,24 @@ async function createLayout(nodes: Node[], edges: Edge[]) {
 }
 //------------------------------------------------------------------------------
 // Function to convert items to nodes and edges
-// TEMPORARY: Inject signal nodes for demo
-// --- BEGIN: TEMPORARY SIGNAL NODE INJECTION ---
-function injectSignalNodes(items: FlowItem[]): FlowItem[] {
-  const result = [...items];
-  // Find Task 1 and Task 7
-  const task1 = items.find(
-    (item) => item.name === 'Task 1' || item.label === 'Task 1'
-  );
-  const task7 = items.find(
-    (item) => item.name === 'Task 7' || item.label === 'Task 7'
-  );
-
-  // Add signal node before Task 1
-  if (task1) {
-    result.push({
-      id: 'signal-1',
-      signal: true,
-      label: 'Signal 1',
-      description: 'Signal node for Task 1',
-      // No previousId, will connect as source
-    });
-    // Remove Task 1's previous connections (if any) for clarity
-    if (task1.previousId) delete task1.previousId;
-    if (task1.previousTaskExecutionId) delete task1.previousTaskExecutionId;
-    if (task1.previousExecutions) delete task1.previousExecutions;
-    // Add a custom field to link from signal-1
-    task1._signalInjected = true;
-  }
-
-  // Add signal node after Task 7
-  if (task7) {
-    result.push({
-      id: 'signal-2',
-      signal: true,
-      label: 'Signal 2',
-      description: 'Signal node for Task 7',
-      previousId: getId(task7),
-    });
-  }
-  return result;
-}
-
-// --- BEGIN: TEMPORARY SIGNAL NODE INJECTION ---
+// Modify processFlowItems to handle duplicate nodes
 async function processFlowItems(items: FlowItem[]) {
   if (!items || items.length === 0) {
     nodes.value = [];
     edges.value = [];
+    console.warn('No items provided to processFlowItems');
     return;
   }
 
-  // TEMP: inject signal nodes for demo
-  const itemsWithSignals = injectSignalNodes(items);
+  // Create a map to merge nodes with the same ID
+  const nodeMap = new Map<string, Node>();
+  const newEdges: Edge[] = [];
 
-  // Create nodes
-  const newNodes: Node[] = itemsWithSignals.map((item: FlowItem) => {
+  items.forEach((item: FlowItem) => {
+    const nodeId = getId(item);
     const nodeData = {
       label: getLabel(item),
-      uuid: getId(item),
+      uuid: nodeId,
       description: item.description || '',
       is_unique: item.isUnique || item.is_unique || false,
       concurrency: 1,
@@ -216,96 +175,35 @@ async function processFlowItems(items: FlowItem[]) {
       signal: item.signal === true,
       item: item,
     };
-    return {
-      id: getId(item),
-      type: 'custom',
-      position: { x: 0, y: 0 },
-      data: nodeData,
-    };
-  });
 
-  // Only assign nodes if all have type 'custom'
-  const allCustom = newNodes.every((n) => n.type === 'custom');
-
-  // Create edges based on previous item references
-  const newEdges: Edge[] = [];
-  // Build mapping of possible identifiers -> primary node id (primary id is getId(item))
-  const idToPrimary: Record<string, string> = {};
-  const primaryToItem: Record<string, FlowItem> = {};
-  itemsWithSignals.forEach((item) => {
-    const primary = getId(item);
-    if (!primary) return;
-    primaryToItem[primary] = item;
-    idToPrimary[primary] = primary;
-    if (item.id) idToPrimary[String(item.id)] = primary;
-    if ((item as any).uuid) idToPrimary[String((item as any).uuid)] = primary;
-    if (item.name) idToPrimary[String(item.name)] = primary;
-  });
-  itemsWithSignals.forEach((item: FlowItem) => {
-    // Special: for Task 1, connect signal-1 -> Task 1
-    if (
-      (item.name === 'Task 1' || item.label === 'Task 1') &&
-      (item as any)._signalInjected
-    ) {
-      newEdges.push({
-        id: `signal-1-${getId(item)}`,
-        source: 'signal-1',
-        target: getId(item),
-        type: 'smoothstep',
-        animated: true,
-        style: { stroke: '#2b9222', strokeWidth: 1 },
+    if (!nodeMap.has(nodeId)) {
+      nodeMap.set(nodeId, {
+        id: nodeId,
+        type: 'custom',
+        position: { x: 0, y: 0 },
+        data: nodeData,
       });
-      return;
-    }
-    // For signal-2, connect Task 7 -> signal-2
-    if (item.id === 'signal-2') {
-      const task7 = itemsWithSignals.find(
-        (t: FlowItem) => t.name === 'Task 7' || t.label === 'Task 7'
-      );
-      if (task7) {
-        newEdges.push({
-          id: `${getId(task7)}-signal-2`,
-          source: getId(task7),
-          target: 'signal-2',
-          type: 'smoothstep',
-          animated: true,
-          style: { stroke: '#2b9222', strokeWidth: 1 },
-        });
-      }
-      return;
+    } else {
+      console.warn(`Duplicate node detected for ID: ${nodeId}. Merging data.`);
     }
 
-    // Default: connect as usual (resolve previousId via idToPrimary map so UUIDs still work)
     const previousIds = getPreviousIds(item);
     previousIds.forEach((previousId: string) => {
       if (!previousId) return;
-      const resolvedPrimary = idToPrimary[previousId] || previousId;
-      const previousItem = primaryToItem[resolvedPrimary];
-      if (previousItem) {
-        const isSignalEdge = item.signal === true || previousItem.signal === true;
-        const sourceId = resolvedPrimary;
-        const targetId = getId(item);
-        newEdges.push({
-          id: `${sourceId}-${targetId}`,
-          source: sourceId,
-          target: targetId,
-          type: isSignalEdge ? 'smoothstep' : 'default',
-          animated: isSignalEdge,
-          style: isSignalEdge ? { stroke: '#2b9222', strokeWidth: 1 } : undefined,
-        });
-      }
+      const sourceId = previousId;
+      const targetId = nodeId;
+      newEdges.push({
+        id: `${sourceId}-${targetId}`,
+        source: sourceId,
+        target: targetId,
+      });
     });
   });
-  // Apply layout
-  const layoutedNodes = await createLayout(newNodes, newEdges);
 
-  if (allCustom) {
-    nodes.value = layoutedNodes;
-    edges.value = newEdges;
-  } else {
-    nodes.value = [];
-    edges.value = [];
-  }
+  // Apply layout
+  const layoutedNodes = await createLayout(Array.from(nodeMap.values()), newEdges);
+  nodes.value = layoutedNodes;
+  edges.value = newEdges;
 }
 
 // Handle node click
@@ -321,6 +219,12 @@ function onNodeClick(event: NodeMouseEvent) {
 watch(
   () => props.items,
   (newItems) => {
+    if (!newItems || newItems.length === 0) {
+      console.warn('Received empty items array. Skipping processing.');
+      nodes.value = [];
+      edges.value = [];
+      return;
+    }
     processFlowItems(newItems);
   },
   { immediate: true, deep: true }

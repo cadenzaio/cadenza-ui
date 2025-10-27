@@ -1,0 +1,56 @@
+[
+  {
+    "name": "CadenzaDB",
+    "display_name": "Cadenza DB",
+    "description": "This is the official CadenzaDB database service. It is used to store metadata and execution data from the Cadenza framework.",
+    "is_meta": true,
+    "modified": "2025-10-16 15:30:21.801550",
+    "deleted": false,
+    "created": "2025-10-16 15:30:21.801550"
+  },
+  {
+    "name": "IotDbService",
+    "display_name": "",
+    "description": "IoT Database Service",
+    "is_meta": false,
+    "modified": "2025-10-16 15:30:22.386802",
+    "deleted": false,
+    "created": "2025-10-16 15:30:22.386802"
+  },
+  {
+    "name": "ScheduledRunnerService",
+    "display_name": "",
+    "description": "Mocks IoT device events and triggers monitoring flows",
+    "is_meta": false,
+    "modified": "2025-10-16 15:30:22.664657",
+    "deleted": false,
+    "created": "2025-10-16 15:30:22.664657"
+  },
+  {
+    "name": "TelemetryCollectorService",
+    "display_name": "",
+    "description": "Ingests and validates IoT telemetry, fan-out to anomaly detection",
+    "is_meta": false,
+    "modified": "2025-10-16 15:30:22.840940",
+    "deleted": false,
+    "created": "2025-10-16 15:30:22.840940"
+  },
+  {
+    "name": "AnomalyDetectorService",
+    "display_name": "",
+    "description": "Detects outliers in IoT telemetry using statistical analysis",
+    "is_meta": false,
+    "modified": "2025-10-16 15:30:22.948493",
+    "deleted": false,
+    "created": "2025-10-16 15:30:22.948493"
+  },
+  {
+    "name": "PredictorService",
+    "display_name": "",
+    "description": "Forecasts IoT device failures using anomalies and external weather data",
+    "is_meta": false,
+    "modified": "2025-10-16 15:30:22.972714",
+    "deleted": false,
+    "created": "2025-10-16 15:30:22.972714"
+  }
+]

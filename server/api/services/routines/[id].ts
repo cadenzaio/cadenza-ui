@@ -7,7 +7,7 @@ async function getRoutine(routineName: string) {
   const query = `
     SELECT *
     FROM routine
-    WHERE name = $1;
+    WHERE name = $1 AND is_meta = false;
   `;
   const result = await client!.query(query, [routineName]);
 

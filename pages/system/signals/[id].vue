@@ -22,6 +22,12 @@ import { ref, onMounted, computed } from 'vue';
 import { useAppStore } from '~/stores/app';
 import { useRoute, useAsyncData } from '#imports';
 
+// Define the Task interface
+interface Task {
+  task_name: string;
+  task_description: string;
+}
+
 // Set current section to 'services' for correct node coloring
 const appStore = useAppStore();
 onMounted(() => {
@@ -32,12 +38,16 @@ onMounted(() => {
 const flowItems = ref<any[]>([]);
 
 const route = useRoute();
-const rawId = computed(() => String(route.params.id ?? '').replace(/\+/g, ' '));
 
 // Fetch signal flow (the API may return either an items array or an object with previousTasks)
 const { data: apiData, pending, error } = await useAsyncData(
-  () => `signal-flow-${rawId.value}`,
-  () => $fetch(`/api/services/signals/${encodeURIComponent(rawId.value)}`)
+  () => `signal-flow-${route.params.id}`,
+  () => $fetch(`/api/services/signals/${encodeURIComponent(String(route.params.id))}`, {
+    params: {
+      signalName: route.params.id,
+      serviceName: route.query.serviceName
+    }
+  })
 );
 
 function makeTaskId(name: string) {
@@ -45,49 +55,43 @@ function makeTaskId(name: string) {
 }
 
 function makeSignalId(name: string) {
-  return `signal-${String(name).replace(/[^a-zA-Z0-9-_]/g, '-')}`;
+  return `signal-${String(name)}`;
 }
 
 // Build flowItems from API response
 if (apiData.value) {
   const resp: any = apiData.value;
   if (Array.isArray(resp)) {
-    flowItems.value = resp;
-  } else if (resp.signal) {
-    const items: any[] = [];
-    const prev = resp.previousTasks || [];
-    // Emitters
-    for (const t of prev) {
-      items.push({
-        id: makeTaskId(t.name),
-        name: t.name,
-        label: t.label || t.name,
-        description: t.description || '',
+    flowItems.value = resp.flatMap(signal => {
+      const sid = makeSignalId(signal.name);
+      const signalNode = {
+        id: sid,
+        name: signal.name,
+        label: signal.name,
+        description: signal.domain || '',
+        signal: true
+      };
+
+      const previousTaskNodes = signal.previousTasks.map((task: Task) => ({
+        id: makeTaskId(task.task_name),
+        name: task.task_name,
+        label: task.task_name,
+        description: task.task_description || '',
         previousId: undefined,
-      });
-    }
-    // Signal
-    const sid = makeSignalId(resp.signal.name || rawId.value);
-    items.push({
-      id: sid,
-      name: resp.signal.name || rawId.value,
-      label: resp.signal.name || rawId.value,
-      description: resp.signal.description || resp.signal.domain || '',
-      signal: true,
-      previousId: prev.length === 1 ? makeTaskId(prev[0].name) : prev.map((p: any) => makeTaskId(p.name)),
-    });
-    // Consumers (if the API included them as nextTasks or similar, fallback to resp.nextTasks)
-    const consumers = resp.nextTasks || [];
-    for (const c of consumers) {
-      items.push({
-        id: makeTaskId(c.name),
-        name: c.name,
-        label: c.label || c.name,
-        description: c.description || '',
+        edge: { source: makeTaskId(task.task_name), target: sid }
+      }));
+
+      const nextTaskNodes = signal.nextTasks.map((task: Task) => ({
+        id: makeTaskId(task.task_name),
+        name: task.task_name,
+        label: task.task_name,
+        description: task.task_description || '',
         previousId: sid,
-      });
-    }
-    flowItems.value = items;
+        edge: { source: sid, target: makeTaskId(task.task_name) }
+      }));
+
+      return [signalNode, ...previousTaskNodes, ...nextTaskNodes];
+    });
   } else {
     // Fallback: if API returned object but not expected shape, attempt to use items property
     flowItems.value = resp.items || [];

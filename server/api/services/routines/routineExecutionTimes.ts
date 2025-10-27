@@ -36,7 +36,7 @@ async function getRoutineExecutionTimes(
       MIN(EXTRACT(EPOCH FROM (ended - created))) as fastest_time,
       AVG(EXTRACT(EPOCH FROM (ended - created))) as average_time
     FROM routine_execution as re
-    WHERE routine_id = $1
+    WHERE routine_id = $1 AND is_meta = false
     GROUP BY date, hour
     ORDER BY started
   `;

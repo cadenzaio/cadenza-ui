@@ -135,7 +135,13 @@
               />
             </q-td>
 
-            <q-td v-for="col in props.cols" :key="col.name" :props="props">
+            <!-- Apply the marquee effect only to the 'name' column -->
+            <q-td
+              v-for="col in props.cols"
+              :key="col.name"
+              :props="props"
+              :class="col.name === 'name' ? 'max-column-width' : ''"
+            >
               <template v-if="col.name === 'status'">
                 <q-icon
                   size="sm"
@@ -162,7 +168,7 @@
                 />
               </template>
               <template v-else>
-                {{ props.row[col.name] }}
+                <span>{{ props.row[col.name] }}</span>
               </template>
             </q-td>
 
@@ -870,7 +876,6 @@ defineExpose({
   padding: 0px 4px;
 }
 
-/* ...existing code... */
 .filter-input-height {
   height: 60px;
 }
@@ -889,5 +894,33 @@ defineExpose({
   line-height: 60px;
   padding-top: 0;
   padding-bottom: 0;
+}
+
+/* Adjust marquee effect to be slower and confined to the column */
+.max-column-width {
+  max-width: 200px; /* Adjust the width as needed */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+.max-column-width:hover {
+  overflow: hidden;
+}
+
+.max-column-width:hover span {
+  display: inline-block;
+  animation: marquee 10s linear infinite;
+  position: relative;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 </style>

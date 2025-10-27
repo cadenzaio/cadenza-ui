@@ -2,7 +2,7 @@
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
       <template #title>
-        Meta {{ selectedItem?.label }} - {{ selectedItem?.uuid.slice(0, 8) }}
+        {{ selectedItem?.label }} - {{ selectedItem?.uuid.slice(0, 8) }}
         <q-btn color="warning" @click="showGenerateDialog = true">
           Generate Trace
           <q-tooltip anchor="top middle" self="bottom middle">
@@ -509,7 +509,7 @@ onMounted(async () => {
   try {
     // Fetch the specific routine by uuid using the new query param
     const response = await fetch(
-      `/api/activity/routines/activeRoutines?uuid=${itemId}`
+      `/api/meta/routines/metaRoutine?uuid=${itemId}`
     );
     if (!response.ok) throw new Error('Failed to fetch routine');
     const data = await response.json();
@@ -550,7 +550,7 @@ function confirmStop() {
 
 function confirmGenerate() {
   showGenerateDialog.value = false;
-  // Add logic to handle generating the trace
+  // Add logic to handle generating the contract
 }
 // Flash animation for InfoCard when selectedTask updates
 import { nextTick } from 'vue';
@@ -589,11 +589,11 @@ watch(selectedTask, async (newVal, oldVal) => {
 }
 @keyframes flash-fade {
   0% {
-    box-shadow: #eb0feb 0px 0px 30px;
+    box-shadow: #e3b434 0px 0px 30px;
     border-radius: 20px;
   }
   60% {
-    box-shadow: #eb0feb 0px 0px 15px;
+    box-shadow: #e3b434 0px 0px 15px;
     border-radius: 20px;
   }
   100% {

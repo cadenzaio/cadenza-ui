@@ -47,7 +47,7 @@ LEFT JOIN directional_task_graph_map dtm
   ON t.name = dtm.task_name
   AND t.version = dtm.task_version
   AND t.service_name = dtm.service_name
-WHERE t.service_name = $1
+WHERE t.service_name = $1 AND t.is_meta = false
   AND (t.deleted IS FALSE OR t.deleted IS NULL);
   `;
 

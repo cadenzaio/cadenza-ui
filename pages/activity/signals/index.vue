@@ -11,7 +11,7 @@
           @inspect-row-in-new-tab="inspectInNewTab"
           :enableInfiniteScroll="false"
           :hasMoreData="false"
-          :loadingMoreData="false"
+          :loadingMoreData="loading"
         />
         <FrequencyPieChart v-if="signals.length > 0" :values="signals" />
       </div>
@@ -27,12 +27,8 @@ import FrequencyPieChart from '~/components/FrequencyPieChart.vue';
 
 interface Signal {
   name: string;
-  status: string;
-  value: string;
-  started: string;
-  ended: string;
-  duration: number;
   uuid: string;
+  service: string;
 }
 
 const columns = [
@@ -44,81 +40,16 @@ const columns = [
     sortable: true,
   },
   {
-    name: 'status',
-    label: 'Status',
-    field: 'status',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'value',
-    label: 'Value',
-    field: 'value',
-    required: true,
-    sortable: false,
-  },
-  {
-    name: 'started',
-    label: 'Started',
-    field: 'started',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'ended',
-    label: 'Ended',
-    field: 'ended',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'duration',
-    label: 'Duration (sec)',
-    field: 'duration',
+    name: 'service',
+    label: 'Service',
+    field: 'service',
     required: true,
     sortable: true,
   },
 ];
 
-const signals = ref<Signal[]>([
-  {
-    name: 'Signal 1',
-    status: 'check',
-    value: 'OK',
-    started: '2025-08-21T10:00:00Z',
-    ended: '2025-08-21T10:00:01Z',
-    duration: 1,
-    uuid: 'sig-1',
-  },
-  {
-    name: 'Signal 2',
-    status: 'close',
-    value: 'Threshold Exceeded',
-    started: '2025-08-21T09:55:00Z',
-    ended: '2025-08-21T09:55:05Z',
-    duration: 5,
-    uuid: 'sig-2',
-  },
-  {
-    name: 'Signal 3',
-    status: 'play_arrow',
-    value: 'In Progress',
-    started: '2025-08-21T09:50:00Z',
-    ended: '',
-    duration: 0,
-    uuid: 'sig-3',
-  },
-  {
-    name: 'Signal 4',
-    status: 'schedule',
-    value: 'Scheduled',
-    started: '2025-08-21T11:00:00Z',
-    ended: '',
-    duration: 0,
-    uuid: 'sig-4',
-  },
-]);
-
+const signals = ref<Signal[]>([]);
+const loading = ref(false);
 const router = useRouter();
 
 function inspectSignal(signal: Signal) {
@@ -133,8 +64,26 @@ const navigateToItem = (route: string) => {
   router.push(route);
 };
 
+async function fetchSignals() {
+  loading.value = true;
+  try {
+    const response = await fetch('/api/activity/signals/activeSignals');
+    const result = await response.json();
+    signals.value = result.map((item: any) => ({
+      name: item.name,
+      uuid: item.uuid,
+      service: item.service,
+    }));
+  } catch (error) {
+    console.error('Error fetching signals:', error);
+  } finally {
+    loading.value = false;
+  }
+}
+
 onMounted(() => {
   const appStore = useAppStore();
   appStore.setCurrentSection('serviceActivity');
+  fetchSignals();
 });
 </script>
