@@ -203,7 +203,6 @@ function formatDate(date: string) {
 }
 
 const showGenerateDialog = ref(false);
-// --- Trace page state ---
 const traceContext = ref<any>(null);
 const routines = ref<any[]>([]);
 const isLoading = ref(false);
@@ -310,7 +309,6 @@ const timelineItems = computed(() => {
     ...task,
   }));
 
-  // Combine and sort by start time
   const allItems = [...serviceItems, ...routineItems, ...taskItems];
   return allItems.sort((a: any, b: any) => {
     const aTime = a.started ? new Date(a.started).getTime() : 0;
@@ -337,9 +335,8 @@ async function loadRoutines(isLoadMore = false) {
     } else {
       currentPage.value = 1;
     }
-    // Note: backend param is still contractId
     const routinesResponse = await fetch(
-      `/api/activity/routines/activeRoutines?contractId=${traceId}&page=${currentPage.value}&limit=${pageSize}`
+      `/api/activity/routines/activeRoutines?traceId=${traceId}&page=${currentPage.value}&limit=${pageSize}`
     );
     if (!routinesResponse.ok) {
       const errMsg = `[loadRoutines] Routines response not ok: ${routinesResponse.status} ${routinesResponse.statusText}`;
@@ -369,142 +366,23 @@ async function loadMoreRoutines() {
 function confirmGenerate() {
   showGenerateDialog.value = false;
 }
-async function fetchTraceContext(traceId: string) {
+async function fetchTraceData(traceId: string) {
   try {
-    // Updated backend endpoint to fetch trace context by UUID
-    const traceRes = await fetch(`/api/activity/traces/trace?uuid=${traceId}`);
-    if (traceRes.ok) {
-      const apiData = await traceRes.json();
-      traceContext.value = apiData[0] || null;
-      routineMap.value = {
-        routines: apiData[0]?.routines || [],
-        servers: apiData[0]?.servers || [],
-        tasks: apiData[0]?.tasks || [],
-      };
-      // Build nodes and edges for NestedFlowMap using the raw API data
-      const routines = apiData[0]?.routines || [];
-      const servers = apiData[0]?.servers || [];
-      const tasks = apiData[0]?.tasks || [];
-      const serviceNodes = servers.map((srv: any) => ({
-        id: srv.uuid,
-        type: 'custom',
-        nodeType: 'service',
-        data: { label: srv.processing_graph, isParent: true },
-        created: srv.created || '',
-        ended: srv.modified || '',
-        extent: 'parent',
-        expandParent: true,
-      }));
-      const routineNodes = routines.map((routine: any) => ({
-        id: routine.uuid,
-        type: 'custom',
-        nodeType: 'routine',
-        data: { label: routine.description, isParent: true },
-        parentNode: routine.server_id,
-        created: routine.created || '',
-        started: routine.created || '',
-        ended: routine.ended || '',
-        extent: 'parent',
-        expandParent: true,
-      }));
-      const taskNodes = tasks.map((task: any) => ({
-        id: task.uuid,
-        type: 'custom',
-        nodeType: 'task',
-        data: { label: task.task_name },
-        parentNode: task.routine_execution_id,
-        created: task.created || '',
-        started: task.started || task.created || '',
-        ended: task.ended || '',
-        extent: 'parent',
-        expandParent: true,
-        style: { margin: '50px', padding: '10px' },
-      }));
-      const edgesFromPrevious: any[] = [];
-      tasks.forEach((task: any) => {
-        if (Array.isArray(task.previous_task_execution_id)) {
-          task.previous_task_execution_id.forEach((prevId: string) => {
-            if (prevId) {
-              edgesFromPrevious.push({
-                id: `e${prevId}-${task.uuid}`,
-                source: prevId,
-                target: task.uuid,
-              });
-            }
-          });
-        } else if (task.previous_task_execution_id) {
-          edgesFromPrevious.push({
-            id: `e${task.previous_task_execution_id}-${task.uuid}`,
-            source: task.previous_task_execution_id,
-            target: task.uuid,
-          });
-        }
-      });
-      nodes.value = [...serviceNodes, ...routineNodes, ...taskNodes];
-      edges.value = [...edgesFromPrevious];
-      // Fetch all tasks for all routine IDs and update rangedTimelineItems
-      const routineIds = routines.map((r: any) => r.uuid).filter(Boolean);
-      const allTasks: any[] = [];
-      for (const id of routineIds) {
-        try {
-          const res = await fetch(
-            `/api/activity/tasks/tasksInRoutines?routineId=${id}`
-          );
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data)) {
-              allTasks.push(...data);
-            } else if (Array.isArray(data.tasks)) {
-              allTasks.push(...data.tasks);
-            }
-          }
-        } catch {}
-      }
-      rangedTimelineItems.value = allTasks
-        .map((task: any) => {
-          const started = task.started || task.scheduled || '';
-          const ended = task.ended || '';
-          const startedTime = new Date(started).getTime();
-          if (!started || isNaN(startedTime)) return null;
-          let endedTime =
-            ended && !isNaN(new Date(ended).getTime())
-              ? ended
-              : new Date().toISOString();
-          return {
-            label: task.label || task.name || task.uuid,
-            uuid: task.uuid,
-            name: task.name || task.label || task.uuid,
-            started,
-            created: task.scheduled || '',
-            ended: endedTime,
-            progress:
-              typeof task.progress === 'string'
-                ? parseInt(task.progress)
-                : task.progress ?? 0,
-            errored: task.errored ?? false,
-            failed: task.failed ?? false,
-            isComplete: task.isComplete ?? task.is_complete ?? false,
-            layer_index: task.layer_index ?? 0,
-            description: task.description || '',
-          };
-        })
-        .filter(Boolean);
-    } else {
-      const errMsg = `[fetchTraceContext] Trace response not ok: ${traceRes.status} ${traceRes.statusText}`;
-      error.value = errMsg;
+    const response = await fetch(`/api/activity/traces/trace?uuid=${traceId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trace data: ${response.statusText}`);
     }
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err);
+    const data = await response.json();
+    nodes.value = data.nodes;
+    edges.value = data.edges;
+  } catch (error) {
+    console.error('Error fetching trace data:', error);
   }
 }
 async function loadAllData() {
   let traceId = route.params.id;
   if (Array.isArray(traceId)) traceId = traceId[0];
-  isLoading.value = true;
-  error.value = null;
-  await loadRoutines(false);
-  await fetchTraceContext(traceId);
-  isLoading.value = false;
+  await fetchTraceData(traceId);
 }
 onMounted(loadAllData);
 watch(
@@ -513,6 +391,22 @@ watch(
     if (newId !== oldId) loadAllData();
   }
 );
+watch(
+  edges,
+  (newEdges) => {
+    console.log('[id.vue] Edges updated:', newEdges);
+  },
+  { deep: true }
+);
+watch(
+  nodes,
+  (newNodes) => {
+  },
+  { deep: true }
+);
+
+onMounted(() => {
+});
 </script>
 
 <style scoped>

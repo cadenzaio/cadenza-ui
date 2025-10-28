@@ -62,7 +62,7 @@ const resetFilter = () => {
   updateLayout(props.nodes, props.edges);
   filtered.value = false;
 };
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed, onMounted, nextTick } from 'vue';
 import { VueFlow } from '@vue-flow/core';
 import { MiniMap } from '@vue-flow/minimap';
 import ELK from 'elkjs/lib/elk.bundled.js';
@@ -142,13 +142,12 @@ const onNodeClick = (node) => {
   }
 };
 
+const vueFlowInstance = ref(null); // Define vueFlowInstance as a ref
+
 onMounted(() => {
-  console.log('[NestedFlowMap] Mounted.');
-  console.log(
-    '[NestedFlowMap] onNodeClick (should be function):',
-    typeof onNodeClick
-  );
+    typeof onNodeClick;
 });
+
 import { defineProps } from 'vue';
 import { useAppStore } from '~/stores/app';
 import { colors } from 'quasar';
@@ -157,10 +156,12 @@ const props = defineProps({
   nodes: {
     type: Array,
     required: true,
+    default: () => [],
   },
   edges: {
     type: Array,
     required: true,
+    default: () => [],
   },
 });
 
@@ -187,8 +188,8 @@ async function layoutNodes(nodesArr, edgesArr) {
           }));
         return {
           id: routine.id,
-          width: 400,
-          height: 250,
+          width: Math.max(400, elkTasks.length * 80), // Adjust width based on children
+          height: Math.max(250, elkTasks.length * 50), // Adjust height based on children
           ...routine,
           children: elkTasks,
           layoutOptions: {
@@ -200,8 +201,8 @@ async function layoutNodes(nodesArr, edgesArr) {
       });
     return {
       id: service.id,
-      width: 600,
-      height: 350,
+      width: Math.max(600, elkRoutines.length * 100), // Adjust width based on children
+      height: Math.max(350, elkRoutines.length * 80), // Adjust height based on children
       ...service,
       children: elkRoutines,
       layoutOptions: {
@@ -218,7 +219,7 @@ async function layoutNodes(nodesArr, edgesArr) {
     sources: [edge.source],
     targets: [edge.target],
     type: edge.type || 'default',
-    style: edge.style || { stroke: '#1976d2', strokeWidth: 2 },
+    style: edge.style || { strokeWidth: 2 },
   }));
 
   const elkGraph = {
@@ -226,7 +227,7 @@ async function layoutNodes(nodesArr, edgesArr) {
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': 'RIGHT',
-      'elk.spacing.nodeNode': '100', // more space between services
+      'elk.spacing.nodeNode': '100',
       'elk.layered.spacing.nodeNodeBetweenLayers': '100',
     },
     children: elkServices,
@@ -247,6 +248,8 @@ async function layoutNodes(nodesArr, edgesArr) {
       flat.push({
         ...nodesArr.find((n) => n.id === elkNode.id),
         position: { x: elkNode.x, y: elkNode.y },
+        width: elkNode.width, // Include calculated width
+        height: elkNode.height, // Include calculated height
       });
     }
     return flat;
@@ -270,14 +273,26 @@ async function updateLayout(newNodes, newEdges) {
   loading.value = true;
   try {
     const nodes = await layoutNodes(newNodes, newEdges);
-    const edges = (newEdges || []).map((edge) => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
-      type: edge.type || 'default',
-      style: { stroke: sectionNodeBg.value, strokeWidth: 4 },
-      ...edge,
-    }));
+    const edges = (newEdges || []).map((edge) => {
+      if (!edge.source || !edge.target) {
+        console.warn('[updateLayout] Edge skipped due to missing source or target:', {
+          edge,
+          reason: {
+            missingSource: !edge.source,
+            missingTarget: !edge.target,
+          },
+        });
+        return null; // Skip invalid edges
+      }
+      return {
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        type: edge.type || 'default',
+        style: edge.style || {  strokeWidth: 2 },
+        ...edge,
+      };
+    }).filter(Boolean); // Remove null edges
     laidOutNodes.value = nodes;
     laidOutEdges.value = edges;
     fullNodes = nodes;
