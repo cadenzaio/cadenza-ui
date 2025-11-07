@@ -29,7 +29,7 @@ interface RoutineRow {
   previous_routine_id: string;
   routine_name: string;
   routine_description: string;
-  service_name: string; // Updated from server_name
+  service_name: string; 
 }
 
 interface RoutineMapped {
@@ -39,7 +39,7 @@ interface RoutineMapped {
   label: string;
   description: string;
   routineDescription: string;
-  serviceId: string; // Updated from serverId
+  serviceId: string; 
   routineId: string;
   status: string;
   previousRoutineExecution: string;
@@ -48,7 +48,7 @@ interface RoutineMapped {
   ended: string;
   duration: number;
   uuid: string;
-  serviceName: string; // Updated from serverName
+  serviceName: string; 
   previousRoutineName: string;
   contract_id: string;
   processingGraph: string;
@@ -74,7 +74,7 @@ async function getRoutines({
 
   // Re-added the WHERE clause for re.is_meta and set it to false directly
   let query = `
-  SELECT
+ SELECT
       re.uuid,
       re.name AS routine_name,
       re.service_instance_id AS service_id,
