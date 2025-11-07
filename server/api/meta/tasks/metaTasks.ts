@@ -3,11 +3,10 @@ import { initializeClient, formatDate, getDuration } from '~/server/api/utils';
 
 let client: pg.Client | null = null;
 
-// Get all TaskExecutions with pagination support
+// Get all TaskExecutions without pagination
 async function getTaskExecution(
-  id?: string,
   page: number = 1,
-  limit: number = 100
+  limit: number = 50
 ) {
   if (!client) {
     client = await initializeClient();
@@ -37,7 +36,8 @@ async function getTaskExecution(
         t.name,
         t.description,
         t.is_unique,
-        t.function_string
+        t.function_string,
+        te.is_meta
     FROM task_execution te
     LEFT JOIN routine_execution re ON te.routine_execution_id = re.uuid
     LEFT JOIN routine r ON re.name = r.name
@@ -45,12 +45,12 @@ async function getTaskExecution(
     LEFT JOIN context ctx2 ON te.result_context_id = ctx2.uuid
     LEFT JOIN task t ON te.task_name = t.name
     LEFT JOIN service s ON re.service_name = s.name
-    ${id ? 'WHERE te.task_name = $1 AND is_meta = true' : ''}
+    WHERE te.is_meta = true
     ORDER BY te.created DESC
-    LIMIT $${id ? '2' : '1'} OFFSET $${id ? '3' : '2'}
+    LIMIT $1 OFFSET $2
     `;
 
-  const params = id ? [id, limit, offset] : [limit, offset];
+  const params = [limit, offset];
   const result = await client.query(query, params);
 
   // Map the results to match the expected frontend format
@@ -58,6 +58,7 @@ async function getTaskExecution(
     uuid: row.uuid,
     id: row.uuid,
     type: 'task',
+    meta: row.is_meta,
     routineExecutionId: row.routine_execution_id,
     taskId: row.task_name,
     isRunning: row.is_running,
@@ -111,12 +112,7 @@ export default defineEventHandler(async (event) => {
 
   if (method === 'GET') {
     try {
-      const query = getQuery(event);
-      const id = query.id as string | undefined;
-      const page = parseInt(query.page as string) || 1;
-      const limit = parseInt(query.limit as string) || 100;
-
-      return await getTaskExecution(id, page, limit);
+      return await getTaskExecution();
     } catch (error) {
       console.error('Error fetching TaskExecutions:', error);
       throw error;

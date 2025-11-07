@@ -7,16 +7,18 @@ let client: pg.Client | null = null;
 async function getAllServers() {
   const query = `
     SELECT
-    s.uuid AS server_id,
+    si.uuid AS server_id,
     s2s.service_instance_client_id AS client_id,
-    s.is_active, s.is_blocked,
-    s.is_non_responsive,
-    s.address,
-    s.port,
-    s.service_name
-    FROM service_instance s
-    WHERE s.is_meta = false
-    LEFT JOIN service_to_service_communication_map s2s ON s.uuid = s2s.service_instance_id;
+    si.is_active,
+    si.is_blocked,
+    si.is_non_responsive,
+    si.address,
+    si.port,
+    si.service_name
+    FROM service_instance si
+    LEFT JOIN service_to_service_communication_map s2s ON si.uuid = s2s.service_instance_id
+    LEFT JOIN service s ON si.service_name = s.name
+    WHERE s.is_meta = true
   `;
   const result = await client!.query(query);
   return result.rows;

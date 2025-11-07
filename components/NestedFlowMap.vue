@@ -142,7 +142,7 @@ const onNodeClick = (node) => {
   }
 };
 
-const vueFlowInstance = ref(null); // Define vueFlowInstance as a ref
+const vueFlowInstance = ref(null);
 
 onMounted(() => {
     typeof onNodeClick;
@@ -172,55 +172,103 @@ async function layoutNodes(nodesArr, edgesArr) {
   const services = nodesArr.filter((n) => n.nodeType === 'service');
   const routines = nodesArr.filter((n) => n.nodeType === 'routine');
   const tasks = nodesArr.filter((n) => n.nodeType === 'task');
+  const signals = nodesArr.filter((n) => n.nodeType === 'signal');
 
   // Build nested children: service > routine > task
   const elkServices = services.map((service) => {
-    const elkRoutines = routines
-      .filter((r) => r.parentNode === service.id)
-      .map((routine) => {
-        const elkTasks = tasks
-          .filter((t) => t.parentNode === routine.id)
-          .map((task) => ({
-            id: task.id,
-            width: 70,
-            height: 40,
-            ...task,
-          }));
-        return {
-          id: routine.id,
-          width: Math.max(400, elkTasks.length * 80), // Adjust width based on children
-          height: Math.max(250, elkTasks.length * 50), // Adjust height based on children
-          ...routine,
-          children: elkTasks,
-          layoutOptions: {
-            'elk.padding': '[top=60,left=60,bottom=60,right=60]',
-            'elk.spacing.nodeNode': '40',
-            'elk.align': 'CENTER', // center task graph in routine
-          },
-        };
-      });
+    const elkChildren = [
+      ...routines
+        .filter((r) => r.parentNode === service.id)
+        .map((routine) => {
+          const elkTasks = tasks
+            .filter((t) => t.parentNode === routine.id)
+            .map((task) => ({
+              id: task.id,
+              width: 70,
+              height: 40,
+              ...task,
+            }));
+
+          return {
+            id: routine.id,
+            width: Math.max(400, elkTasks.length * 80),
+            height: Math.max(250, elkTasks.length * 50),
+            ...routine,
+            children: elkTasks,
+            layoutOptions: {
+              'elk.padding': '[top=60,left=60,bottom=60,right=60]',
+              'elk.spacing.nodeNode': '40',
+              'elk.align': 'CENTER',
+            },
+          };
+        }),
+      ...signals
+        .filter((s) => s.parentNode === service.id)
+        .map((signal) => {
+          const elkTasks = tasks
+            .filter((t) => t.parentNode === signal.id)
+            .map((task) => ({
+              id: task.id,
+              width: 70,
+              height: 40,
+              ...task,
+            }));
+
+          return {
+            id: signal.id,
+            width: Math.max(110, elkTasks.length * 80),
+            height: Math.max(50, elkTasks.length * 50),
+            ...signal,
+            children: elkTasks,
+            layoutOptions: {
+              'elk.padding': '[top=60,left=60,bottom=60,right=60]',
+              'elk.spacing.nodeNode': '60',
+              'elk.align': 'CENTER',
+            },
+          };
+        }),
+    ];
+
+    console.log('[ELK Layout] Service children:', elkChildren);
+
     return {
       id: service.id,
-      width: Math.max(600, elkRoutines.length * 100), // Adjust width based on children
-      height: Math.max(350, elkRoutines.length * 80), // Adjust height based on children
+      width: Math.max(600, elkChildren.length * 100),
+      height: Math.max(350, elkChildren.length * 80),
       ...service,
-      children: elkRoutines,
+      children: elkChildren,
       layoutOptions: {
-        'elk.padding': '[top=40,left=40]',
-        'elk.spacing.nodeNode': '80',
-        'elk.align': 'CENTER', // center routine in service
+        'elk.padding': '[top=60,left=30,bottom=30,right=30]',
+        'elk.spacing.nodeNode': '40',
+        'elk.align': 'CENTER',
       },
     };
   });
 
-  // Only task-to-task edges
-  const elkEdges = edgesArr.map((edge) => ({
-    id: edge.id,
-    sources: [edge.source],
-    targets: [edge.target],
-    type: edge.type || 'default',
-    style: edge.style || { strokeWidth: 2 },
-  }));
+  // Define elkEdges
+  const elkEdges = edgesArr
+    .map((edge) => {
+      const sourceNode = nodesArr.find((n) => n.id === edge.source);
+      const targetNode = nodesArr.find((n) => n.id === edge.target);
+
+      if (!sourceNode || !targetNode) {
+        console.warn('[ELK Layout] Skipping edge due to missing nodes:', {
+          edge,
+          missingSource: !sourceNode,
+          missingTarget: !targetNode,
+        });
+        return null;
+      }
+
+      return {
+        id: edge.id || `${edge.source}-${edge.target}`,
+        sources: [edge.source],
+        targets: [edge.target],
+        type: edge.type || 'default',
+        style: edge.style || { strokeWidth: 2 },
+      };
+    })
+    .filter(Boolean);
 
   const elkGraph = {
     id: 'root',
@@ -229,12 +277,17 @@ async function layoutNodes(nodesArr, edgesArr) {
       'elk.direction': 'RIGHT',
       'elk.spacing.nodeNode': '100',
       'elk.layered.spacing.nodeNodeBetweenLayers': '100',
+      'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
     },
-    children: elkServices,
+    children: [...elkServices],
     edges: elkEdges,
   };
 
+  console.log('[ELK Graph Structure]:', elkGraph);
+
   const layouted = await elk.layout(elkGraph);
+
+  console.log('[ELK Layout Result]:', layouted);
 
   // Flatten all nodes for VueFlow, preserving positions
   function flattenNodes(elkNode) {
@@ -248,8 +301,8 @@ async function layoutNodes(nodesArr, edgesArr) {
       flat.push({
         ...nodesArr.find((n) => n.id === elkNode.id),
         position: { x: elkNode.x, y: elkNode.y },
-        width: elkNode.width, // Include calculated width
-        height: elkNode.height, // Include calculated height
+        width: elkNode.width,
+        height: elkNode.height,
       });
     }
     return flat;
@@ -282,7 +335,7 @@ async function updateLayout(newNodes, newEdges) {
             missingTarget: !edge.target,
           },
         });
-        return null; // Skip invalid edges
+        return null;
       }
       return {
         id: edge.id,
@@ -292,7 +345,7 @@ async function updateLayout(newNodes, newEdges) {
         style: edge.style || {  strokeWidth: 2 },
         ...edge,
       };
-    }).filter(Boolean); // Remove null edges
+    }).filter(Boolean);
     laidOutNodes.value = nodes;
     laidOutEdges.value = edges;
     fullNodes = nodes;

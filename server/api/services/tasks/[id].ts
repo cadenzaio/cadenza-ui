@@ -5,9 +5,11 @@ let client: pg.Client | null = null;
 
 async function getTask(taskName: string) {
   const query = `
-    SELECT *
+    SELECT task.*, task_to_routine_map.routine_name
     FROM task
-    WHERE name = $1;
+    LEFT JOIN task_to_routine_map
+    ON task.name = task_to_routine_map.task_name
+    WHERE task.name = $1;
   `;
   const result = await client!.query(query, [taskName]);
   return result.rows;

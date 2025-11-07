@@ -6,18 +6,13 @@
       </template>
 
       <div class="row q-mx-md">
-        <FlowMap
-          :items="tasksWithId"
-          id-field="uuid"
-          label-field="name"
-          previous-field="previous_task_execution_name"
-          @item-selected="onTaskSelected"
-        />
-        <div v-if="error" class="text-negative q-pa-md">
-          {{ error }}
-        </div>
+        <NestedFlowMap
+          v-if="nodes.length > 0"
+          :nodes="nodes"
+          :edges="edges"
+          />
         <div v-else-if="isLoading" class="text-center q-pa-md">Loading...</div>
-        <InfoCard v-else-if="selectedItem">
+        <InfoCard v-if="selectedItem">
           <template #title>
             {{ selectedItem?.name }}
           </template>
@@ -27,19 +22,33 @@
                 Description: {{ selectedItem?.description }}
               </div>
               <div class="q-mx-md q-my-sm">
-                Modified: {{ selectedItem?.modified }}
+                Function: {{ selectedItem?.function_string }}
+              </div>
+              <div class="q-separator" style="height: 2px"></div>
+              <div class="q-mx-md q-my-sm">Type: {{ selectedItem?.type }}</div>
+              <div class="q-mx-md q-my-sm">
+                Created:
+                {{
+                  selectedItem?.created
+                    ? new Date(selectedItem.created).toLocaleString()
+                    : 'N/A'
+                }}
               </div>
               <div class="q-mx-md q-my-sm">
-                Deleted: {{ selectedItem?.deletedStatus }}
-              </div>
-              <div class="q-mx-md q-my-sm">
-                Created: {{ selectedItem?.created }}
+                Deleted: {{ selectedItem?.deleted ? 'Yes' : 'No' }}
               </div>
             </div>
           </template>
         </InfoCard>
+         <!-- <ExecutionStatisticsPieChart 
+          type="routine"
+          :routineName="String(route.params.id)"
+        />
+        <ExecutionTimeChart v-if="selectedItem" :series="executionTimeSeries" />
+        <div v-if="error" class="text-negative q-pa-md">
+          {{ error }}
+        </div> -->
       </div>
-
       <div class="row q-mx-md">
         <Table
           class="custom-table"
@@ -48,7 +57,6 @@
           row-key="uuid"
           @inspect-row="inspectService"
           @inspect-row-in-new-tab="inspectInNewTab"
-          @loadMoreData="loadMoreServers"
           :enableInfiniteScroll="true"
           :hasMoreData="hasMoreData"
           :loadingMoreData="loadingMoreData"
@@ -75,26 +83,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter, useRoute } from '#app';
 import InfoCard from '~/components/InfoCard.vue';
+import NestedFlowMap from '~/components/NestedFlowMap.vue';
 import { useAppStore } from '~/stores/app';
 
 const router = useRouter();
 const route = useRoute();
 const activeProcesses = ref<Service[]>([]);
-const tasksInService = ref<Task[]>([]);
-const tasksWithId = computed(() =>
-  tasksInService.value.map((task) => ({
-    ...task,
-    id: task.uuid,
-  }))
-);
+const nodes = ref<any[]>([]);
+const edges = ref<any[]>([]);
 const service = route.params.id as string;
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
 const currentPage = ref(1);
 const pageSize = 50;
+const isLoading = ref(false);
+const error = ref<string | null>(null);
+const selectedItem = ref<Item | null>(null);
 
 const columns = [
   {
@@ -138,111 +145,119 @@ function inspectInNewTab(service: Service) {
   openLinkInNewTab(`/activity/services/${service.uuid}`);
 }
 
-function onServiceSelected(service: any) {
-  // Navigate to the service details page when a service node is selected in the FlowMap
-  navigateToItem(`/activity/services/${service.uuid || service.id}`);
+function navigateToItem(route: string) {
+  router.push(route);
 }
 
-function onTaskSelected(task: any) {
-  // Navigate to the task details page when a task node is selected in the FlowMap
-  navigateToItem(`/services/tasks/${task.name}`);
-}
-
-const navigateToItem = (route: string) => {
-  useRouter().push(route);
-};
-
-const fetchFilteredServers = async (isLoadMore = false): Promise<void> => {
-  try {
-    if (isLoadMore) {
-      loadingMoreData.value = true;
-      currentPage.value++;
-    }
-
-    error.value = null;
-    const response = await fetch(
-      `/api/activity/servers/activeServers?service=${encodeURIComponent(
-        service
-      )}&page=${currentPage.value}&limit=${pageSize}`
-    );
-    if (!response.ok) throw new Error('Failed to fetch filtered servers');
-    const data = await response.json();
-
-    if (isLoadMore) {
-      activeProcesses.value = [
-        ...activeProcesses.value,
-        ...(data.servers || []),
-      ];
-    } else {
-      activeProcesses.value = data.servers || [];
-    }
-
-    hasMoreData.value = (data.servers || []).length === pageSize;
-  } catch (err) {
-    const errorMessage =
-      err instanceof Error ? err.message : 'Unknown error occurred';
-    error.value = `Error fetching servers: ${errorMessage}`;
-    console.error('Error fetching servers:', err);
-    hasMoreData.value = false;
-  } finally {
-    if (isLoadMore) {
-      loadingMoreData.value = false;
-    }
-  }
-};
-
-const loadMoreServers = async (): Promise<void> => {
-  await fetchFilteredServers(true);
-};
-
-const fetchTasksInService = async (): Promise<void> => {
+async function fetchTasksInService() {
   try {
     error.value = null;
     const response = await fetch(
-      `/api/services/tasksInService?serviceName=${encodeURIComponent(
-        service
-      )}`
+      `/api/services/tasksInService?serviceName=${encodeURIComponent(service)}`
     );
     if (!response.ok) throw new Error('Failed to fetch tasks in service');
     const data = await response.json();
-
-    tasksInService.value = data || [];
+    nodes.value = data.nodes;
+    edges.value = data.edges;
   } catch (err) {
     const errorMessage =
       err instanceof Error ? err.message : 'Unknown error occurred';
     error.value = `Error fetching tasks: ${errorMessage}`;
     console.error('Error fetching tasks:', err);
   }
-};
+}
 
-const fetchGraphDetails = async (): Promise<void> => {
+// Updated the `fetchServerDetails` function to include all required properties
+async function fetchServerDetails() {
   try {
     error.value = null;
-    const response = await fetch(
-      `/api/services/graphs/${encodeURIComponent(service)}`
-    );
-    if (!response.ok) throw new Error('Failed to fetch graph details');
+    const response = await fetch(`/api/activity/servers/${service}`);
+    if (!response.ok) throw new Error('Failed to fetch server details');
     const data = await response.json();
 
-    selectedItem.value = data;
+    if (data.length > 0) {
+      const server = data[0];
+      selectedItem.value = {
+        name: server.service_name,
+        description: `Address: ${server.address}, Port: ${server.port}`,
+        function_string: `PID: ${server.process_pid}, Primary: ${server.is_primary}`,
+        type: server.is_active ? 'Active' : 'Inactive',
+        service_instance: server.service_instance_uuid,
+        created: server.created,
+        deleted: server.deleted,
+        modified: server.service_instance_modified,
+        deletedStatus: server.deleted ? 'Deleted' : 'Active',
+        displayName: server.service_name,
+      };
+    } else {
+      selectedItem.value = null;
+    }
   } catch (err) {
     const errorMessage =
       err instanceof Error ? err.message : 'Unknown error occurred';
-    error.value = `Error fetching graph details: ${errorMessage}`;
-    console.error('Error fetching graph details:', err);
+    error.value = `Error fetching server details: ${errorMessage}`;
+    console.error('Error fetching server details:', err);
   }
-};
-
-interface Item {
-  name: string;
-  description: string;
-  modified: string;
-  deleted: boolean;
-  created: string;
-  deletedStatus: string;
-  displayName: string;
 }
 
+// Add a function to fetch active executions
+async function fetchActiveExecutions() {
+  try {
+    error.value = null;
+    const response = await fetch(`/api/activity/servers/activeServers`);
+    if (!response.ok) throw new Error('Failed to fetch active executions');
+    const data = await response.json();
+    activeProcesses.value = data.servers.map((server: { uuid: any; service: any; address: any; port: any; processPid: any; displayStatus: any; }) => ({
+      uuid: server.uuid,
+      graph: server.service,
+      address: server.address,
+      port: server.port,
+      processPid: server.processPid,
+      status: server.displayStatus,
+    }));
+  } catch (err) {
+    const errorMessage =
+      err instanceof Error ? err.message : 'Unknown error occurred';
+    error.value = `Error fetching active executions: ${errorMessage}`;
+    console.error('Error fetching active executions:', err);
+  }
+}
+
+onMounted(async () => {
+  const appStore = useAppStore();
+  appStore.setCurrentSection('system');
+
+  try {
+    isLoading.value = true;
+    await Promise.all([
+      fetchTasksInService(),
+      fetchServerDetails(),
+      fetchActiveExecutions(),
+    ]);
+  } catch (err) {
+    const errorMessage =
+      err instanceof Error ? err.message : 'Unknown error occurred';
+    error.value = `Error loading data: ${errorMessage}`;
+    console.error('Error in onMounted:', err);
+  } finally {
+    isLoading.value = false;
+  }
+});
+
+watch(
+  () => route.params.id,
+  async (newId, oldId) => {
+    if (newId !== oldId) {
+      await Promise.all([
+        fetchTasksInService(),
+        fetchServerDetails(),
+        fetchActiveExecutions(),
+      ]);
+    }
+  }
+);
+
+// Define missing types
 interface Service {
   uuid: string;
   graph: string;
@@ -255,45 +270,19 @@ interface Service {
   displayStatus: string;
 }
 
-interface Task {
-  uuid: string;
+// Updated the `Item` interface to include `type` and `service_instance`
+interface Item {
   name: string;
-  description?: string;
-  processing_graph: string;
-  layer_index: number;
-  is_unique: boolean;
-  concurrency: number;
-  task_id: string;
-  previous_task_execution_id?: string;
+  description: string;
+  modified: string;
+  deleted: boolean;
+  created: string;
+  deletedStatus: string;
+  displayName: string;
+  function_string?: string; // Added optional property
+  type?: string; // Added optional property
+  service_instance?: string; // Added optional property
 }
-
-const selectedItem = ref<Item | null>(null);
-const isLoading = ref(false);
-const error = ref<string | null>(null);
-onMounted(async () => {
-  const appStore = useAppStore();
-  appStore.setCurrentSection('system');
-
-  currentPage.value = 1; // Always start at page 1 on mount
-
-  try {
-    isLoading.value = true;
-    error.value = null;
-
-    await Promise.all([
-      fetchGraphDetails(),
-      fetchTasksInService(),
-      fetchFilteredServers(),
-    ]);
-  } catch (err) {
-    const errorMessage =
-      err instanceof Error ? err.message : 'Unknown error occurred';
-    error.value = `Error loading data: ${errorMessage}`;
-    console.error('Error in onMounted:', err);
-  } finally {
-    isLoading.value = false;
-  }
-});
 </script>
 
 <style scoped>

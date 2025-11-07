@@ -22,89 +22,48 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useFetch } from '#app';
-import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
+import { useRouter } from '#vue-router';
 
-interface task {
-  name: string;
-  type: string;
-  label: string;
-  description: string;
-  id: any;
-  executionId: any;
-  progress: any;
+interface Task {
   uuid: string;
+  name: string;
+  status: string;
+  progress: number;
+  started: string;
+  ended: string;
+  duration: number;
 }
 
-const layout = 'dashboard-layout';
-const selectedTask = ref<task[] | undefined>(undefined);
-watch(selectedTask, (newValue) => {});
-
-const columns = [
-  {
-    name: 'name',
-    label: 'Name',
-    field: 'name',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'status',
-    label: 'Status',
-    field: 'status',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'progress',
-    label: 'Progress',
-    field: 'progress',
-    required: true,
-    sortable: false,
-  },
-  {
-    name: 'started',
-    label: 'Started',
-    field: 'started',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'ended',
-    label: 'Ended',
-    field: 'ended',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'duration',
-    label: 'Duration (sec)',
-    field: 'duration',
-    required: true,
-    sortable: true,
-  },
-];
-
-const tasks = ref<task[]>([]);
-const hasMoreData = ref(true);
-const loadingMoreData = ref(false);
+const tasks = ref<Task[]>([]);
 const currentPage = ref(1);
 const pageSize = 50;
+const hasMoreData = ref(true);
+const loadingMoreData = ref(false);
+
+const columns = [
+  { name: 'name', label: 'Name', field: 'name', required: true },
+  { name: 'status', label: 'Status', field: 'status', required: true },
+  { name: 'progress', label: 'Progress', field: 'progress', required: true },
+  { name: 'started', label: 'Started', field: 'started', required: true },
+  { name: 'ended', label: 'Ended', field: 'ended', required: true },
+  { name: 'duration', label: 'Duration (sec)', field: 'duration', required: true },
+];
 
 const router = useRouter();
 
-function inspectTask(task: task) {
-  navigateToItem(`/activity/tasks/${task.uuid}`);
+function inspectTask(task: Task) {
+  navigateToItem(`/meta/tasks/${task.uuid}`);
 }
-function inspectInNewTab(task: task) {
-  const url = `/activity/tasks/${task.uuid}`;
+
+function inspectInNewTab(task: Task) {
+  const url = `/meta/tasks/${task.uuid}`;
   window.open(url, '_blank');
 }
 
-const navigateToItem = (route: string) => {
+function navigateToItem(route: string) {
   router.push(route);
-};
+}
 
 async function loadTasks(isLoadMore = false) {
   try {
@@ -116,7 +75,8 @@ async function loadTasks(isLoadMore = false) {
     const response = await fetch(
       `/api/meta/tasks/metaTasks?page=${currentPage.value}&limit=${pageSize}`
     );
-    if (!response.ok) throw new Error('Network response was not ok');
+    if (!response.ok) throw new Error('Failed to fetch tasks');
+
     const data = await response.json();
 
     if (isLoadMore) {
@@ -127,7 +87,7 @@ async function loadTasks(isLoadMore = false) {
 
     hasMoreData.value = data.tasks.length === pageSize;
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    console.error('Error loading tasks:', error);
     hasMoreData.value = false;
   } finally {
     if (isLoadMore) {

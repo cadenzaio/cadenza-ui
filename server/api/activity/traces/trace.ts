@@ -7,15 +7,17 @@ type Node = {
   type: string;
   nodeType: string;
   parentNode?: string;
-  data: Record<string, any>;
-  position: { x: number; y: number };
+  data: Record<string, any>; 
 };
 
 type Edge = {
   id: string;
   source: string;
   target: string;
+  style?: { [key: string]: any };
 };
+
+
 
 let client: pg.Client | null = null;
 
@@ -29,7 +31,9 @@ async function generateNodesAndEdges(traceUuid: string) {
       re.uuid AS routine_uuid,
       te.task_name,
       te.uuid AS task_uuid,
-      tem.previous_task_execution_id
+      tem.previous_task_execution_id,
+      se.signal_name AS signal_emission_name,
+      sc.signal_name AS signal_consumption_name
     FROM execution_trace et
     LEFT JOIN routine_execution re
       ON et.uuid = re.execution_trace_id
@@ -37,6 +41,10 @@ async function generateNodesAndEdges(traceUuid: string) {
       ON re.uuid = te.routine_execution_id
     LEFT JOIN task_execution_map tem
       ON te.uuid = tem.task_execution_id
+    LEFT JOIN signal_emission se
+      ON te.uuid = se.task_execution_id AND se.is_meta = false
+    LEFT JOIN signal_consumption sc
+      ON te.uuid = sc.task_execution_id AND sc.is_meta = false
     WHERE et.uuid = $1;
   `;
 
@@ -49,33 +57,30 @@ async function generateNodesAndEdges(traceUuid: string) {
 
   const nodes: Node[] = [];
   const edges: Edge[] = [];
+  const signalNodes: Record<string, string> = {};
 
   // Update nodes to include parentNode for services and routines
   const serviceNode = {
     id: res.rows[0].trace_uuid,
     type: 'custom',
     nodeType: 'service',
-    data: { label: res.rows[0].service_name || res.rows[0].trace_uuid, isParent: true },
-    position: { x: 0, y: 0 },
+    data: { label: res.rows[0].service_name || res.rows[0].trace_uuid, isParent: true },    
   };
   nodes.push(serviceNode);
 
   const routineMap: Record<string, Node> = {};
 
-  let yOffset = 0;
   res.rows.forEach((row) => {
     if (!routineMap[row.routine_uuid]) {
       const routineNode = {
         id: row.routine_uuid,
         type: 'custom',
         nodeType: 'routine',
-        parentNode: row.trace_uuid, // Set parentNode to the service node
-        data: { label: row.routine_name || row.routine_uuid, isParent: true },
-        position: { x: 100, y: yOffset },
+        parentNode: row.trace_uuid, 
+        data: { label: row.routine_name || row.routine_uuid, isParent: true },        
       };
       routineMap[row.routine_uuid] = routineNode;
       nodes.push(routineNode);
-      yOffset += 150; // Increment yOffset for the next node
     }
 
     if (row.task_uuid) {
@@ -83,18 +88,83 @@ async function generateNodesAndEdges(traceUuid: string) {
         id: row.task_uuid,
         type: 'custom',
         nodeType: 'task',
-        parentNode: row.routine_uuid, // Set parentNode to the routine node
-        data: { label: row.task_name || row.task_uuid },
-        position: { x: 300, y: yOffset },
+        parentNode: row.routine_uuid, 
+        data: { label: row.task_name || row.task_uuid },        
       };
       nodes.push(taskNode);
-      yOffset += 100; // Increment yOffset for the next node
-
+    
       if (row.previous_task_execution_id) {
         edges.push({
           id: `e${row.previous_task_execution_id}-${row.task_uuid}`,
           source: row.previous_task_execution_id,
           target: row.task_uuid,
+        });
+      }
+    }
+    if (row.signal_emission_name) {
+      let signalEmissionNodeId;
+      if (!signalNodes[row.signal_emission_name]) {
+        signalEmissionNodeId = `${row.task_uuid}-emission-${row.signal_emission_name}`;
+        signalNodes[row.signal_emission_name] = signalEmissionNodeId;
+        const signalEmissionNode = {
+          id: signalEmissionNodeId,
+          type: 'custom',
+          nodeType: 'signal',
+          parentNode: row.trace_uuid,
+          data: { label: row.signal_emission_name, signal: true }, // Explicitly set signal property
+        };
+        nodes.push(signalEmissionNode);
+      } else {
+        signalEmissionNodeId = signalNodes[row.signal_emission_name];
+      }
+
+      edges.push({
+        id: `e${row.task_uuid}-${signalEmissionNodeId}`,
+        source: row.task_uuid,
+        target: signalEmissionNodeId,
+      });
+
+      // Create edge to parent routine with custom edge type
+      if (row.routine_uuid) {
+        edges.push({
+          id: `e${signalEmissionNodeId}-${row.routine_uuid}`,
+          source: row.routine_uuid,
+          target: signalEmissionNodeId,
+          style: { display: 'none' }
+        });
+      }
+    }
+
+    if (row.signal_consumption_name) {
+      let signalConsumptionNodeId;
+      if (!signalNodes[row.signal_consumption_name]) {
+        signalConsumptionNodeId = `${row.task_uuid}-consumption-${row.signal_consumption_name}`;
+        signalNodes[row.signal_consumption_name] = signalConsumptionNodeId;
+        const signalConsumptionNode = {
+          id: signalConsumptionNodeId,
+          type: 'custom',
+          nodeType: 'signal',
+          parentNode: row.trace_uuid,
+          data: { label: row.signal_consumption_name, signal: true }, // Explicitly set signal property
+        };
+        nodes.push(signalConsumptionNode);
+      } else {
+        signalConsumptionNodeId = signalNodes[row.signal_consumption_name];
+      }
+
+      edges.push({
+        id: `e${signalConsumptionNodeId}-${row.task_uuid}`,
+        source: signalConsumptionNodeId,
+        target: row.task_uuid,
+      });
+
+      // Create edge to parent routine with custom edge type
+      if (row.routine_uuid) {
+        edges.push({
+          id: `e${signalConsumptionNodeId}-${row.routine_uuid}`,
+          source: signalConsumptionNodeId,
+          target: row.routine_uuid,
+          style: { display: 'none' }
         });
       }
     }

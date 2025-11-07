@@ -8,6 +8,7 @@ async function getgraphs(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
   const query = `
     SELECT * FROM service
+    WHERE is_meta = false
     ORDER BY name ASC
     LIMIT $1 OFFSET $2
   `;

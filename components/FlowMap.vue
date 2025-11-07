@@ -151,14 +151,13 @@ async function processFlowItems(items: FlowItem[]) {
   if (!items || items.length === 0) {
     nodes.value = [];
     edges.value = [];
-    console.warn('No items provided to processFlowItems');
     return;
   }
 
-  // Create a map to merge nodes with the same ID
   const nodeMap = new Map<string, Node>();
   const newEdges: Edge[] = [];
 
+  // Step 1: Process all nodes first
   items.forEach((item: FlowItem) => {
     const nodeId = getId(item);
     const nodeData = {
@@ -183,13 +182,18 @@ async function processFlowItems(items: FlowItem[]) {
         position: { x: 0, y: 0 },
         data: nodeData,
       });
-    } else {
-      console.warn(`Duplicate node detected for ID: ${nodeId}. Merging data.`);
     }
+  });
 
+  // Step 2: Process edges after all nodes are added
+  items.forEach((item: FlowItem) => {
+    const nodeId = getId(item);
     const previousIds = getPreviousIds(item);
+
     previousIds.forEach((previousId: string) => {
-      if (!previousId) return;
+      if (!previousId || !nodeMap.has(previousId)) {
+        return;
+      }
       const sourceId = previousId;
       const targetId = nodeId;
       newEdges.push({
@@ -200,7 +204,6 @@ async function processFlowItems(items: FlowItem[]) {
     });
   });
 
-  // Apply layout
   const layoutedNodes = await createLayout(Array.from(nodeMap.values()), newEdges);
   nodes.value = layoutedNodes;
   edges.value = newEdges;

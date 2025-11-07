@@ -151,7 +151,7 @@ const fetchServerStats = async (isLoadMore = false) => {
   error.value = null;
   try {
     const response = await fetch(
-      `/api/activity/servers/activeServers?page=${currentPage.value}&limit=${pageSize}`
+      `/api/meta/activeMetaServices?page=${currentPage.value}&limit=${pageSize}`
     );
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
@@ -226,7 +226,7 @@ async function layoutGraph(nodes: Node[], edges: Edge[]) {
 async function fetchServerMap() {
   mapLoading.value = true;
   try {
-    const serverMap = await $fetch('/api/activity/serverMap');
+    const serverMap = await $fetch('/api/meta/metaServerMap');
     if (serverMap && serverMap.length > 0) {
       const activeServers = serverMap.filter((server: any) => server.is_active);
       const uniqueServers = new Map();
@@ -240,7 +240,7 @@ async function fetchServerMap() {
           position: { x: 0, y: 0 },
           sourcePosition: 'right' as Position,
           targetPosition: 'left' as Position,
-          data: { label: server.processing_graph, meta: true },
+          data: { label: server.service_name, meta: true },
           type: 'customNode',
         });
       });

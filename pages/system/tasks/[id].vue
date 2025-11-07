@@ -10,7 +10,7 @@
           :items="taskMap"
           id-field="name"
           label-field="name"
-          previous-field="previousTaskExecutionId"
+          previous-field="previousTaskExecutionName"
           @item-selected="onTaskSelected"
         />
         <InfoCard v-if="selectedItem">
@@ -261,17 +261,35 @@ const routines = ref<any[]>([]);
 const taskMap = ref<any[]>([]);
 
 async function updateTaskMap() {
-  if (!selectedItem.value || !routines.value || routines.value.length === 0) {
+  if (!selectedItem.value) {
+    console.error('updateTaskMap: No selectedItem available');
     taskMap.value = [];
     return;
   }
+
   try {
-    const firstRoutine = routines.value[0];
-    // backend now expects routineName instead of routineId/uuid
+    // Fetch routine name from the API using the task name
+    const routineResponse = await $fetch(
+      `/api/services/tasks/${selectedItem.value.name}`
+    );
+
+    // Ensure the response is an array before indexing it so TypeScript can narrow the type
+    if (!Array.isArray(routineResponse) || routineResponse.length === 0 || !routineResponse[0]?.routine_name) {
+      console.error('updateTaskMap: No routine name found in API response');
+      taskMap.value = [];
+      return;
+    }
+
+    const routineName = routineResponse[0].routine_name;
+    console.log('updateTaskMap: Using routine name to fetch task map:', routineName);
+
+    // Fetch task map using the routine name
     const response = await $fetch(
-      `/api/services/tasks/staticTasksInRoutine?routineName=${firstRoutine.name}`
+      `/api/services/tasks/staticTasksInRoutine?routineName=${routineName}`
     );
     const itemsArray = Array.isArray(response) ? response : [];
+    console.log('updateTaskMap: Response itemsArray:', itemsArray);
+
     // Set isSelected on the correct node (by uuid or taskId)
     taskMap.value = itemsArray.map((item: any) => ({
       ...item,
@@ -279,8 +297,9 @@ async function updateTaskMap() {
         selectedItem.value &&
         (item.taskName === selectedItem.value.name || item.name === selectedItem.value.name),
     }));
+    console.log('updateTaskMap: taskMap updated to', taskMap.value);
   } catch (error) {
-    console.error('Error fetching task map:', error);
+    console.error('updateTaskMap: Error fetching task map:', error);
     taskMap.value = [];
   }
 }
@@ -290,7 +309,7 @@ watch([selectedItem, routines], updateTaskMap, { immediate: true });
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
   if (task.name) {
-    navigateToItem(`/services/tasks/${task.name}`);
+    navigateToItem(`/system/tasks/${task.name}`);
   }
 }
 
@@ -381,7 +400,7 @@ async function fetchActiveTasks(taskName: string, isLoadMore = false) {
       throw new Error('Failed to parse JSON response');
     }
 
-    console.log('Response data:', data);
+    console.log('active task Response data:', data);
 
     let taskArray = [];
     if (Array.isArray(data)) {
@@ -394,9 +413,9 @@ async function fetchActiveTasks(taskName: string, isLoadMore = false) {
       taskArray = [data];
     }
 
-    console.log('taskArray:', taskArray);
+    console.log('active task taskArray:', taskArray);
     if (taskArray.length > 0) {
-      console.log('First task object:', taskArray[0]);
+      console.log('First active task object:', taskArray[0]);
     }
 
     if (isLoadMore) {
@@ -406,7 +425,7 @@ async function fetchActiveTasks(taskName: string, isLoadMore = false) {
     }
 
     hasMoreTasksData.value = taskArray.length === pageSize;
-    console.log('tasks.value:', tasks.value);
+    console.log('activetasks.value:', tasks.value);
   } catch (error) {
     console.error('Error loading tasks:', error);
     hasMoreTasksData.value = false;

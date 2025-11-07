@@ -181,11 +181,11 @@ const nodeSelectedBorder = computed(() =>
 }
 .signal-node {
   /* Keep background fully transparent to let the scan band show clearly */
-  background: transparent !important;
-  box-shadow: none !important;
+  background: rgba(169 170 169 / 0.88) !important;
+  box-shadow: 2px 6px 6px rgba(189, 188, 188, 0.66) !important;
   align-content: center !important;
   word-wrap: break-word !important;
-  color: #08c011 !important;
+  color: v-bind('nodeSelectedBg') !important;
 }
 
 /* Updated animation for signal-node */
@@ -201,8 +201,9 @@ const nodeSelectedBorder = computed(() =>
   left: 50%;
   width: 0;
   height: 0;
-  border: 2px solid rgba(8, 192, 17, 0.8);
+  border: 2px solid;
   border-radius: 50%;
+  border-color: v-bind('nodeSelectedBg') !important;;
   transform: translate(-50%, -50%);
   animation: expand-ring 1.5s ease-out infinite;
 }
@@ -236,28 +237,35 @@ const nodeSelectedBorder = computed(() =>
   padding: 10px;
   margin: 0;
 }
+
+/* Redesigned meta-node styling with chamfered corners */
 .meta-node {
   background: #ab0ac0 !important;
-  width: 30px !important;
-  height: 30px !important;
-  box-shadow: 0 2px 8px 0 rgba(141, 140, 140, 0.66);
-  transform: rotate(45deg);
   display: flex;
-  align-items: bottom;
-  justify-content: center;
+  align-items: center; 
+  justify-content: center; 
   position: relative;
   margin: 0 auto;
   overflow: visible;
+  padding: 10px; 
+  box-shadow: 2px 6px 6px rgba(189, 188, 188, 0.66) !important;
+  clip-path: polygon(
+    10% 0%, 90% 0%, /* Top chamfers */
+    100% 20%, 100% 80%, /* Right chamfers */
+    90% 100%, 10% 100%, /* Bottom chamfers */
+    0% 80%, 0% 20% /* Left chamfers */
+  );
 }
+
 .meta-label {
   display: inline-block;
-  transform: rotate(-45deg);
-  width: 80px;
   text-align: center;
   color: #fff;
-  font-size: 0.7em;
+  font-size: 0.8em; /* Slightly larger font for better readability */
   pointer-events: none;
+  white-space: nowrap; /* Prevent text wrapping */
 }
+
 .node-label {
   display: inline-block;
   max-width: 100%;

@@ -4,7 +4,7 @@ import { getQuery } from 'h3';
 
 let client: pg.Client | null = null;
 
-async function getAllServicesWithStats(
+async function getAllServersWithStats(
   serviceInstanceUuid?: string,
   page: number = 1,
   limit: number = 100
@@ -24,7 +24,7 @@ async function getAllServicesWithStats(
         si.modified
     FROM service_instance si
     LEFT JOIN service s ON si.service_name = s.name
-    WHERE si.is_active = true AND s.is_meta = false
+    WHERE si.is_active = true AND s.is_meta = true
   `;
   const values: (string | number)[] = [];
 
@@ -40,7 +40,7 @@ async function getAllServicesWithStats(
 
   const result = await client!.query(query, values);
   return {
-    services: result.rows.map((row) => ({
+    servers: result.rows.map((row) => ({
       uuid: row.uuid,
       service: row.service_name,
       address: row.address,
@@ -68,9 +68,9 @@ export default defineEventHandler(async (event) => {
       const serviceInstance = q.serviceInstance as string | undefined;
       const page = parseInt((q.page as string) || '1', 10) || 1;
       const limit = parseInt((q.limit as string) || '100', 10) || 100;
-      return await getAllServicesWithStats(serviceInstance, page, limit);
+      return await getAllServersWithStats(serviceInstance, page, limit);
     } catch (error) {
-      console.error('Error fetching service stats:', error);
+      console.error('Error fetching server stats:', error);
       throw error;
     }
   }
