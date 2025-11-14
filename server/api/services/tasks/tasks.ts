@@ -21,6 +21,7 @@ async function getTasks(page: number = 1, limit: number = 100) {
     description: row.description,
     uuid: row.uuid,
     service: row.service_name,
+    version: row.version,
     unique: row.is_unique,
     concurrency: row.concurrency,
     name: row.name,

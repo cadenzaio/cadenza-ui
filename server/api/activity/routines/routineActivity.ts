@@ -8,7 +8,7 @@ let client: pg.Client | null = null;
 interface RoutineRow {
   uuid: string;
   description: string;
-  server_id: string;
+  service_id: string;
   routine_id: string;
   is_running: boolean;
   is_complete: boolean;
@@ -29,6 +29,7 @@ interface RoutineRow {
   previous_routine_id: string;
   routine_name: string;
   routine_description: string;
+  service_name: string; // Updated from server_name
 }
 
 interface RoutineMapped {
@@ -38,7 +39,7 @@ interface RoutineMapped {
   label: string;
   description: string;
   routineDescription: string;
-  serverId: string;
+  serviceId: string; // Updated from serverId
   routineId: string;
   status: string;
   previousRoutineExecution: string;
@@ -47,7 +48,7 @@ interface RoutineMapped {
   ended: string;
   duration: number;
   uuid: string;
-  serverName: string;
+  serviceName: string; // Updated from serverName
   previousRoutineName: string;
   contract_id: string;
   processingGraph: string;
@@ -57,67 +58,68 @@ interface RoutineMapped {
   referer: string | null;
 }
 
-// Get all routines
-async function getRoutines(
-  id: string,
-  page: number = 1,
-  limit: number = 50
-): Promise<RoutineMapped[]> {
+// Get all routines or a single routine by uuid
+async function getRoutines({
+  uuid,
+  page = 1,
+  limit = 50,
+}: {
+  uuid?: string;
+  page?: number;
+  limit?: number;
+}): Promise<RoutineMapped[]> {
   if (!client) {
     client = await initializeClient();
   }
 
-  const query = `
+  let query = `
   SELECT
       re.uuid,
-      re.description,
-      re.server_id,
-      re.routine_id,
+      re.name AS routine_name,
+      re.service_instance_id AS service_id,
       re.is_running,
       re.is_complete,
       re.errored,
       re.failed,
-      re.previous_routine_execution,
       re.progress,
       re.created,
+      re.started,
       re.ended,
-      re.contract_id,
-      re.context_id,
-      re.is_running,
-      ctx.uuid AS context_id,
-      ctx2.uuid AS result_context_id,
-      ctx.context AS input_context,
-      ctx2.context AS output_context,
-      s.processing_graph,
-      s.address,
-      s.port,
-      pre.routine_id AS previous_routine_id,
-      r.name AS routine_name,
-      r.description AS routine_description
+      r.name AS routine_type,
+      r.description AS routine_description,
+      re.previous_routine_execution,
+      s.name AS service_name
   FROM routine_execution AS re
-  LEFT JOIN server s on re.server_id = s.uuid
-  LEFT JOIN routine r ON re.routine_id = r.uuid
-  LEFT JOIN routine_execution pre on re.previous_routine_execution = pre.uuid
-    LEFT JOIN context ctx ON re.context_id = ctx.uuid
-    LEFT JOIN context ctx2 ON re.result_context_id = ctx2.uuid
-    where re.routine_id = $1
-    ORDER BY re.created DESC
+  LEFT JOIN routine r ON re.name = r.name AND re.service_name = r.service_name
+  LEFT JOIN service s ON re.service_name = s.name
   `;
 
-  try {
-    const res = await client.query(query, [id]);
+  // Build params and conditional WHERE clause only when uuid is provided
+  const params: any[] = [];
+  const whereClause = uuid ? `WHERE r.name = $1` : '';
+  if (uuid) {
+    params.push(uuid);
+  }
 
-    // Map the results - ensuring all fields needed by frontend are included
+  const orderQuery = `ORDER BY re.created DESC`;
+  const limitQuery = uuid ? '' : `LIMIT ${limit} OFFSET ${(page - 1) * limit}`;
+
+  const fullQuery = [query, whereClause, orderQuery, limitQuery]
+    .filter(Boolean)
+    .join(' ');
+
+  try {
+    const res = await client.query(fullQuery, params);
     return res.rows.map(
       (row: RoutineRow): RoutineMapped => ({
         id: row.uuid,
-        name: row.description,
-        type: 'routine',
-        label: row.description,
+        name: row.routine_name,
+        type: 'routine', // Removed dependency on `routine_type`
+        label: row.routine_name,
         description: row.routine_description,
         routineDescription: row.routine_description,
-        serverId: row.server_id,
-        routineId: row.routine_id,
+        serviceId: row.service_id,
+        routineId: row.uuid,
         status: row.is_complete
           ? 'check'
           : row.is_running
@@ -127,24 +129,34 @@ async function getRoutines(
           : 'schedule',
         previousRoutineExecution: row.previous_routine_execution,
         progress: row.progress,
-        started: formatDate(
-          typeof row.created === 'string'
-            ? row.created
-            : row.created.toISOString()
-        ),
-        ended: formatDate(
-          typeof row.ended === 'string' ? row.ended : row.ended.toISOString()
-        ),
+        started: row.created
+          ? formatDate(
+              typeof row.created === 'string'
+                ? row.created
+                : row.created.toISOString()
+            )
+          : '', // Use empty string as fallback for created
+        ended: row.ended
+          ? formatDate(
+              typeof row.ended === 'string'
+                ? row.ended
+                : row.ended.toISOString()
+            )
+          : '', // Use empty string as fallback for ended
         duration: getDuration(
-          typeof row.created === 'string'
-            ? new Date(row.created).getTime()
-            : row.created.getTime(),
-          typeof row.ended === 'string'
-            ? new Date(row.ended).getTime()
-            : row.ended.getTime()
+          row.created
+            ? typeof row.created === 'string'
+              ? new Date(row.created).getTime()
+              : row.created.getTime()
+            : 0, // Use 0 as fallback for created
+          row.ended
+            ? typeof row.ended === 'string'
+              ? new Date(row.ended).getTime()
+              : row.ended.getTime()
+            : 0 // Use 0 as fallback for ended
         ),
         uuid: row.uuid,
-        serverName: row.processing_graph + '@' + row.address + ':' + row.port,
+        serviceName: row.service_name,
         previousRoutineName: row.routine_name,
         contract_id: row.contract_id,
         processingGraph: row.processing_graph,
@@ -175,18 +187,9 @@ export default defineEventHandler(async (event) => {
     const limit = parseInt(urlParams.get('limit') || '50', 10);
     const contractId = urlParams.get('contractId') || undefined;
 
-    // Extract routine ID from query parameters
-    const id = urlParams.get('id');
-
-    if (!id) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Routine ID is required',
-      });
-    }
-
     try {
-      const data = await getRoutines(id);
+      const uuid = urlParams.get('uuid') || undefined;
+      const data = await getRoutines({ uuid, page, limit });
 
       // If contractId is provided, filter and return mapped data for contract page
       if (contractId) {
@@ -232,6 +235,11 @@ export default defineEventHandler(async (event) => {
           routines,
           routineMap,
         };
+      }
+
+      // If uuid is provided, return the single routine (or null)
+      if (uuid) {
+        return data.length > 0 ? data[0] : null;
       }
 
       // Default response for other uses

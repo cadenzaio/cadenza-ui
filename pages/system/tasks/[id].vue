@@ -268,34 +268,25 @@ async function updateTaskMap() {
   }
 
   try {
-    // Fetch routine name from the API using the task name
-    const routineResponse = await $fetch(
-      `/api/services/tasks/${selectedItem.value.name}`
-    );
+    // Fetch the linear chain for the selected task (includes duplicates
+    // for tasks with multiple predecessors). Use the new endpoint which
+    // returns `{ chain: [...] }`.
+    const params = new URLSearchParams();
+    params.set('task_name', String(selectedItem.value.name));
+    if ((selectedItem.value as any).version) params.set('version', String((selectedItem.value as any).version));
+    if ((selectedItem.value as any).service) params.set('service', String((selectedItem.value as any).service));
 
-    // Ensure the response is an array before indexing it so TypeScript can narrow the type
-    if (!Array.isArray(routineResponse) || routineResponse.length === 0 || !routineResponse[0]?.routine_name) {
-      console.error('updateTaskMap: No routine name found in API response');
-      taskMap.value = [];
-      return;
-    }
-
-    const routineName = routineResponse[0].routine_name;
-    console.log('updateTaskMap: Using routine name to fetch task map:', routineName);
-
-    // Fetch task map using the routine name
-    const response = await $fetch(
-      `/api/services/tasks/staticTasksInRoutine?routineName=${routineName}`
-    );
-    const itemsArray = Array.isArray(response) ? response : [];
-    console.log('updateTaskMap: Response itemsArray:', itemsArray);
+    const response = await $fetch(`/api/services/tasks/task?${params.toString()}`);
+    const itemsArray = Array.isArray(response)
+      ? response
+      : (response && Array.isArray((response as any).chain) ? (response as any).chain : []);
 
     // Set isSelected on the correct node (by uuid or taskId)
     taskMap.value = itemsArray.map((item: any) => ({
       ...item,
       isSelected:
         selectedItem.value &&
-        (item.taskName === selectedItem.value.name || item.name === selectedItem.value.name),
+        (item.uuid === selectedItem.value.name || item.name === selectedItem.value.name),
     }));
     console.log('updateTaskMap: taskMap updated to', taskMap.value);
   } catch (error) {
@@ -335,11 +326,11 @@ function inspectInNewTab(task: Task) {
 }
 
 function inspectRoutine(routine: Routine) {
-  navigateToItem(`/services/routines/${routine.name}`);
+  navigateToItem(`/system/routines/${routine.name}`);
 }
 
 function inspectRoutineInNewTab(routine: Routine) {
-  openLinkInNewTab(`/services/routines/${routine.name}`);
+  openLinkInNewTab(`/system/routines/${routine.name}`);
 }
 
 const navigateToItem = (route: string) => {

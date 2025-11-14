@@ -78,7 +78,7 @@
           <template #title> Active Executions </template>
         </Table>
       </div>
-      <HeatMap
+      <!-- <HeatMap
         v-if="heatmapData"
         :chartSeries="heatmapData.chartSeries"
         :yearOptions="heatmapData.yearOptions"
@@ -90,7 +90,7 @@
             if (heatmapData) heatmapData.editableRanges = val;
           }
         "
-      />
+      /> -->
     </NuxtLayout>
   </NuxtLayout>
 </template>
@@ -101,7 +101,7 @@ import { useFetch, useRoute, useRouter } from '#app';
 import { useAppStore } from '~/stores/app';
 import InfoCard from '~/components/InfoCard.vue';
 import FlowMap from '~/components/FlowMap.vue';
-import HeatMap from '~/components/HeatMap.vue';
+// import HeatMap from '~/components/HeatMap.vue';
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
@@ -178,6 +178,7 @@ if (executionError.value) {
 }
 
 interface Routine {
+  uuid: string;
   name: string;
   type: string;
   label: string;
@@ -248,11 +249,11 @@ const router = useRouter();
 function inspectRoutine(routine: Routine) {
   // Left click: navigate, right click: open in new tab
   // (Assume this is called from a row or button, so add @contextmenu in template where used)
-  navigateToItem(`/activity/routines/${routine.name}`);
+  navigateToItem(`/activity/routines/${routine.uuid}`);
 }
 
 function inspectInNewTab(routine: Routine) {
-  openLinkInNewTab(`/activity/routines/${routine.name}`);
+  openLinkInNewTab(`/activity/routines/${routine.uuid}`);
 }
 
 const navigateToItem = (route: string) => {
@@ -268,48 +269,48 @@ function onTaskSelected(task: any) {
   }
 }
 
-async function fetchHeatmapData(routineName: string) {
-  try {
-    const response = await fetch(
-      `/api/services/routines/heatmapData?routineName=${routineName}`
-    );
-    const rawData = await response.json();
-    const dates = rawData.map((r: any) => new Date(r.date));
-    const years = Array.from(
-      new Set<number>(dates.map((d: Date) => d.getFullYear()))
-    ).sort((a: number, b: number) => b - a);
-    const monthNames = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    const editableRanges = [
-      { from: 1, to: 10 },
-      { from: 11, to: 20 },
-      { from: 21, to: 30 },
-      { from: 31, to: 40 },
-    ];
-    heatmapData.value = {
-      chartSeries: [],
-      yearOptions: years,
-      monthNames,
-      editableRanges,
-      rawData,
-    };
-  } catch (error) {
-    console.error('Error fetching heatmap data:', error);
-    heatmapData.value = null;
-  }
-}
+// async function fetchHeatmapData(routineName: string) {
+//   try {
+//     const response = await fetch(
+//       `/api/services/routines/heatmapData?routineName=${routineName}`
+//     );
+//     const rawData = await response.json();
+//     const dates = rawData.map((r: any) => new Date(r.date));
+//     const years = Array.from(
+//       new Set<number>(dates.map((d: Date) => d.getFullYear()))
+//     ).sort((a: number, b: number) => b - a);
+//     const monthNames = [
+//       'January',
+//       'February',
+//       'March',
+//       'April',
+//       'May',
+//       'June',
+//       'July',
+//       'August',
+//       'September',
+//       'October',
+//       'November',
+//       'December',
+//     ];
+//     const editableRanges = [
+//       { from: 1, to: 10 },
+//       { from: 11, to: 20 },
+//       { from: 21, to: 30 },
+//       { from: 31, to: 40 },
+//     ];
+//     heatmapData.value = {
+//       chartSeries: [],
+//       yearOptions: years,
+//       monthNames,
+//       editableRanges,
+//       rawData,
+//     };
+//   } catch (error) {
+//     console.error('Error fetching heatmap data:', error);
+//     heatmapData.value = null;
+//   }
+// }
 
 onMounted(async () => {
   const appStore = useAppStore();

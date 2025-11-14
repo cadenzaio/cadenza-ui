@@ -19,7 +19,7 @@ const props = defineProps<{
   name: string;
 }>();
 
-const series = computed(() => [Number(props.value.replace('%', ''))]);
+const series = computed(() => [Number(props.value)*100]);
 
 const chartOptions = computed(() => ({
   chart: {

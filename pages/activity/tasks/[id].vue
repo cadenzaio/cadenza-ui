@@ -13,10 +13,10 @@
       <div>
         <FlowMap
           :items="taskMap"
-          id-field="name"
+          id-field="uuid"
           label-field="name"
-          previous-field="previousTaskExecutionId"
-          @item-selected="(task) => navigateToItem(`/activity/tasks/${task.name || task.uuid}`)"
+          previous-field="previousTaskExecutionName"
+          @item-selected="(task) => navigateToItem(`/activity/tasks/${task.uuid || task.id}`)"
         ></FlowMap>
       </div>
 
@@ -48,7 +48,7 @@
                 <div class="row items-center">
                   <div class="col">
                     <div class="q-mx-md q-my-sm">
-                      Progress: {{ taskExecution.progress }}%
+                      Progress: {{ (taskExecution.progress * 100).toFixed(0) }}%
                     </div>
                     <div class="q-mx-md q-my-sm">
                       Success: {{ !taskExecution.failed && !taskExecution.errored }}
@@ -126,41 +126,37 @@
                 </div>
 
                 <div
-                  v-if="taskExecution.taskId"
+                  v-if="taskExecution.name"
                   class="q-mx-md q-my-sm cursor-pointer text-primary"
-                  @click="
-                    navigateToItem(`/services/tasks/${taskExecution.taskId}`)
-                  "
-                  @contextmenu.prevent="
-                    openLinkInNewTab(`/services/tasks/${taskExecution.taskId}`)
-                  "
+                  @click="navigateToItem(`/system/tasks/${encodeURIComponent(taskExecution.name)}?version=${taskExecution.version || 1}&service=${encodeURIComponent(taskExecution.serverName || taskExecution.serviceName || '')}`)"
+                  @contextmenu.prevent="openLinkInNewTab(`/system/tasks/${encodeURIComponent(taskExecution.name)}?version=${taskExecution.version || 1}&service=${encodeURIComponent(taskExecution.serverName || taskExecution.serviceName || '')}`)"
                 >
                   Task: {{ taskExecution.name }}
                 </div>
 
                 <div
                   class="q-mx-md q-my-sm cursor-pointer text-primary"
-                  @click="navigateToItem(`/services/${taskExecution.serverName}`)"
+                  @click="navigateToItem(`/system/services/${taskExecution.serviceName}`)"
                   @contextmenu.prevent="
-                    openLinkInNewTab(`/services/${taskExecution.serverName}`)
+                    openLinkInNewTab(`/system/services/${taskExecution.serviceName}`)
                   "
                 >
-                  Server: {{ taskExecution.serverName }}
+                  Service: {{ taskExecution.serviceName }}
                 </div>
                 <div
-                  class="q-mx-md q-my-sm"
+                  class="q-mx-md q-my-sm cursor-pointer text-warning"
                   @click="
                     navigateToItem(
-                      `/activity/traces/${taskExecution?.contract_id}`
+                      `/activity/traces/${taskExecution?.execution_trace_id}`
                     )
                   "
                   @contextmenu.prevent="
                     openLinkInNewTab(
-                      `/activity/traces/${taskExecution?.contract_id}`
+                      `/activity/traces/${taskExecution?.uuid}`
                     )
                   "
                 >
-                  <span class="text-warning cursor-pointer">Trace</span>
+                  Trace: {{ taskExecution?.execution_trace_id }}
                 </div>
               </div>
             </div>
@@ -225,73 +221,78 @@
 <script setup lang="ts">
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
-import { useFetch, useRoute } from '#app';
-import { ref, onMounted } from 'vue';
-import { useRouter } from '#vue-router';
+import { ref, onMounted, computed, watch } from 'vue';
+import { useAsyncData, useRoute, useRouter, useHead } from '#app';
 import { useAppStore } from '@/stores/app';
-import { computedAsync } from '@vueuse/core';
+import { defineAsyncComponent } from 'vue';
 
-const layout = 'dashboard-layout';
+// Lazy-load heavier components to improve initial render performance
+const FlowMap = defineAsyncComponent(() => import('~/components/FlowMap.vue'));
+const ProgressRadialBarChart = defineAsyncComponent(() => import('~/components/ProgressRadialBarChart.vue'));
+const InfoCard = defineAsyncComponent(() => import('~/components/InfoCard.vue'));
+
 const route = useRoute();
 const router = useRouter();
-const taskExecutionId = ref<string>('');
-const taskExecution = ref<any>(null);
 
-async function fetchTaskExecution() {
-  if (!taskExecutionId.value) return;
+// reactive id derived from route params — when it changes, useAsyncData will refetch
+const taskExecutionId = computed(() => route.params.id as string);
 
-  try {
-    const result = await $fetch(
-      `/api/activity/tasks/activeTask?id=${taskExecutionId.value}`
-    );
-    console.log('API fetch result (activeTask):', result);
-    if (result) {
-      taskExecution.value = result;
+const { data: taskExecution, refresh: refreshTask } = useAsyncData<any>(
+  () => `taskExecution-${taskExecutionId.value}`,
+  () => $fetch<any>(`/api/activity/tasks/activeTask?id=${taskExecutionId.value}`),
+  { server: true }
+);
+
+// taskMap depends on the loaded taskExecution; fetch when it becomes available
+const taskMap = ref<any[]>([]);
+watch(
+  taskExecution,
+  async (val) => {
+    if (!val) {
+      taskMap.value = [];
+      return;
     }
-  } catch (error) {
-    console.error('Error fetching task execution:', error);
-  }
-}
-
-const Item = computed(() => taskExecution.value);
-
-interface Item {
-  label: string;
-  uuid: string;
-  routineDescription: string;
-  progress: number;
-  started: string;
-  ended: string;
-  status: string;
-  routineId?: string;
-  serverId: string;
-  previousRoutineExecution?: string;
-  serverName: string;
-  previousRoutineName: string;
-  contract_id: string;
-  layer_index: number;
-  inputContext: string;
-  outputContext: string;
-}
-
-const taskMap = computedAsync(async () => {
-  if (Item.value) {
     try {
       const tasks = await $fetch(
-        `/api/activity/tasks/tasksInRoutines?routineId=${taskExecution.value.routineExecutionId}&selectedTaskId=${taskExecution.value.uuid}&selectionType=execution`
+        `/api/activity/tasks/tasksInRoutines?task_execution_id=${val.uuid}`
       );
-      console.log('API fetch result (tasksInRoutines):', tasks);
-      return (tasks || []).map((task: any) => ({
-        ...task,
-        id: task.uuid,
-      }));
+
+      // Normalize possible shapes returned by the API into an array before using map
+      let taskArray: any[] = [];
+      if (!tasks) {
+        taskArray = [];
+      } else if (Array.isArray(tasks)) {
+        taskArray = tasks;
+      } else if ((tasks as any).nodes && Array.isArray((tasks as any).nodes)) {
+        taskArray = (tasks as any).nodes;
+      } else if ((tasks as any).items && Array.isArray((tasks as any).items)) {
+        taskArray = (tasks as any).items;
+      } else {
+        // fallback: try to find an array on the object
+        const maybeArray = Object.values(tasks).find((v: any) => Array.isArray(v));
+        taskArray = Array.isArray(maybeArray) ? maybeArray : [];
+      }
+
+      taskMap.value = taskArray.map((t: any) => ({ ...t, id: t.uuid || t.id }));
     } catch (error) {
       console.error('Error fetching task map:', error);
-      return [];
+      taskMap.value = [];
     }
-  }
-  return [];
-}, []);
+  },
+  { immediate: true }
+);
+
+useHead({
+  title: computed(() =>
+    taskExecution.value ? `${taskExecution.value.name} - ${taskExecution.value.uuid?.slice(0, 8)}` : 'Task'
+  ),
+  meta: [
+    {
+      name: 'description',
+      content: computed(() => taskExecution.value?.description || 'Task execution details'),
+    },
+  ],
+});
 
 function formatDate(date?: string) {
   if (!date) return 'Not finished';
@@ -307,16 +308,12 @@ function getDuration(start?: string, end?: string) {
 }
 
 const navigateToItem = (path: string) => {
-  console.log('Navigating to:', path);
   router.push(path);
 };
 
 onMounted(() => {
   const appStore = useAppStore();
   appStore.setCurrentSection('serviceActivity');
-
-  taskExecutionId.value = route.params.id as string;
-  fetchTaskExecution();
 });
 
 const showStopDialog = ref(false);
@@ -324,11 +321,9 @@ const showGenerateDialog = ref(false);
 
 function confirmStop() {
   showStopDialog.value = false;
-  // Add logic to handle stopping the process
 }
 
 function confirmGenerate() {
   showGenerateDialog.value = false;
-  // Add logic to handle generating the trace
 }
 </script>

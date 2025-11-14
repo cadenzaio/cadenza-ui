@@ -526,7 +526,7 @@ onMounted(async () => {
     try {
       routineMapLoading.value = true;
       const tasks = await fetch(
-        `/api/activity/tasks/tasksInRoutines?routineId=${selectedItem.value.uuid}`
+        `/api/activity/tasks/tasksInRoutines?routineId=${selectedItem.value.name}`
       );
       if (!tasks.ok) throw new Error('Failed to fetch routine map');
       const tasksData = await tasks.json();

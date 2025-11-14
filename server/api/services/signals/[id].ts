@@ -14,7 +14,7 @@ async function getSignal(name: string, serviceName: string) {
     created, 
     deleted
     FROM signal_registry
-    WHERE name = $1 AND service_name = $2
+    WHERE name = $1 AND service_name = $2 AND is_meta = false
     ORDER BY name ASC
   `;
 
@@ -33,7 +33,7 @@ async function getPreviousTasksForSignal(signalName: string, serviceName: string
       tsm.service_name
     FROM task_to_signal_map tsm
     JOIN task t ON tsm.task_name = t.name
-    WHERE tsm.signal_name = $1 AND tsm.service_name = $2
+    WHERE tsm.signal_name = $1 AND tsm.service_name = $2 AND is_meta = false
     ORDER BY t.name ASC
   `;
 
@@ -52,7 +52,7 @@ async function getNextTasksForSignal(signalName: string, serviceName: string) {
       tsm.task_service_name AS service_name
     FROM signal_to_task_map tsm
     JOIN task t ON tsm.task_name = t.name
-    WHERE tsm.signal_name = $1 AND tsm.signal_service_name = $2
+    WHERE tsm.signal_name = $1 AND tsm.signal_service_name = $2 AND is_meta = false
     ORDER BY t.name ASC
   `;
 
@@ -72,8 +72,8 @@ export default defineEventHandler(async (event) => {
   if (method === 'GET') {
     try {
       const query = getQuery(event);
-      const signal = event.context.params?.id; // Safely access signal from the URL path
-      const serviceName = query.serviceName as string; // Extract service name from query parameters
+      const signal = event.context.params?.id; 
+      const serviceName = query.serviceName as string; 
 
       if (!signal || !serviceName) {
         throw new Error('Both signal and serviceName must be provided');

@@ -33,8 +33,11 @@ export default {
   },
   props: {
     type: String,
+    // Accept both name/id variants to match how pages pass props
     taskId: String,
+    taskName: String,
     routineId: String,
+    routineName: String,
     loading: {
       type: Boolean,
       default: false,
@@ -88,32 +91,47 @@ export default {
     try {
       let url;
       if (this.type === 'routine') {
-        url = `/api/routineErrors?routineId=${this.routineId}`;
+        const name = this.routineName ?? this.routineId;
+        url = `/api/routineErrors?routineName=${encodeURIComponent(name ?? '')}`;
       } else if (this.type === 'task') {
-        url = `/api/taskErrors?taskId=${this.taskId}`;
+        const name = this.taskName ?? this.taskId;
+        url = `/api/taskErrors?taskName=${encodeURIComponent(name ?? '')}`;
       } else {
         url = `/api/allErrors`;
       }
-
       const { data } = await useFetch(url);
       let isComplete = 0,
         errored = 0,
         failed = 0;
-      
+
       if (
         Array.isArray(data.value) &&
         data.value.length > 0 &&
         typeof data.value[0] === 'object'
       ) {
         const statsObj = data.value[0];
-        // Try to get by key, fallback to values order if needed
-        isComplete = Number(
-          statsObj.isComplete ?? Object.values(statsObj)[0] ?? 0
-        );
-        errored = Number(statsObj.errored ?? Object.values(statsObj)[1] ?? 0);
-        failed = Number(statsObj.failed ?? Object.values(statsObj)[2] ?? 0);
+
+        // Normalize keys from possible server response shapes. Server returns snake_case like `is_complete` and `executions`.
+        const rawErrored = statsObj.errored ?? statsObj.errored_count ?? statsObj.error ?? Object.values(statsObj)[1];
+        const rawFailed = statsObj.failed ?? statsObj.failed_count ?? Object.values(statsObj)[2];
+        const rawIsComplete =
+          statsObj.is_complete ?? statsObj.isComplete ?? statsObj.is_complete_count ?? statsObj.completed ?? null;
+        const rawExecutions = statsObj.executions ?? statsObj.count ?? Object.values(statsObj)[0];
+
+        errored = Number(rawErrored ?? 0);
+        failed = Number(rawFailed ?? 0);
+
+        if (rawIsComplete !== null && rawIsComplete !== undefined) {
+          isComplete = Number(rawIsComplete || 0);
+        } else if (rawExecutions !== undefined && rawExecutions !== null) {
+          // If the backend returned a total executions number but not completed count, derive successes
+          const executionsNum = Number(rawExecutions || 0);
+          isComplete = Math.max(0, executionsNum - errored - failed);
+        } else {
+          isComplete = 0;
+        }
       }
-      
+
       this.series = [isComplete, errored, failed];
       this.hasData = isComplete > 0 || errored > 0 || failed > 0;
     } catch (error) {

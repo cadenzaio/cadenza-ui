@@ -10,8 +10,8 @@ async function getClient() {
   return client;
 }
 
-// Get routineExecutions by routine_id
-async function getRoutineMap(routineId: string) {
+// Get routineExecutions by routine_name
+async function getRoutineMap(routineName: string) {
   const query = `
 SELECT
     COUNT(*) as executions,
@@ -22,10 +22,10 @@ SELECT
 FROM
     routine_execution
 WHERE
-    routine_id = $1
+    name = $1
   `;
   const client = await getClient();
-  const result = await client.query(query, [routineId]);
+  const result = await client.query(query, [routineName]);
   return result.rows;
 }
 
@@ -36,17 +36,17 @@ export default defineEventHandler(async (event) => {
     event.node.req.url ?? '',
     `http://${event.node.req.headers.host}`
   );
-  const routineId = url.searchParams.get('routineId');
+  const routineName = url.searchParams.get('routineName');
 
-  if (method === 'GET' && routineId) {
+  if (method === 'GET' && routineName) {
     try {
-      return await getRoutineMap(routineId);
+      return await getRoutineMap(routineName);
     } catch (error) {
       console.error('Error fetching routineExecutions:', error);
       throw error;
     }
   } else {
-    console.error('Invalid request:', { method, routineId });
+    console.error('Invalid request:', { method, routineName });
     return { error: 'Invalid request' };
   }
 });

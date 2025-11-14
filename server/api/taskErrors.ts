@@ -10,8 +10,8 @@ async function getClient() {
   return client;
 }
 
-// Get TaskExecutions by task_id
-async function getTaskMap(taskId: string) {
+// Get taskExecutions by task_name
+async function gettaskMap(taskName: string) {
   const query = `
 SELECT
     COUNT(*) as executions,
@@ -22,10 +22,10 @@ SELECT
 FROM
     task_execution
 WHERE
-    task_id = $1
+    task_name = $1
   `;
   const client = await getClient();
-  const result = await client.query(query, [taskId]);
+  const result = await client.query(query, [taskName]);
   return result.rows;
 }
 
@@ -36,17 +36,17 @@ export default defineEventHandler(async (event) => {
     event.node.req.url ?? '',
     `http://${event.node.req.headers.host}`
   );
-  const taskId = url.searchParams.get('taskId');
+  const taskName = url.searchParams.get('taskName');
 
-  if (method === 'GET' && taskId) {
+  if (method === 'GET' && taskName) {
     try {
-      return await getTaskMap(taskId);
+      return await gettaskMap(taskName);
     } catch (error) {
-      console.error('Error fetching TaskExecutions:', error);
+      console.error('Error fetching taskExecutions:', error);
       throw error;
     }
   } else {
-    console.error('Invalid request:', { method, taskId });
+    console.error('Invalid request:', { method, taskName });
     return { error: 'Invalid request' };
   }
 });

@@ -275,7 +275,7 @@ async function layoutNodes(nodesArr, edgesArr) {
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': 'RIGHT',
-      'elk.spacing.nodeNode': '100',
+      'elk.spacing.nodeNode': '110',
       'elk.layered.spacing.nodeNodeBetweenLayers': '100',
       'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
     },

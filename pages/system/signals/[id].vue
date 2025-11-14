@@ -7,8 +7,13 @@
         <InfoCard>
           <template #title> Signal Data </template>
           <template #info>
-            This section displays metadata and details about the selected
-            signal.
+            <div>
+              <div><strong>Name:</strong> {{ signalDetails?.name ?? '—' }}</div>
+              <div><strong>Domain:</strong> {{ signalDetails?.domain ?? 'N/A' }}</div>
+              <div><strong>Action:</strong> {{ signalDetails?.action ?? '—' }}</div>
+              <div><strong>Service:</strong> {{ signalDetails?.service_name ?? '—' }}</div>
+              <div><strong>Created At:</strong> {{ formattedCreatedAt || '—' }}</div>
+            </div>
           </template>
         </InfoCard>
       </div>
@@ -66,28 +71,40 @@ if (apiData.value) {
       const sid = makeSignalId(signal.name);
       const signalNode = {
         id: sid,
-        name: signal.name,
+        // use the generated id as the `name` so FlowMap's getId() resolves to this stable id
+        name: sid,
+        // keep the human-friendly label separate
         label: signal.name,
         description: signal.domain || '',
         signal: true
       };
 
-      const previousTaskNodes = signal.previousTasks.map((task: Task) => ({
+      // Build a list of previous task ids (stable ids used by FlowMap)
+      const previousIds = (signal.previousTasks || []).map((task: Task) =>
+        makeTaskId(task.task_name)
+      );
+
+      // Attach previousId(s) to the signal node so FlowMap will create edges from tasks -> signal
+      if (previousIds.length > 0) {
+        // if only one previous id, keep as single value is also accepted by FlowMap's getPreviousIds
+        (signalNode as any).previousId = previousIds.length === 1 ? previousIds[0] : previousIds;
+      }
+
+      const previousTaskNodes = (signal.previousTasks || []).map((task: Task) => ({
         id: makeTaskId(task.task_name),
-        name: task.task_name,
+        // store stable id in `name` so getId() resolves to the same identifier
+        name: makeTaskId(task.task_name),
         label: task.task_name,
-        description: task.task_description || '',
-        previousId: undefined,
-        edge: { source: makeTaskId(task.task_name), target: sid }
+        description: task.task_description || ''
       }));
 
-      const nextTaskNodes = signal.nextTasks.map((task: Task) => ({
+      const nextTaskNodes = (signal.nextTasks || []).map((task: Task) => ({
         id: makeTaskId(task.task_name),
-        name: task.task_name,
+        name: makeTaskId(task.task_name),
         label: task.task_name,
         description: task.task_description || '',
-        previousId: sid,
-        edge: { source: sid, target: makeTaskId(task.task_name) }
+        // next tasks should have the signal id as their previousId so FlowMap will create edges signal -> task
+        previousId: sid
       }));
 
       return [signalNode, ...previousTaskNodes, ...nextTaskNodes];
@@ -97,4 +114,28 @@ if (apiData.value) {
     flowItems.value = resp.items || [];
   }
 }
+
+// Compute a single signal details object for the InfoCard (handles array or single-object responses)
+const signalDetails = computed(() => {
+  if (!apiData.value) return null as any;
+  const resp: any = apiData.value;
+  if (Array.isArray(resp)) {
+    // prefer exact match to route param, otherwise first element
+    const match = resp.find((s: any) => s.name === route.params.id);
+    return match || resp[0] || null;
+  }
+  return resp || null;
+});
+
+const formattedCreatedAt = computed(() => {
+  const s = signalDetails.value;
+  if (!s || !s.created) return '';
+  try {
+    // Some timestamps come as 'YYYY-MM-DD HH:mm:ss.SSS' or ISO; Date can parse both in most environments
+    const d = new Date(s.created);
+    return isNaN(d.getTime()) ? String(s.created) : d.toLocaleString();
+  } catch (e) {
+    return String(s.created);
+  }
+});
 </script>

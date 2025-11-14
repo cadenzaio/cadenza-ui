@@ -111,7 +111,7 @@ const nodeSelectedBorder = computed(() =>
       <span class="meta-label">{{ data.label || data.uuid }}</span>
     </template>
     <template v-else>
-      <span class="node-label" :title="data.label">{{ (data.label || data.uuid).slice(0, 20) }}</span>
+      <span class="node-label" :title="data.label">{{ (data.label || data.uuid).slice(0, 30) }}</span>
       <q-linear-progress
         v-if="data.isRunning"
         dark

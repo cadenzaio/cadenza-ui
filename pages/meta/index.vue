@@ -121,13 +121,13 @@ interface Server {
 }
 
 function inspectServer(server: Server): void {
-  navigateToItem(`/activity/services/${server.uuid}`);
+  navigateToItem(`/meta/services/${server.uuid}`);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(server: Server): void {
-  openLinkInNewTab(`/activity/services/${server.uuid}`);
+  openLinkInNewTab(`/meta/services/${server.uuid}`);
 }
 const navigateToItem = (route: string) => {
   router.push(route);

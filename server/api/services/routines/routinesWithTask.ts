@@ -6,7 +6,7 @@ let client: pg.Client | null = null;
 
 // Get all routines
 async function getRoutineMap(
-  taskId: string,
+  taskName: string,
   page: number = 1,
   limit: number = 50
 ) {
@@ -22,7 +22,7 @@ async function getRoutineMap(
     ORDER BY r.name ASC
     LIMIT $2 OFFSET $3;
   `;
-  const result = await client!.query(query, [taskId, limit, offset]);
+  const result = await client!.query(query, [taskName, limit, offset]);
 
   // Map the results to match the expected frontend format
   return result.rows.map((routine) => ({
@@ -42,11 +42,11 @@ export default defineEventHandler(async (event) => {
   if (method === 'GET') {
     try {
       const query = getQuery(event);
-      const taskId = query.taskId as string;
+      const taskName = query.taskName as string;
       const page = parseInt(query.page as string) || 1;
       const limit = parseInt(query.limit as string) || 50;
 
-      return await getRoutineMap(taskId ?? '', page, limit);
+      return await getRoutineMap(taskName ?? '', page, limit);
     } catch (error) {
       console.error('Error fetching routines:', error);
       throw error;

@@ -75,13 +75,22 @@ const pageSize = 50;
 const router = useRouter();
 
 function inspectTasks(tasks: tasks) {
-  navigateToItem(`/system/tasks/${tasks.name}`);
+  // Navigate to task detail including version and service as query params
+  const path = `/system/tasks/${encodeURIComponent(String(tasks.name))}`;
+  const qs = [];
+  if ((tasks as any).version) qs.push(`version=${encodeURIComponent(String((tasks as any).version))}`);
+  if (tasks.service) qs.push(`service=${encodeURIComponent(String(tasks.service))}`);
+  navigateToItem(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(tasks: tasks) {
-  openLinkInNewTab(`/system/tasks/${tasks.name}`);
+  const path = `/system/tasks/${encodeURIComponent(String(tasks.name))}`;
+  const qs = [];
+  if ((tasks as any).version) qs.push(`version=${encodeURIComponent(String((tasks as any).version))}`);
+  if (tasks.service) qs.push(`service=${encodeURIComponent(String(tasks.service))}`);
+  openLinkInNewTab(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
 }
 
 const navigateToItem = (route: string) => {

@@ -13,6 +13,7 @@ async function getSingleTaskExecution(id: string) {
     SELECT
         te.uuid,
         te.routine_execution_id,
+      te.execution_trace_id,
         te.task_name,
         te.is_running,
         te.is_complete,
@@ -54,6 +55,8 @@ async function getSingleTaskExecution(id: string) {
     id: row.uuid,
     type: 'task',
     routineExecutionId: row.routine_execution_id,
+    execution_trace_id: row.execution_trace_id,
+    executionTraceId: row.execution_trace_id,
     taskId: row.task_name,
     isRunning: row.is_running,
     isComplete: row.is_complete,

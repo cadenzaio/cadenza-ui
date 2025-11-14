@@ -20,10 +20,10 @@ async function getRoutineMap(routineName: string) {
       SUM(CASE WHEN errored THEN 1 ELSE 0 END) +
       SUM(CASE WHEN failed THEN 1 ELSE 0 END) +
       SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as errors
-    FROM "routine_execution"
-    WHERE "routine_Name" = $1 AND is_meta = false
-    GROUP BY date, hour
-    ORDER BY date, hour
+    FROM routine_execution
+    WHERE routine_name = $1 AND is_meta = false
+    GROUP BY DATE_TRUNC('day', created), EXTRACT(hour FROM created)
+    ORDER BY DATE_TRUNC('day', created), EXTRACT(hour FROM created)
   `;
   const client = await getClient();
   try {
