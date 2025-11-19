@@ -22,7 +22,7 @@ interface RoutineExecutionTimeRow {
 
 // Get RoutineExecutions by routine_id
 async function getRoutineExecutionTimes(
-  routineId: string
+  routineName: string
 ): Promise<RoutineExecutionTimeRow[]> {
   const query = `
  SELECT
@@ -33,13 +33,13 @@ async function getRoutineExecutionTimes(
       MIN(EXTRACT(EPOCH FROM (ended - created))) as fastest_time,
       AVG(EXTRACT(EPOCH FROM (ended - created))) as average_time
     FROM routine_execution as re
-    WHERE routine_id = $1
+    WHERE name = $1
     GROUP BY date, hour
     ORDER BY started
   `;
   const client = await getClient();
   try {
-    const result = await client.query(query, [routineId]);
+    const result = await client.query(query, [routineName]);
     return result.rows as RoutineExecutionTimeRow[];
   } catch (error) {
     console.error('Error executing query:', error);
@@ -54,21 +54,24 @@ export default defineEventHandler(async (event) => {
     event.node.req.url ?? '',
     `http://${event.node.req.headers.host}`
   );
-  const routineId = url.searchParams.get('routineId');
+  const routineName = url.searchParams.get('routineName');
 
-  if (method === 'GET' && routineId) {
+  if (method === 'GET' && routineName) {
     try {
-      const rows = await getRoutineExecutionTimes(routineId);
+      const rows = await getRoutineExecutionTimes(routineName);
       if (!rows || rows.length === 0) {
         return { series: [] };
       }
-      // Map to chart series format
-      const seriesData = rows.map((item: RoutineExecutionTimeRow) => ({
-        date: new Date(item.started).toISOString(),
-        fastest: parseFloat(item.fastest_time as unknown as string),
-        average: parseFloat(item.average_time as unknown as string),
-        slowest: parseFloat(item.slowest_time as unknown as string),
-      }));
+      // Map to chart series format — convert dates to epoch milliseconds (number)
+      const seriesData = rows.map((item: RoutineExecutionTimeRow) => {
+        const started = item.started ? new Date(item.started).getTime() : 0;
+        return {
+          date: started,
+          fastest: Number(item.fastest_time),
+          average: Number(item.average_time),
+          slowest: Number(item.slowest_time),
+        };
+      });
       return {
         series: [
           {
@@ -90,7 +93,7 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
   } else {
-    console.error('Invalid request:', { method, routineId });
+    console.error('Invalid request:', { method, routineName });
     return { error: 'Invalid request' };
   }
 });

@@ -46,10 +46,10 @@
                 <FlowMap
                   v-else
                   :items="routineMap"
-                  id-field="name"
+                  id-field="uuid"
                   label-field="name"
                   previous-field="previousTaskExecutionId"
-                  @item-selected="(task) => onTaskSelected(mapTaskToSelectedTask(task))"
+                 @item-selected="(task) => navigateToItem(`/activity/tasks/${task.uuid || task.id}`)"
                   style="width: 100%"
                 />
               </div>
@@ -114,7 +114,7 @@
                 <div class="flex">
                   <div>
                     <div class="q-mx-md q-my-sm">
-                      Progress: {{ selectedItem?.progress }}
+                      Progress: {{ selectedItem?.progress * 100 }}%
                     </div>
                     <div class="q-mx-md q-my-sm">
                       Started: {{ formatDate(selectedItem?.started) }}
@@ -199,19 +199,19 @@
                   >
                 </div>
                 <div
-                  class="q-mx-md q-my-sm"
+                  class="q-mx-md q-my-sm cursor-pointer text-warning"
                   @click="
                     navigateToItem(
-                      `/activity/traces/${selectedItem?.contract_id}`
+                      `/activity/traces/${selectedItem?.executionTraceId}`
                     )
                   "
                   @contextmenu.prevent="
                     openLinkInNewTab(
-                      `/activity/traces/${selectedItem?.contract_id}`
+                      `/activity/traces/${selectedItem?.executionTraceId}`
                     )
                   "
                 >
-                  <span class="text-warning cursor-pointer">Trace</span>
+                  Trace: {{ selectedItem?.executionTraceId }}
                 </div>
               </div>
             </template>
@@ -413,6 +413,7 @@ interface SelectedItem {
   serverId: string;
   previousRoutineExecution?: string;
   serviceName: string;
+  executionTraceId?: string;
   previousRoutineName: string;
   contract_id: string;
   layer_index: number;
@@ -521,12 +522,13 @@ onMounted(async () => {
     selectedItem.value = null;
   }
 
-  // Fetch the routine map for this routine
+  // Fetch the routine map for this routine using routine_execution_id endpoint
   if (selectedItem.value) {
     try {
       routineMapLoading.value = true;
+      const encodedId = encodeURIComponent(selectedItem.value.uuid);
       const tasks = await fetch(
-        `/api/activity/tasks/tasksInRoutines?routineId=${selectedItem.value.name}`
+        `/api/activity/routines/tasksInRoutines?routine_execution_id=${encodedId}`
       );
       if (!tasks.ok) throw new Error('Failed to fetch routine map');
       const tasksData = await tasks.json();

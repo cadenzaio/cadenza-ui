@@ -271,17 +271,17 @@
                 </span>
               </div>
 
-              <div v-if="selectedRow?.processingGraph" class="detail-item">
-                <strong>Processing Graph:</strong>
+              <div v-if="selectedRow?.service" class="detail-item">
+                <strong>Service:</strong>
                 <span
                   class="text-warning cursor-pointer link-text"
                   @click="
                     navigateToItem(
-                      `/activity/servers/${selectedRow.processingGraph}`
+                      `/activity/servers/${selectedRow.service}`
                     )
                   "
                 >
-                  {{ selectedRow.server }}
+                  {{ selectedRow.service }}
                 </span>
               </div>
             </div>

@@ -218,27 +218,26 @@ function onNodeClick(event: NodeMouseEvent) {
   }
 }
 
-// Watch for changes in items and process them
+// Watch for changes in items
 watch(
   () => props.items,
   (newItems) => {
     if (!newItems || newItems.length === 0) {
+      console.warn('Received empty items array. Skipping processing.');
       nodes.value = [];
       edges.value = [];
       return;
     }
-
-    processFlowItems(newItems).catch((err) => {
-      console.error('Error processing flow items', err);
-    });
+    processFlowItems(newItems);
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 );
-
 </script>
 
 <style scoped>
 .vue-flow-container {
+  position: relative;
+  min-width: 50dvw;
   max-width: 80dvw;
   height: 50dvh;
   box-shadow: 0 1px 6px 0 rgba(105, 105, 105, 0.5);

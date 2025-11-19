@@ -5,7 +5,7 @@ let client: pg.Client | null = null;
 
 // Get all TaskExecutions with pagination support
 async function getTaskExecution(
-  id?: string,
+  name?: string,
   page: number = 1,
   limit: number = 100
 ) {
@@ -14,6 +14,10 @@ async function getTaskExecution(
   }
 
   const offset = (page - 1) * limit;
+
+  const whereClause = name
+    ? "WHERE te.is_meta = false AND te.task_name = $1"
+    : 'WHERE te.is_meta = false';
 
   const query = `
     SELECT
@@ -45,12 +49,11 @@ async function getTaskExecution(
     LEFT JOIN context ctx2 ON te.result_context_id = ctx2.uuid
     LEFT JOIN task t ON te.task_name = t.name
     LEFT JOIN service s ON re.service_name = s.name
-    ${id ? 'WHERE te.task_name = $1 AND te.is_meta = false' : 'WHERE '}te.is_meta = false
+    ${whereClause}
     ORDER BY te.created DESC
-    LIMIT $${id ? '2' : '1'} OFFSET $${id ? '3' : '2'}
+    LIMIT $${name ? '2' : '1'} OFFSET $${name ? '3' : '2'}
     `;
-
-  const params = id ? [id, limit, offset] : [limit, offset];
+  const params = name ? [name, limit, offset] : [limit, offset];
   const result = await client.query(query, params);
 
   // Map the results to match the expected frontend format
@@ -64,7 +67,7 @@ async function getTaskExecution(
     isComplete: row.is_complete,
     errored: row.errored,
     failed: row.failed,
-    progress: row.progress,
+    progress: parseFloat((row.progress * 100).toFixed(2)) + '%',
     scheduled: row.scheduled,
     started: formatDate(row.started),
     ended: formatDate(row.ended),
@@ -112,11 +115,11 @@ export default defineEventHandler(async (event) => {
   if (method === 'GET') {
     try {
       const query = getQuery(event);
-      const id = query.id as string | undefined;
+      const name = query.name as string | undefined;
       const page = parseInt(query.page as string) || 1;
       const limit = parseInt(query.limit as string) || 100;
 
-      return await getTaskExecution(id, page, limit);
+      return await getTaskExecution(name, page, limit);
     } catch (error) {
       console.error('Error fetching TaskExecutions:', error);
       throw error;

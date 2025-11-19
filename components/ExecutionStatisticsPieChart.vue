@@ -34,7 +34,7 @@ export default {
   props: {
     type: String,
     // Accept both name/id variants to match how pages pass props
-    taskId: String,
+    taskName: String,
     taskName: String,
     routineId: String,
     routineName: String,
@@ -94,7 +94,7 @@ export default {
         const name = this.routineName ?? this.routineId;
         url = `/api/routineErrors?routineName=${encodeURIComponent(name ?? '')}`;
       } else if (this.type === 'task') {
-        const name = this.taskName ?? this.taskId;
+        const name = this.taskName ?? this.taskName;
         url = `/api/taskErrors?taskName=${encodeURIComponent(name ?? '')}`;
       } else {
         url = `/api/allErrors`;

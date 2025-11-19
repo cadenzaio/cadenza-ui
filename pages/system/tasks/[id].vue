@@ -26,17 +26,32 @@
               <div
                 class="q-mx-md q-my-sm"
                 @click="
-                  navigateToItem(`/services/${selectedItem?.processing_graph}`)
+                  navigateToItem(`/system/services/${selectedItem?.service}`)
                 "
                 @contextmenu.prevent="
                   openLinkInNewTab(
-                    `/services/${selectedItem?.processing_graph}`
+                    `/services/${selectedItem?.service}`
                   )
                 "
               >
+              Service:
                 <span class="text-primary cursor-pointer">{{
-                  selectedItem?.processing_graph
+                  selectedItem?.service
                 }}</span>
+              </div>
+              <div
+                class="q-mx-md q-my-sm"
+                @click="
+                  navigateToItem(`/system/routines/${selectedItem?.routineName}`)
+                "
+                @contextmenu.prevent="
+                  openLinkInNewTab(
+                    `/routines/${selectedItem?.routineName}`
+                  )
+                "
+              >
+              Routine:
+                <span class="text-primary cursor-pointer">{{ selectedItem?.routineName }}</span>
               </div>
               <div class="q-mx-md q-my-sm">
                 Created: {{ selectedItem?.created ? new Date(selectedItem.created).toLocaleString() : 'N/A' }}
@@ -126,11 +141,14 @@ interface Item {
   uuid?: string;
   executionId?: any;
   progress?: any;
-  processing_graph?: string;
+  serviceDbName?: string;
+  service?: string;
+  routineName?: string;
   created?: string;
   deleted?: boolean;
   is_unique?: boolean;
   concurrency?: number;
+  serviceName?: string;
 }
 
 interface ExecutionTime {
@@ -337,6 +355,30 @@ const navigateToItem = (route: string) => {
   router.push(route);
 };
 
+function normalizeItem(item: any): Item | null {
+  if (!item) return null;
+  const serviceDbName = item.serviceDbName ?? item.service_name ?? item.service ?? item.serviceName ?? null;
+  const normalized: any = {
+    taskId: item.taskId ?? item.task_id,
+    type: item.type,
+    name: item.name,
+    description: item.description ?? item.desc ?? null,
+    function_string: item.function_string ?? item.functionString ?? item.function ?? null,
+    uuid: item.uuid ?? item.name,
+    executionId: item.executionId ?? item.execution_id,
+    progress: item.progress ?? null,
+    serviceDbName,
+    service: item.service ?? item.service_name ?? serviceDbName,
+    created: item.created ?? item.created_at ?? null,
+    deleted: item.deleted ?? false,
+    is_unique: item.is_unique ?? item.isUnique ?? null,
+    concurrency: item.concurrency ?? null,
+    routineName: item.routine_name ?? item.routineName ?? (item.routines && (item.routines.routine_name ?? item.routines.routineName)) ?? null,
+  };
+  return normalized as Item;
+}
+
+
 onMounted(() => {
   const appStore = useAppStore();
   appStore.setCurrentSection('system');
@@ -349,7 +391,8 @@ onMounted(() => {
     : route.params.id;
   if (Array.isArray(Items.value)) {
     // DB now uses `name` as primary identifier
-    selectedItem.value = Items.value.find((item: Item) => item.name === itemName);
+    const found = Items.value.find((item: Item) => item.name === itemName);
+    selectedItem.value = normalizeItem(found);
   } else {
     selectedItem.value = null;
   }
@@ -519,7 +562,7 @@ watch(
   (newName) => {
     const itemName: string = Array.isArray(newName) ? newName[0] : newName;
     selectedItem.value = Array.isArray(Items.value)
-      ? Items.value.find((item: Item) => item.uuid === itemName)
+      ? normalizeItem(Items.value.find((item: Item) => item.name === itemName))
       : null;
     tasksCurrentPage.value = 1;
     routinesCurrentPage.value = 1;

@@ -6,10 +6,11 @@ let client: pg.Client | null = null;
 
 // Types for routine row and mapped object
 interface RoutineRow {
-  uuid: string;
+  name: string;
   description: string;
   service_id: string;
   routine_id: string;
+  uuid: string;
   is_running: boolean;
   is_complete: boolean;
   errored: boolean;
@@ -17,6 +18,7 @@ interface RoutineRow {
   previous_routine_execution: string;
   progress: number;
   created: string | Date;
+  started: string | Date;
   ended: string | Date;
   contract_id: string;
   context_id: string;
@@ -29,7 +31,7 @@ interface RoutineRow {
   previous_routine_id: string;
   routine_name: string;
   routine_description: string;
-  service_name: string; // Updated from server_name
+  service_name: string;
 }
 
 interface RoutineMapped {
@@ -43,11 +45,10 @@ interface RoutineMapped {
   routineId: string;
   status: string;
   previousRoutineExecution: string;
-  progress: number;
+  progress: string;
   started: string;
   ended: string;
   duration: number;
-  uuid: string;
   serviceName: string; // Updated from serverName
   previousRoutineName: string;
   contract_id: string;
@@ -58,13 +59,13 @@ interface RoutineMapped {
   referer: string | null;
 }
 
-// Get all routines or a single routine by uuid
+// Get all routines or a single routine by name
 async function getRoutines({
-  uuid,
+  name,
   page = 1,
   limit = 50,
 }: {
-  uuid?: string;
+  name?: string;
   page?: number;
   limit?: number;
 }): Promise<RoutineMapped[]> {
@@ -74,7 +75,8 @@ async function getRoutines({
 
   let query = `
   SELECT
-      re.uuid,
+      re.uuid AS uuid,
+      re.name,
       re.name AS routine_name,
       re.service_instance_id AS service_id,
       re.is_running,
@@ -94,15 +96,15 @@ async function getRoutines({
   LEFT JOIN service s ON re.service_name = s.name
   `;
 
-  // Build params and conditional WHERE clause only when uuid is provided
+  // Build params and conditional WHERE clause only when name is provided
   const params: any[] = [];
-  const whereClause = uuid ? `WHERE r.name = $1` : '';
-  if (uuid) {
-    params.push(uuid);
+  const whereClause = name ? `WHERE r.name = $1` : '';
+  if (name) {
+    params.push(name);
   }
 
   const orderQuery = `ORDER BY re.created DESC`;
-  const limitQuery = uuid ? '' : `LIMIT ${limit} OFFSET ${(page - 1) * limit}`;
+  const limitQuery = name ? '' : `LIMIT ${limit} OFFSET ${(page - 1) * limit}`;
 
   const fullQuery = [query, whereClause, orderQuery, limitQuery]
     .filter(Boolean)
@@ -112,9 +114,9 @@ async function getRoutines({
     const res = await client.query(fullQuery, params);
     return res.rows.map(
       (row: RoutineRow): RoutineMapped => ({
-        id: row.uuid,
+        id: row.name,
         name: row.routine_name,
-        type: 'routine', // Removed dependency on `routine_type`
+        type: 'routine',
         label: row.routine_name,
         description: row.routine_description,
         routineDescription: row.routine_description,
@@ -128,7 +130,7 @@ async function getRoutines({
           ? 'close'
           : 'schedule',
         previousRoutineExecution: row.previous_routine_execution,
-        progress: row.progress,
+        progress: parseFloat((row.progress * 100).toFixed(2)) + '%',
         started: row.created
           ? formatDate(
               typeof row.created === 'string'
@@ -155,7 +157,6 @@ async function getRoutines({
               : row.ended.getTime()
             : 0 // Use 0 as fallback for ended
         ),
-        uuid: row.uuid,
         serviceName: row.service_name,
         previousRoutineName: row.routine_name,
         contract_id: row.contract_id,
@@ -188,8 +189,8 @@ export default defineEventHandler(async (event) => {
     const contractId = urlParams.get('contractId') || undefined;
 
     try {
-      const uuid = urlParams.get('uuid') || undefined;
-      const data = await getRoutines({ uuid, page, limit });
+      const name = urlParams.get('name') || undefined;
+      const data = await getRoutines({ name, page, limit });
 
       // If contractId is provided, filter and return mapped data for contract page
       if (contractId) {
@@ -199,7 +200,7 @@ export default defineEventHandler(async (event) => {
 
         // Map for table display
         const routines = filteredData.map((r) => ({
-          uuid: r.uuid,
+          name: r.name,
           label: r.label,
           description: r.routineDescription,
           status: r.isRunning
@@ -237,8 +238,8 @@ export default defineEventHandler(async (event) => {
         };
       }
 
-      // If uuid is provided, return the single routine (or null)
-      if (uuid) {
+      // If name is provided, return the single routine (or null)
+      if (name) {
         return data.length > 0 ? data[0] : null;
       }
 

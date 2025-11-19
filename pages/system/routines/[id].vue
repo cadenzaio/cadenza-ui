@@ -22,12 +22,24 @@
               <div class="q-mx-md q-my-sm">
                 Description: {{ selectedItem?.description }}
               </div>
-              <div class="q-mx-md q-my-sm">
-                Function: {{ selectedItem?.function_string }}
+                            <div
+                class="q-mx-md q-my-sm"
+                @click="
+                  navigateToItem(`/system/services/${selectedItem?.service}`)
+                "
+                @contextmenu.prevent="
+                  openLinkInNewTab(
+                    `/services/${selectedItem?.service}`
+                  )
+                "
+              >
+              Service:
+                <span class="text-primary cursor-pointer">{{
+                  selectedItem?.service
+                }}</span>
               </div>
               <div class="q-separator" style="height: 2px"></div>
               <div class="q-mx-md q-my-sm">Name: {{ selectedItem?.name }}</div>
-              <div class="q-mx-md q-my-sm">Type: {{ selectedItem?.type }}</div>
               <div
                 class="q-mx-md q-my-sm"
                 @click="
@@ -40,7 +52,7 @@
                 "
               >
                 <span class="text-primary cursor-pointer">
-                  {{ selectedItem?.service_instance }}
+                  {{ selectedItem?.serviceName }}
                 </span>
               </div>
               <div class="q-mx-md q-my-sm">
@@ -78,7 +90,7 @@
           <template #title> Active Executions </template>
         </Table>
       </div>
-      <!-- <HeatMap
+      <HeatMap
         v-if="heatmapData"
         :chartSeries="heatmapData.chartSeries"
         :yearOptions="heatmapData.yearOptions"
@@ -90,7 +102,7 @@
             if (heatmapData) heatmapData.editableRanges = val;
           }
         "
-      /> -->
+      />
     </NuxtLayout>
   </NuxtLayout>
 </template>
@@ -115,6 +127,7 @@ interface Item {
   service_instance: string;
   created: string;
   deleted: boolean;
+  service: string;
 }
 
 interface ExecutionTime {
@@ -169,10 +182,14 @@ if (executionError.value) {
             (d: any) =>
               Array.isArray(d) &&
               d.length === 2 &&
-              typeof d[0] === 'number' &&
-              typeof d[1] === 'number'
+              typeof d[1] === 'number' &&
+              (typeof d[0] === 'number' || typeof d[0] === 'string') &&
+              !(typeof d[0] === 'string' && Number.isNaN(Date.parse(d[0])))
           )
-          .map((d: any) => [d[0], d[1]])
+          .map((d: any) => {
+            const ts = typeof d[0] === 'number' ? d[0] : Date.parse(d[0]);
+            return [ts, d[1]];
+          })
       : [],
   }));
 }
@@ -198,6 +215,7 @@ interface Routine {
   outputContext: any;
   isRunning: boolean;
   referer: string | null;
+  routineId: string;
 }
 
 const selectedRoutine = ref<Routine[] | undefined>(undefined);
@@ -247,13 +265,11 @@ const pageSize = 50;
 const router = useRouter();
 
 function inspectRoutine(routine: Routine) {
-  // Left click: navigate, right click: open in new tab
-  // (Assume this is called from a row or button, so add @contextmenu in template where used)
-  navigateToItem(`/activity/routines/${routine.uuid}`);
+  navigateToItem(`/activity/routines/${routine.routineId}`);
 }
 
 function inspectInNewTab(routine: Routine) {
-  openLinkInNewTab(`/activity/routines/${routine.uuid}`);
+  openLinkInNewTab(`/activity/routines/${routine.routineId}`);
 }
 
 const navigateToItem = (route: string) => {
@@ -263,54 +279,52 @@ const navigateToItem = (route: string) => {
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
   if (task.name) {
-    // Left click: navigate, right click: open in new tab
-    // (Assume this is called from a row or button, so add @contextmenu in template where used)
     navigateToItem(`/system/tasks/${task.name}`);
   }
 }
 
-// async function fetchHeatmapData(routineName: string) {
-//   try {
-//     const response = await fetch(
-//       `/api/services/routines/heatmapData?routineName=${routineName}`
-//     );
-//     const rawData = await response.json();
-//     const dates = rawData.map((r: any) => new Date(r.date));
-//     const years = Array.from(
-//       new Set<number>(dates.map((d: Date) => d.getFullYear()))
-//     ).sort((a: number, b: number) => b - a);
-//     const monthNames = [
-//       'January',
-//       'February',
-//       'March',
-//       'April',
-//       'May',
-//       'June',
-//       'July',
-//       'August',
-//       'September',
-//       'October',
-//       'November',
-//       'December',
-//     ];
-//     const editableRanges = [
-//       { from: 1, to: 10 },
-//       { from: 11, to: 20 },
-//       { from: 21, to: 30 },
-//       { from: 31, to: 40 },
-//     ];
-//     heatmapData.value = {
-//       chartSeries: [],
-//       yearOptions: years,
-//       monthNames,
-//       editableRanges,
-//       rawData,
-//     };
-//   } catch (error) {
-//     console.error('Error fetching heatmap data:', error);
-//     heatmapData.value = null;
-//   }
-// }
+async function fetchHeatmapData(routineName: string) {
+  try {
+    const response = await fetch(
+      `/api/services/routines/heatmapData?routineName=${routineName}`
+    );
+    const rawData = await response.json();
+    const dates = rawData.map((r: any) => new Date(r.date));
+    const years = Array.from(
+      new Set<number>(dates.map((d: Date) => d.getFullYear()))
+    ).sort((a: number, b: number) => b - a);
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    const editableRanges = [
+      { from: 1, to: 10 },
+      { from: 11, to: 20 },
+      { from: 21, to: 30 },
+      { from: 31, to: 40 },
+    ];
+    heatmapData.value = {
+      chartSeries: [],
+      yearOptions: years,
+      monthNames,
+      editableRanges,
+      rawData,
+    };
+  } catch (error) {
+    console.error('Error fetching heatmap data:', error);
+    heatmapData.value = null;
+  }
+}
 
 onMounted(async () => {
   const appStore = useAppStore();
@@ -330,14 +344,15 @@ onMounted(async () => {
   // Fetch routine map data
       if (selectedItem.value) {
     try {
-      const tasks = await $fetch(
+      const tasks = await $fetch<any>(
         `/api/services/tasks/staticTasksInRoutine?routineName=${selectedItem.value.name}`
       );
-      routineMap.value =
-        (tasks as RoutineMapTask[]).map((task) => ({
-          ...task,
-              name: task.name, // Add 'name' property required by FlowItem
-        })) || [];
+      routineMap.value = Array.isArray(tasks)
+        ? tasks.map((task: any) => ({
+            ...task,
+            name: task.name, // Add 'name' property required by FlowItem
+          }))
+        : [];
     } catch (error) {
       console.error('Error fetching routine map:', error);
       routineMap.value = [];
@@ -363,17 +378,22 @@ async function fetchActiveRoutines(itemName: string, isLoadMore = false) {
       currentPage.value++;
     }
 
-    const data = await $fetch<Routine[]>(
-      `/api/activity/routines/routineActivity?id=${itemName}&page=${currentPage.value}&limit=${pageSize}`
+    const data = await $fetch<any>(
+      `/api/activity/routines/routineActivity?name=${itemName}&page=${currentPage.value}&limit=${pageSize}`
     );
 
+    // The API may return either an array of routines or a single routine object
+    // when queried with `name`. Normalize to an array so the table code can
+    // always operate on `routines.value` as an array.
+    const normalized: Routine[] = Array.isArray(data) ? data : data ? [data] : [];
+
     if (isLoadMore) {
-      routines.value = [...routines.value, ...(data || [])];
+      routines.value = [...routines.value, ...normalized];
     } else {
-      routines.value = data || [];
+      routines.value = normalized;
     }
 
-    hasMoreData.value = (data || []).length === pageSize;
+    hasMoreData.value = normalized.length === pageSize;
   } catch (error) {
     console.error('Error fetching active routines:', error);
     hasMoreData.value = false;

@@ -20,6 +20,7 @@ async function getRoutine(routineName: string) {
     service_instance: routine.service_instance,
     created: routine.created,
     deleted: routine.deleted,
+    service: routine.service_name,
   }));
 }
 
