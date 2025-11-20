@@ -204,7 +204,7 @@ async function fetchServerDetails() {
 async function fetchActiveExecutions() {
   try {
     error.value = null;
-    const response = await fetch(`/api/activity/servers/activeServers`);
+    const response = await fetch(`/api/activity/servers/activeServers?serviceInstance=${encodeURIComponent(service)}`);
     if (!response.ok) throw new Error('Failed to fetch active executions');
     const data = await response.json();
     activeProcesses.value = data.servers.map((server: { uuid: any; service: any; address: any; port: any; processPid: any; displayStatus: any; }) => ({

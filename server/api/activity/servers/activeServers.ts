@@ -5,7 +5,7 @@ import { getQuery } from 'h3';
 let client: pg.Client | null = null;
 
 async function getAllServersWithStats(
-  serviceInstanceUuid?: string,
+  serviceInstance?: string,
   page: number = 1,
   limit: number = 100
 ) {
@@ -28,9 +28,17 @@ async function getAllServersWithStats(
   `;
   const values: (string | number)[] = [];
 
-  if (serviceInstanceUuid) {
-    query += ` AND si.uuid = $${values.length + 1}`;
-    values.push(serviceInstanceUuid);
+  if (serviceInstance) {
+    // Accept either a UUID (filter by si.uuid) or a service name (filter by si.service_name)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      serviceInstance
+    );
+    if (isUuid) {
+      query += ` AND si.uuid = $${values.length + 1}`;
+    } else {
+      query += ` AND si.service_name = $${values.length + 1}`;
+    }
+    values.push(serviceInstance);
   }
 
   query += ` ORDER by si.modified DESC LIMIT $${values.length + 1} OFFSET $${

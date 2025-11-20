@@ -133,36 +133,7 @@
             </div>
           </div>
         </div>
-        <div class="row q-mx-md">
-          <Table
-            class="custom-table"
-            :columns="columns"
-            :rows="routines"
-            row-key="uuid"
-            @inspect-row="inspectRoutine"
-            @inspect-row-in-new-tab="inspectInNewTab"
-            @loadMoreData="loadMoreRoutines"
-            :enableInfiniteScroll="true"
-            :hasMoreData="hasMoreData"
-            :loadingMoreData="loadingMoreData"
-          >
-            <template #title>
-              Active Executions ({{ routines.length }} found)
-            </template>
-          </Table>
-          <div v-if="isLoading" class="q-pa-md text-center">
-            Loading active executions...
-          </div>
-          <div v-else-if="error" class="q-pa-md text-center text-negative">
-            Error: {{ error }}
-          </div>
-          <div
-            v-else-if="routines.length === 0"
-            class="q-pa-md text-center text-grey-6"
-          >
-            No active executions found for this trace.
-          </div>
-        </div>
+       
       </div>
       <q-dialog v-model="showGenerateDialog">
         <q-card>
@@ -195,7 +166,6 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useFetch, useRoute } from '#app';
 import { useRouter } from '#vue-router';
 import NestedFlowMap from '~/components/NestedFlowMap.vue';
-import { Style } from '#components';
 
 function formatDate(date: string) {
   const datetime = new Date(date);
@@ -205,7 +175,6 @@ function formatDate(date: string) {
 const showGenerateDialog = ref(false);
 const traceContext = ref<any>(null);
 const routines = ref<any[]>([]);
-const isLoading = ref(false);
 const error = ref<string | null>(null);
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
@@ -218,57 +187,6 @@ const routineMap = ref<any>([]);
 const rangedTimelineItems = ref<any[]>([]);
 const nodes = ref<any[]>([]);
 const edges = ref<any[]>([]);
-const columns = [
-  {
-    name: 'label',
-    label: 'Name',
-    field: 'label',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'description',
-    label: 'Description',
-    field: 'description',
-    required: true,
-    sortable: false,
-  },
-  {
-    name: 'status',
-    label: 'Status',
-    field: 'status',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'progress',
-    label: 'Progress',
-    field: 'progress',
-    required: true,
-    sortable: false,
-  },
-  {
-    name: 'started',
-    label: 'Started',
-    field: 'started',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'ended',
-    label: 'Ended',
-    field: 'ended',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'duration',
-    label: 'Duration (sec)',
-    field: 'duration',
-    required: true,
-    sortable: true,
-  },
-];
 const timelineItems = computed(() => {
   const services = routineMap.value?.servers || [];
   const routines = routineMap.value?.routines || [];
@@ -316,53 +234,7 @@ const timelineItems = computed(() => {
     return aTime - bTime;
   });
 });
-function inspectRoutine(routine: any) {
-  router.push(`/activity/routines/${routine.uuid}`);
-}
-function inspectInNewTab(routine: any) {
-  const url = `/activity/routines/${routine.uuid}`;
-  window.open(url, '_blank');
-}
-const isRoutinesLoading = ref(false);
-async function loadRoutines(isLoadMore = false) {
-  if (isRoutinesLoading.value) return;
-  isRoutinesLoading.value = true;
-  const traceId = route.params.id;
-  try {
-    if (isLoadMore) {
-      loadingMoreData.value = true;
-      currentPage.value++;
-    } else {
-      currentPage.value = 1;
-    }
-    const routinesResponse = await fetch(
-      `/api/activity/routines/activeRoutines?traceId=${traceId}&page=${currentPage.value}&limit=${pageSize}`
-    );
-    if (!routinesResponse.ok) {
-      const errMsg = `[loadRoutines] Routines response not ok: ${routinesResponse.status} ${routinesResponse.statusText}`;
-      error.value = errMsg;
-      throw new Error(errMsg);
-    }
-    const routinesData = await routinesResponse.json();
-    if (isLoadMore) {
-      routines.value = [...routines.value, ...(routinesData.routines || [])];
-    } else {
-      routines.value = routinesData.routines || [];
-    }
-    routineMap.value = routinesData.routineMap || [];
-    hasMoreData.value = (routinesData.routines || []).length === pageSize;
-  } catch (err) {
-    hasMoreData.value = false;
-    if (!error.value)
-      error.value = err instanceof Error ? err.message : String(err);
-  } finally {
-    if (isLoadMore) loadingMoreData.value = false;
-    isRoutinesLoading.value = false;
-  }
-}
-async function loadMoreRoutines() {
-  if (!isRoutinesLoading.value && hasMoreData.value) await loadRoutines(true);
-}
+
 function confirmGenerate() {
   showGenerateDialog.value = false;
 }

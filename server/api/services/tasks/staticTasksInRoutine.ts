@@ -62,6 +62,8 @@ SELECT
     ttrm.routine_name,
     ttrm.task_name AS name,
     t.name,
+    t.service_name,
+    t.version,
     t.layer_index,
     t.description,
     t.is_unique,
@@ -132,13 +134,15 @@ WHERE routine_name = $1 AND t.is_meta = false;
     });
   }
 
-  // Add task nodes first
+  // Add task nodes first (include service_name and version when available)
   tasks.forEach((task: any) => {
     nodes.push({
       uuid: task.name,
       type: 'task',
       name: task.name,
       label: task.name,
+      service_name: task.service_name ?? null,
+      version: task.version ?? null,
       layer_index: task.layer_index ?? null,
       description: task.description,
       is_unique: task.is_unique,
@@ -184,6 +188,8 @@ WHERE routine_name = $1 AND t.is_meta = false;
         is_unique: false,
         concurrency: undefined,
         previousTaskExecutionName: sig,
+        service_name: c.service_name ?? null,
+        version: null,
       });
     });
   });

@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { version } from 'vue';
 import { initializeClient } from '~/server/api/utils';
 
 let client: pg.Client | null = null;
@@ -21,6 +22,7 @@ async function getRoutines(page: number = 1, limit: number = 100) {
     uuid: row.uuid,
     description: row.description,
     service: row.service_name,
+    version: row.version,
   }));
 }
 

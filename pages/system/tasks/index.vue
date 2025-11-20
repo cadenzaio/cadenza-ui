@@ -50,6 +50,13 @@ const columns = [
     sortable: true,
   },
   {
+    name: 'version',
+    label: 'Version',
+    field: 'version',
+    required: true,
+    sortable: true,
+  },
+  {
     name: 'service',
     label: 'Service',
     field: 'service',

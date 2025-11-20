@@ -50,6 +50,13 @@ const columns = [
     sortable: true,
   },
   {
+    name: 'version',
+    label: 'Version',
+    field: 'version',
+    required: true,
+    sortable: true,
+  },
+  {
     name: 'service',
     label: 'Service',
     field: 'service',
@@ -60,13 +67,22 @@ const columns = [
 
 
 function inspectRoutines(routines: routines) {
-  navigateToItem(`/system/routines/${routines.label}`);
+  const path = `/system/routines/${encodeURIComponent(String(routines.label))}`;
+  const qs: string[] = [];
+  // If the routine row contains service/version (from server) pass them through
+  if ((routines as any).service) qs.push(`service=${encodeURIComponent(String((routines as any).service))}`);
+  if ((routines as any).version) qs.push(`version=${encodeURIComponent(String((routines as any).version))}`);
+  navigateToItem(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(routine: routines) {
-  openLinkInNewTab(`/system/routines/${routine.label}`);
+  const path = `/system/routines/${encodeURIComponent(String(routine.label))}`;
+  const qs: string[] = [];
+  if ((routine as any).service) qs.push(`service=${encodeURIComponent(String((routine as any).service))}`);
+  if ((routine as any).version) qs.push(`version=${encodeURIComponent(String((routine as any).version))}`);
+  openLinkInNewTab(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
 }
 
 const navigateToItem = (route: string) => {

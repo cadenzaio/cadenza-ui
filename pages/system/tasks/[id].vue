@@ -2,7 +2,7 @@
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
       <template #title>
-        {{ selectedItem?.name }}
+        {{ selectedItem?.name }} {{ selectedItem?.version ? ` (v${selectedItem.version})` : '' }}
       </template>
       <div class="row q-mx-md">
         <FlowMap
@@ -136,6 +136,7 @@ interface Item {
   taskId?: string;
   type?: string;
   name: string;
+  version?: string | number;
   description?: string;
   function_string?: string;
   uuid?: string;
@@ -286,9 +287,6 @@ async function updateTaskMap() {
   }
 
   try {
-    // Fetch the linear chain for the selected task (includes duplicates
-    // for tasks with multiple predecessors). Use the new endpoint which
-    // returns `{ chain: [...] }`.
     const params = new URLSearchParams();
     params.set('task_name', String(selectedItem.value.name));
     if ((selectedItem.value as any).version) params.set('version', String((selectedItem.value as any).version));
@@ -299,9 +297,14 @@ async function updateTaskMap() {
       ? response
       : (response && Array.isArray((response as any).chain) ? (response as any).chain : []);
 
-    // Set isSelected on the correct node (by uuid or taskId)
+    // Ensure nodes include service/version and set isSelected on the correct node
+    const serviceFromSelected = selectedItem.value?.service ?? selectedItem.value?.serviceDbName ?? null;
+    const versionFromSelected = (selectedItem.value as any)?.version ?? null;
     taskMap.value = itemsArray.map((item: any) => ({
       ...item,
+      // normalize service/version onto the nodes so FlowMap emits them
+      service: item.service ?? item.service_name ?? item.serviceName ?? serviceFromSelected,
+      version: item.version ?? item.task_version ?? (item as any).taskVersion ?? versionFromSelected,
       isSelected:
         selectedItem.value &&
         (item.uuid === selectedItem.value.name || item.name === selectedItem.value.name),
@@ -317,8 +320,12 @@ watch([selectedItem, routines], updateTaskMap, { immediate: true });
 
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
-  if (task.name) {
-    navigateToItem(`/system/tasks/${task.name}`);
+  if (task && task.name) {
+    const path = `/system/tasks/${encodeURIComponent(String(task.name))}`;
+    const qs: string[] = [];
+    if ((task as any).version) qs.push(`version=${encodeURIComponent(String((task as any).version))}`);
+    if ((task as any).service) qs.push(`service=${encodeURIComponent(String((task as any).service))}`);
+    navigateToItem(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
   }
 }
 
@@ -354,7 +361,6 @@ function inspectRoutineInNewTab(routine: Routine) {
 const navigateToItem = (route: string) => {
   router.push(route);
 };
-
 function normalizeItem(item: any): Item | null {
   if (!item) return null;
   const serviceDbName = item.serviceDbName ?? item.service_name ?? item.service ?? item.serviceName ?? null;
@@ -362,6 +368,7 @@ function normalizeItem(item: any): Item | null {
     taskId: item.taskId ?? item.task_id,
     type: item.type,
     name: item.name,
+    version: item.version ?? item.task_version ?? (item as any).taskVersion ?? null,
     description: item.description ?? item.desc ?? null,
     function_string: item.function_string ?? item.functionString ?? item.function ?? null,
     uuid: item.uuid ?? item.name,
@@ -379,6 +386,7 @@ function normalizeItem(item: any): Item | null {
 }
 
 
+
 onMounted(() => {
   const appStore = useAppStore();
   appStore.setCurrentSection('system');
@@ -393,6 +401,13 @@ onMounted(() => {
     // DB now uses `name` as primary identifier
     const found = Items.value.find((item: Item) => item.name === itemName);
     selectedItem.value = normalizeItem(found);
+    // Apply query overrides (version/service) when present in the URL
+    const qVersion = route.query.version ?? route.query.v ?? null;
+    const qService = route.query.service ?? route.query.s ?? null;
+    if (selectedItem.value) {
+      if (qVersion) (selectedItem.value as any).version = String(qVersion);
+      if (qService) selectedItem.value.service = String(qService);
+    }
   } else {
     selectedItem.value = null;
   }
@@ -564,6 +579,13 @@ watch(
     selectedItem.value = Array.isArray(Items.value)
       ? normalizeItem(Items.value.find((item: Item) => item.name === itemName))
       : null;
+    // Respect query params for version/service when route changes
+    const qVersion = route.query.version ?? route.query.v ?? null;
+    const qService = route.query.service ?? route.query.s ?? null;
+    if (selectedItem.value) {
+      if (qVersion) (selectedItem.value as any).version = String(qVersion);
+      if (qService) selectedItem.value.service = String(qService);
+    }
     tasksCurrentPage.value = 1;
     routinesCurrentPage.value = 1;
     fetchActiveTasks(itemName, false);

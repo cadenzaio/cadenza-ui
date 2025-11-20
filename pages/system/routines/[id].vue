@@ -2,7 +2,7 @@
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
       <template #title>
-        {{ selectedItem?.name }}
+        {{ selectedItem?.name }} {{ selectedItem?.version ? ` (v${selectedItem.version})` : '' }}
       </template>
       <div class="row q-mx-md">
         <FlowMap
@@ -128,6 +128,8 @@ interface Item {
   created: string;
   deleted: boolean;
   service: string;
+  serviceName?: string;
+  version?: string | number;
 }
 
 interface ExecutionTime {
@@ -278,8 +280,14 @@ const navigateToItem = (route: string) => {
 
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
-  if (task.name) {
-    navigateToItem(`/system/tasks/${task.name}`);
+  if (task && task.name) {
+    const path = `/system/tasks/${encodeURIComponent(String(task.name))}`;
+    const qs: string[] = [];
+    const version = (task as any).version ?? (task as any).task_version ?? null;
+    const service = (task as any).service ?? (task as any).service_name ?? (task as any).serviceName ?? null;
+    if (version) qs.push(`version=${encodeURIComponent(String(version))}`);
+    if (service) qs.push(`service=${encodeURIComponent(String(service))}`);
+    navigateToItem(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
   }
 }
 
@@ -339,10 +347,18 @@ onMounted(async () => {
       (Items.value.find((item) => item.name === itemName) as Item) ?? null;
   }
 
+  // Apply query overrides (version/service) when present in the URL
+  const qVersion = route.query.version ?? route.query.v ?? null;
+  const qService = route.query.service ?? route.query.s ?? null;
+  if (selectedItem.value) {
+    if (qVersion) (selectedItem.value as any).version = String(qVersion);
+    if (qService) selectedItem.value.service = String(qService);
+  }
+
   fetchActiveRoutines(itemName, false);
 
   // Fetch routine map data
-      if (selectedItem.value) {
+  if (selectedItem.value) {
     try {
       const tasks = await $fetch<any>(
         `/api/services/tasks/staticTasksInRoutine?routineName=${selectedItem.value.name}`
@@ -366,8 +382,46 @@ onMounted(async () => {
 
 watch(
   () => route.params.id,
-  (newId) => {
-    fetchHeatmapData(Array.isArray(newId) ? newId[0] : newId);
+  async (newId) => {
+    const itemName: string = Array.isArray(newId) ? newId[0] : newId;
+
+    if (Items.value && Array.isArray(Items.value)) {
+      selectedItem.value =
+        (Items.value.find((item) => item.name === itemName) as Item) ?? null;
+      // Apply query overrides (version/service) when present in the URL
+      const qVersion = route.query.version ?? route.query.v ?? null;
+      const qService = route.query.service ?? route.query.s ?? null;
+      if (selectedItem.value) {
+        if (qVersion) (selectedItem.value as any).version = String(qVersion);
+        if (qService) selectedItem.value.service = String(qService);
+      }
+    } else {
+      selectedItem.value = null;
+    }
+
+    fetchActiveRoutines(itemName, false);
+
+    // Re-fetch routine map for the newly-selected routine
+    if (selectedItem.value) {
+      try {
+        const tasks = await $fetch<any>(
+          `/api/services/tasks/staticTasksInRoutine?routineName=${selectedItem.value.name}`
+        );
+        routineMap.value = Array.isArray(tasks)
+          ? tasks.map((task: any) => ({
+              ...task,
+              name: task.name,
+            }))
+          : [];
+      } catch (error) {
+        console.error('Error fetching routine map:', error);
+        routineMap.value = [];
+      }
+    } else {
+      routineMap.value = [];
+    }
+
+    fetchHeatmapData(itemName);
   }
 );
 
