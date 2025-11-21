@@ -26,7 +26,15 @@ async function fetchSystemMap() {
   try {
     const res = await fetch('/api/system/system');
     const data = await res.json();
-    // Flatten servers, routines, and tasks into nodes and edges for NestedFlowMap
+
+    // If the API already returns nodes/edges, use them directly
+    if (data && Array.isArray(data.nodes) && Array.isArray(data.edges)) {
+      nodes.value = data.nodes;
+      edges.value = data.edges;
+      return;
+    }
+
+    // Fallback: Flatten servers, routines, and tasks into nodes and edges for NestedFlowMap
     const nodeList: any[] = [];
     const edgeList: any[] = [];
     if (data.servers) {

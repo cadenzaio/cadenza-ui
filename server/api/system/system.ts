@@ -1,181 +1,286 @@
-// Fetch all server-to-server edges
-async function getServerEdges() {
-  const query = `
-    SELECT server_id, server_client_id
-    FROM server_to_server_communication_map
-  `;
-  const res = await client!.query(query);
-  return res.rows.map((row) => ({
-    source: row.server_id,
-    target: row.server_client_id,
-  }));
-}
 import pg from 'pg';
-import { initializeClient, formatDateLocale } from '~/server/api/utils';
+import { initializeClient } from '~/server/api/utils';
 
 let client: pg.Client | null = null;
 
-// Fetch all servers (services), not just active
-async function getAllServers() {
+async function getNonMetaServices() {
   const query = `
-		SELECT
-			s.uuid,
-			s.address,
-			s.port,
-			s.process_pid,
-			s.is_primary,
-			s.is_active,
-			s.is_non_responsive,
-			s.is_blocked,
-			s.processing_graph,
-			s.modified
-		FROM server s
-		ORDER BY s.modified DESC
-	`;
-  const result = await client!.query(query);
-  return result.rows.map((row) => ({
-    uuid: row.uuid,
-    graph: row.processing_graph,
-    address: row.address,
-    port: row.port,
-    processPid: row.process_pid,
-    status: row.is_active ? 'check' : 'schedule',
-    isPrimary: row.is_primary,
-    modified: formatDateLocale(row.modified),
-    displayStatus: row.is_active ? 'Active' : 'Inactive',
-  }));
+    SELECT *
+    FROM service
+    WHERE is_meta = false
+    ORDER BY modified DESC
+  `;
+
+  const res = await client!.query(query);
+  return res.rows;
 }
 
-// Fetch all routines for a given server
-async function getRoutinesForServer(serverId: string) {
+async function getRoutinesForService(serviceName: string) {
   const query = `
-		SELECT
-			re.uuid,
-			re.description,
-			re.server_id,
-			re.routine_id,
-			re.is_running,
-			re.is_complete,
-			re.errored,
-			re.failed,
-			re.previous_routine_execution,
-			re.progress,
-			re.created,
-			re.ended,
-			re.contract_id,
-			re.context_id,
-			re.is_running,
-			ctx.uuid AS context_id,
-			ctx2.uuid AS result_context_id,
-			ctx.context AS input_context,
-			ctx2.context AS output_context,
-			s.processing_graph,
-			s.address,
-			s.port,
-			pre.routine_id AS previous_routine_id,
-			r.name AS routine_name,
-			r.description AS routine_description
-		FROM routine_execution AS re
-		LEFT JOIN server s on re.server_id = s.uuid
-		LEFT JOIN routine r ON re.routine_id = r.uuid
-		LEFT JOIN routine_execution pre on re.previous_routine_execution = pre.uuid
-		LEFT JOIN context ctx ON re.context_id = ctx.uuid
-		LEFT JOIN context ctx2 ON re.result_context_id = ctx2.uuid
-		WHERE re.server_id = $1
-		ORDER BY re.created DESC
-	`;
-  const res = await client!.query(query, [serverId]);
-  return res.rows.map((row) => ({
-    uuid: row.uuid,
-    label: row.description,
-    description: row.routine_description,
-    status: row.is_complete
-      ? 'check'
-      : row.is_running
-      ? 'play_arrow'
-      : row.errored
-      ? 'close'
-      : 'schedule',
-    progress: row.progress,
-    started: row.created,
-    ended: row.ended,
-    contract_id: row.contract_id,
-    inputContext: row.input_context,
-    outputContext: row.output_context,
-    routineId: row.routine_id,
-    routineName: row.routine_name,
-    previousRoutineExecution: row.previous_routine_execution,
-  }));
+    SELECT name, description, service_name, is_meta, version, created, deleted
+    FROM routine
+    WHERE service_name = $1
+      AND is_meta = false
+    ORDER BY name ASC
+  `;
+
+  const res = await client!.query(query, [serviceName]);
+  return res.rows;
 }
 
-// Fetch all tasks for a given routine
-async function getTasksForRoutine(routineExecutionId: string) {
+async function getTasksForRoutine(routineName: string) {
   const query = `
-		SELECT te.*, t.name as task_name, tem.previous_task_execution_id
-		FROM task_execution te
-		LEFT JOIN task t ON te.task_id = t.uuid
-		LEFT JOIN task_execution_map tem ON tem.task_execution_id = te.uuid
-		WHERE te.routine_execution_id = $1
-	`;
-  const res = await client!.query(query, [routineExecutionId]);
-  return res.rows.map((t) => ({
-    uuid: t.uuid,
-    label: t.task_name || t.label || t.uuid,
-    name: t.task_name || t.label || t.uuid,
-    started: t.started,
-    ended: t.ended,
-    description: t.description,
-    parentNode: t.routine_execution_id,
-    previousTaskExecutionId: t.previous_task_execution_id,
-    isComplete: t.is_complete,
-    isRunning: t.is_running,
-    errored: t.errored,
-    failed: t.failed,
-    progress: t.progress,
-    created: t.created,
-    scheduled: t.scheduled,
-    layer_index: t.layer_index,
-    inputContext: t.input_context,
-    outputContext: t.output_context,
-  }));
+    SELECT t.name, t.description, t.service_name, t.layer_index, t.version, t.created, t.deleted
+    FROM task_to_routine_map ttrm
+    LEFT JOIN task t ON ttrm.task_name = t.name
+    WHERE ttrm.routine_name = $1
+      AND t.is_meta = false
+    ORDER BY t.layer_index ASC, t.name ASC
+  `;
+
+  const res = await client!.query(query, [routineName]);
+  return res.rows;
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
+  if (!client) client = await initializeClient();
+
   const { method } = event.node.req;
-  if (method === 'GET') {
-    try {
-      // 1. Get all servers (services)
-      const servers = await getAllServers();
+  if (method !== 'GET') return;
 
-      // 2. For each server, get routines
-      const serversWithRoutines = await Promise.all(
-        servers.map(async (server) => {
-          const routines = await getRoutinesForServer(server.uuid);
+  try {
+    const services = await getNonMetaServices();
 
-          // 3. For each routine, get tasks
-          const routinesWithTasks = await Promise.all(
-            routines.map(async (routine) => {
-              const tasks = await getTasksForRoutine(routine.uuid);
-              return { ...routine, tasks };
-            })
-          );
+    const servicesWithRoutines = await Promise.all(
+      services.map(async (svc: any) => {
+        const routines = await getRoutinesForService(svc.name);
+        return { ...svc, routines };
+      })
+    );
 
-          return { ...server, routines: routinesWithTasks };
-        })
-      );
+    const nodes: any[] = [];
+    const edges: any[] = [];
 
-      // 4. Get server-to-server edges
-      const serverEdges = await getServerEdges();
+    const serviceNameToId: Record<string, string> = {};
 
-      return { servers: serversWithRoutines, serverEdges };
-      // Test this endpoint in your browser:
-      // http://localhost:3000/api/system/system
-    } catch (error) {
-      console.error('Error building system map:', error);
-      throw error;
+    function serviceId(svc: any) {
+      return svc.uuid || svc.name;
     }
+
+    function routineId(routine: any, svc: any) {
+      return routine.uuid || `${svc.name}:${routine.name}`;
+    }
+
+    for (const svc of servicesWithRoutines) {
+      const sId = serviceId(svc);
+      serviceNameToId[svc.name] = sId;
+
+      nodes.push({ id: sId, type: 'custom', nodeType: 'service', data: { label: svc.display_name || svc.name, isParent: true } });
+
+      if (!Array.isArray(svc.routines)) continue;
+
+      for (const rt of svc.routines) {
+        const rId = routineId(rt, svc);
+        nodes.push({ id: rId, type: 'custom', nodeType: 'routine', parentNode: sId, data: { label: rt.name || rt.description || rId, isParent: true } });
+        edges.push({ id: `e-${sId}-${rId}`, source: sId, target: rId });
+
+        const tasks = await getTasksForRoutine(rt.name || rt.routine_name || rId);
+        if (Array.isArray(tasks) && tasks.length > 0) {
+          for (const task of tasks) {
+            const tId = task.name ? `${rId}:${task.name}` : `${rId}:unnamed-task`;
+            nodes.push({ id: tId, type: 'custom', nodeType: 'task', parentNode: rId, data: { label: task.name || task.description || tId, taskName: task.name, service_name: task.service_name ?? svc.name } });
+            edges.push({ id: `e-${rId}-${tId}`, source: rId, target: tId });
+          }
+        }
+
+        // Signals
+        try {
+          const taskNames = (tasks || []).map((t: any) => t.name).filter(Boolean);
+          if (taskNames.length > 0) {
+            const emitQ = `SELECT DISTINCT task_name, signal_name, service_name FROM task_to_signal_map WHERE task_name = ANY($1)`;
+            const emitRes = await client!.query(emitQ, [taskNames]);
+
+            const consQ = `SELECT DISTINCT task_name, signal_name, signal_service_name AS service_name FROM signal_to_task_map WHERE task_name = ANY($1)`;
+            const consRes = await client!.query(consQ, [taskNames]);
+
+            const emittersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
+            (emitRes.rows || []).forEach((r: any) => {
+              if (!emittersMap[r.signal_name]) emittersMap[r.signal_name] = [];
+              emittersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
+            });
+
+            const consumersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
+            (consRes.rows || []).forEach((r: any) => {
+              if (!consumersMap[r.signal_name]) consumersMap[r.signal_name] = [];
+              consumersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
+            });
+
+            const consumedSignals = Object.keys(consumersMap);
+            if (consumedSignals.length > 0) {
+              const externalEmitQ = `SELECT DISTINCT task_name, signal_name, service_name FROM task_to_signal_map WHERE signal_name = ANY($1)`;
+              const externalEmitRes = await client!.query(externalEmitQ, [consumedSignals]);
+              (externalEmitRes.rows || []).forEach((r: any) => {
+                if (!emittersMap[r.signal_name]) emittersMap[r.signal_name] = [];
+                if (!emittersMap[r.signal_name].some((e: any) => e.task_name === r.task_name)) {
+                  emittersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
+                }
+              });
+            }
+
+            const allSignals = Array.from(new Set([...Object.keys(emittersMap), ...Object.keys(consumersMap)]));
+            if (allSignals.length > 0) {
+              const regQ = `SELECT name, domain, action, is_meta, service_name, created, deleted FROM signal_registry WHERE name = ANY($1) AND is_meta = false`;
+              const regRes = await client!.query(regQ, [allSignals]);
+              const registryByName: Record<string, any> = {};
+              (regRes.rows || []).forEach((r: any) => (registryByName[r.name] = r));
+
+              for (const sig of allSignals) {
+                const sigNodeId = `signal::${sig}`;
+                const registry = registryByName[sig];
+                const parentServiceName = registry?.service_name ?? null;
+                let parentNodeId = sId;
+                if (parentServiceName) {
+                  const svcMatch = servicesWithRoutines.find((x: any) => x.name === parentServiceName);
+                  if (svcMatch) parentNodeId = serviceId(svcMatch);
+                }
+
+                if (!nodes.some((n) => n.id === sigNodeId)) nodes.push({ id: sigNodeId, type: 'custom', nodeType: 'signal', parentNode: parentNodeId, data: { label: sig, signal: true } });
+
+                const emitters = emittersMap[sig] || [];
+                for (const e of emitters) {
+                  const emittingTaskId = `${rId}:${e.task_name}`;
+                  if (nodes.some((n) => n.id === emittingTaskId)) {
+                    edges.push({ id: `e-${emittingTaskId}-${sigNodeId}`, source: emittingTaskId, target: sigNodeId });
+                  } else if (e.service_name) {
+                    const svcMatch = servicesWithRoutines.find((x: any) => x.name === e.service_name);
+                    if (svcMatch) edges.push({ id: `e-${serviceId(svcMatch)}-${sigNodeId}`, source: serviceId(svcMatch), target: sigNodeId, style: { display: 'none' } });
+                    else edges.push({ id: `e-${sId}-${sigNodeId}`, source: sId, target: sigNodeId, style: { display: 'none' } });
+                  } else {
+                    edges.push({ id: `e-${sId}-${sigNodeId}`, source: sId, target: sigNodeId, style: { display: 'none' } });
+                  }
+                }
+
+                const consumers = consumersMap[sig] || [];
+                for (const c of consumers) {
+                  const consumingTaskId = `${rId}:${c.task_name}`;
+                  if (nodes.some((n) => n.id === consumingTaskId)) edges.push({ id: `e-${sigNodeId}-${consumingTaskId}`, source: sigNodeId, target: consumingTaskId });
+                  else if (c.service_name) {
+                    const svcMatch = servicesWithRoutines.find((x: any) => x.name === c.service_name);
+                    if (svcMatch) edges.push({ id: `e-${sigNodeId}-${serviceId(svcMatch)}`, source: sigNodeId, target: serviceId(svcMatch), style: { display: 'none' } });
+                    else edges.push({ id: `e-${sigNodeId}-${sId}`, source: sigNodeId, target: sId, style: { display: 'none' } });
+                  } else edges.push({ id: `e-${sigNodeId}-${sId}`, source: sigNodeId, target: sId, style: { display: 'none' } });
+                }
+              }
+            }
+          }
+        } catch (sigErr) {
+          console.error('Error fetching signals for routine', rt.name, sigErr);
+        }
+      }
+    }
+
+    // directional task mapping
+    try {
+      const taskNodes = nodes.filter((n) => n.nodeType === 'task');
+      const taskIndex: Record<string, string[]> = {};
+      taskNodes.forEach((n: any) => {
+        const t = n.data?.taskName;
+        const svcName = n.data?.service_name ?? '';
+        if (!t) return;
+        const svcKey = `${svcName}::${t}`;
+        if (!taskIndex[svcKey]) taskIndex[svcKey] = [];
+        taskIndex[svcKey].push(n.id);
+        const anyKey = `*::${t}`;
+        if (!taskIndex[anyKey]) taskIndex[anyKey] = [];
+        taskIndex[anyKey].push(n.id);
+      });
+
+      const allTaskNames = Array.from(new Set(taskNodes.map((n: any) => n.data?.taskName).filter(Boolean)));
+      if (allTaskNames.length > 0) {
+        const dtmQ = `SELECT task_name, predecessor_task_name, service_name FROM directional_task_graph_map WHERE task_name = ANY($1) OR predecessor_task_name = ANY($1)`;
+        const dtmRes = await client!.query(dtmQ, [allTaskNames]);
+
+        for (const row of (dtmRes.rows || [])) {
+          const taskName = row.task_name;
+          const predName = row.predecessor_task_name;
+          const svc = row.service_name;
+          const targetIds = taskIndex[`${svc}::${taskName}`] || taskIndex[`*::${taskName}`] || [];
+          const sourceIds = taskIndex[`${svc}::${predName}`] || taskIndex[`*::${predName}`] || [];
+
+          if (sourceIds.length > 0 && targetIds.length > 0) {
+            for (const src of sourceIds) {
+              for (const tgt of targetIds) {
+                const edgeId = `e-${src}-${tgt}`;
+                if (!edges.some((e) => e.id === edgeId)) {
+                  const srcNode = nodes.find((n) => n.id === src);
+                  const tgtNode = nodes.find((n) => n.id === tgt);
+                  const sameRoutine = srcNode?.parentNode && srcNode.parentNode === tgtNode?.parentNode;
+
+                  let allowVisible = !!sameRoutine;
+                  if (!allowVisible) {
+                    const srcTaskName = srcNode?.data?.taskName;
+                    const tgtTaskName = tgtNode?.data?.taskName;
+                    if (srcTaskName && tgtTaskName) {
+                      const depQ = `SELECT 1 FROM deputy_task_map WHERE deputy_task_name = $1 AND triggered_task_name = $2 LIMIT 1`;
+                      try {
+                        const depRes = await client!.query(depQ, [srcTaskName, tgtTaskName]);
+                        if (depRes && depRes.rowCount && depRes.rowCount > 0) allowVisible = true;
+                      } catch (depErr) {
+                        console.error('Error querying deputy_task_map', depErr);
+                      }
+                    }
+                  }
+
+                  if (allowVisible) edges.push({ id: edgeId, source: src, target: tgt });
+                  else edges.push({ id: edgeId, source: src, target: tgt, style: { display: 'none' } });
+                }
+              }
+            }
+          } else {
+            const srcServiceId = svc && serviceNameToId[svc] ? serviceNameToId[svc] : null;
+            const tgtServiceId = svc && serviceNameToId[svc] ? serviceNameToId[svc] : null;
+            if (sourceIds.length === 0 && targetIds.length > 0 && srcServiceId) {
+              for (const tgt of targetIds) {
+                const edgeId = `e-${srcServiceId}-${tgt}`;
+                if (!edges.some((e) => e.id === edgeId)) edges.push({ id: edgeId, source: srcServiceId, target: tgt, style: { display: 'none' } });
+              }
+            }
+            if (targetIds.length === 0 && sourceIds.length > 0 && tgtServiceId) {
+              for (const src of sourceIds) {
+                const edgeId = `e-${src}-${tgtServiceId}`;
+                if (!edges.some((e) => e.id === edgeId)) edges.push({ id: edgeId, source: src, target: tgtServiceId, style: { display: 'none' } });
+              }
+            }
+          }
+        }
+      }
+    } catch (dtmErr) {
+      console.error('Error fetching directional task graph map:', dtmErr);
+    }
+
+    // Post-process edges: only show task->task and task->signal edges; hide all others
+    for (const edge of edges) {
+      if (edge.style && edge.style.display === 'none') continue;
+      const srcNode = nodes.find((n) => n.id === edge.source);
+      const tgtNode = nodes.find((n) => n.id === edge.target);
+      const srcType = srcNode?.nodeType ?? null;
+      const tgtType = tgtNode?.nodeType ?? null;
+      const visible = srcType === 'task' && (tgtType === 'task' || tgtType === 'signal');
+      if (!visible) {
+        edge.style = edge.style || {};
+        edge.style.display = 'none';
+      } else {
+        if (edge.style && edge.style.display === 'none') {
+          delete edge.style.display;
+          if (Object.keys(edge.style).length === 0) delete edge.style;
+        }
+      }
+    }
+
+    return { nodes, edges };
+  } catch (error) {
+    console.error('Error fetching services with routines:', error);
+    throw error;
   }
 });
+	    // Post-process edges: only show task->task and task->signal edges; hide all others
