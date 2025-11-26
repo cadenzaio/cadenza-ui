@@ -1,20 +1,19 @@
 <template>
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
-      <template #title> Meta Task executions </template>
+      <template #title> Meta Tasks </template>
       <div class="row q-mx-md">
         <Table
           :columns="columns"
           :rows="tasks"
-          row-key="uuid"
-          @inspect-row="inspectTask"
+          row-key="name"
+          @inspect-row="inspectTasks"
           @inspect-row-in-new-tab="inspectInNewTab"
           @loadMoreData="loadMoreTasks"
           :enableInfiniteScroll="true"
           :hasMoreData="hasMoreData"
           :loadingMoreData="loadingMoreData"
         />
-        <FrequencyPieChart v-if="tasks.length > 0" :values="tasks" />
       </div>
     </NuxtLayout>
   </NuxtLayout>
@@ -22,48 +21,88 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useAppStore } from '~/stores/app';
+import { useFetch } from '#app';
 import { useRouter } from '#vue-router';
 
-interface Task {
-  uuid: string;
+interface tasks {
+  type: string;
+  label: string;
+  description: string;
+  id: any;
+  executionId: any;
+  progress: any;
+  service: string;
+  unique: boolean;
+  concurrency: number;
   name: string;
-  status: string;
-  progress: number;
-  started: string;
-  ended: string;
-  duration: number;
 }
 
-const tasks = ref<Task[]>([]);
-const currentPage = ref(1);
-const pageSize = 50;
+const layout = 'dashboard-layout';
+const selectedTask = ref<tasks[] | undefined>(undefined);
+watch(selectedTask, (newValue) => {});
+
+const columns = [
+  {
+    name: 'name',
+    label: 'Name',
+    field: 'name',
+    required: true,
+    sortable: true,
+  },
+  {
+    name: 'version',
+    label: 'Version',
+    field: 'version',
+    required: true,
+    sortable: true,
+  },
+  {
+    name: 'service',
+    label: 'Service',
+    field: 'service',
+    required: true,
+    sortable: false,
+  },
+  {
+    name: 'unique',
+    label: 'Unique',
+    field: 'unique',
+    required: true,
+    sortable: true,
+  },
+];
+
+const tasks = ref<tasks[]>([]);
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
 
-const columns = [
-  { name: 'name', label: 'Name', field: 'name', required: true },
-  { name: 'status', label: 'Status', field: 'status', required: true },
-  { name: 'progress', label: 'Progress', field: 'progress', required: true },
-  { name: 'started', label: 'Started', field: 'started', required: true },
-  { name: 'ended', label: 'Ended', field: 'ended', required: true },
-  { name: 'duration', label: 'Duration (sec)', field: 'duration', required: true },
-];
+const currentPage = ref(1);
+const pageSize = 50;
 
 const router = useRouter();
 
-function inspectTask(task: Task) {
-  navigateToItem(`/meta/tasks/${task.uuid}`);
+function inspectTasks(tasks: tasks) {
+  // Navigate to task detail including version and service as query params
+  const path = `/meta/tasks/${encodeURIComponent(String(tasks.name))}`;
+  const qs = [];
+  if ((tasks as any).version) qs.push(`version=${encodeURIComponent(String((tasks as any).version))}`);
+  if (tasks.service) qs.push(`service=${encodeURIComponent(String(tasks.service))}`);
+  navigateToItem(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
+}
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
+function inspectInNewTab(tasks: tasks) {
+  const path = `/meta/tasks/${encodeURIComponent(String(tasks.name))}`;
+  const qs = [];
+  if ((tasks as any).version) qs.push(`version=${encodeURIComponent(String((tasks as any).version))}`);
+  if (tasks.service) qs.push(`service=${encodeURIComponent(String(tasks.service))}`);
+  openLinkInNewTab(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
 }
 
-function inspectInNewTab(task: Task) {
-  const url = `/meta/tasks/${task.uuid}`;
-  window.open(url, '_blank');
-}
-
-function navigateToItem(route: string) {
+const navigateToItem = (route: string) => {
   router.push(route);
-}
+};
 
 async function loadTasks(isLoadMore = false) {
   try {
@@ -75,17 +114,16 @@ async function loadTasks(isLoadMore = false) {
     const response = await fetch(
       `/api/meta/tasks/metaTasks?page=${currentPage.value}&limit=${pageSize}`
     );
-    if (!response.ok) throw new Error('Failed to fetch tasks');
-
+    if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();
 
     if (isLoadMore) {
-      tasks.value = [...tasks.value, ...data.tasks];
+      tasks.value = [...tasks.value, ...data];
     } else {
-      tasks.value = data.tasks;
+      tasks.value = data;
     }
 
-    hasMoreData.value = data.tasks.length === pageSize;
+    hasMoreData.value = data.length === pageSize;
   } catch (error) {
     console.error('Error loading tasks:', error);
     hasMoreData.value = false;
@@ -100,9 +138,11 @@ async function loadMoreTasks() {
   await loadTasks(true);
 }
 
+// Fetch server stats and set the current section on component mount
 onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('meta');
-  await loadTasks();
+  currentPage.value = 1; // Always start at page 1 on mount
+  await loadTasks(false);
 });
 </script>

@@ -32,7 +32,7 @@
           <q-btn icon="chevron_left" color="primary" @click="decrementYear" />
           <q-select
             v-model="selectedYear"
-            :options="yearOptions"
+            :options="effectiveYearOptions"
             label="Year"
             dense
             outlined
@@ -70,7 +70,7 @@
           />
           <q-select
             v-model="selectedYear"
-            :options="yearOptions"
+            :options="effectiveYearOptions"
             label="Year"
             dense
             outlined
@@ -221,7 +221,7 @@ const props = defineProps({
     required: true,
   },
   rawHeatmapData: {
-    type: Array as () => Array<HeatmapRow>, // [{ date, hour, executions, ... }]
+    type: Array as () => Array<HeatmapRow>,
     required: false,
     default: () => [],
   },
@@ -313,6 +313,7 @@ const monthChartOptions = computed(() => {
     },
     xaxis: {
       categories: xCategories,
+      tickPlacement: 'on',
       labels: { style: { colors: modeColor.value } },
     },
     yaxis: {
@@ -590,6 +591,7 @@ const chartOptions = computed(() => ({
     style: { color: modeColor.value },
   },
   xaxis: {
+    tickPlacement: 'on',
     labels: {
       style: { colors: modeColor.value },
     },
@@ -633,8 +635,46 @@ watch(scaleToData, (val) => {
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth(); // 0-based
 
-const selectedYear = ref(props.yearOptions[0]);
-const selectedMonth = ref(props.monthNames[0]);
+// Ensure we always have the current year available in the options shown to the user
+const effectiveYearOptions = computed(() => {
+  if (!Array.isArray(props.yearOptions)) return [currentYear];
+  return props.yearOptions.includes(currentYear)
+    ? props.yearOptions
+    : [currentYear, ...props.yearOptions];
+});
+
+// Prefer current year when it's in options or when we actually have data for it;
+// otherwise fall back to the first provided option (or currentYear as a final fallback).
+const hasDataForCurrentYear = computed(() => {
+  try {
+    return (
+      Array.isArray(props.rawHeatmapData) &&
+      props.rawHeatmapData.some((r: HeatmapRow) => {
+        const d = new Date(r.date);
+        return d.getFullYear() === currentYear;
+      })
+    );
+  } catch (e) {
+    return false;
+  }
+});
+
+const selectedYear = ref(
+  Array.isArray(props.yearOptions) && props.yearOptions.includes(currentYear)
+    ? currentYear
+    : hasDataForCurrentYear.value
+    ? currentYear
+    : Array.isArray(props.yearOptions) && props.yearOptions.length
+    ? props.yearOptions[0]
+    : currentYear
+);
+
+// Default selected month should be the current month name when available
+const selectedMonth = ref(
+  Array.isArray(props.monthNames) && props.monthNames[currentMonth]
+    ? props.monthNames[currentMonth]
+    : props.monthNames[0]
+);
 
 // On mount, load settings from store or use scale-to-data
 import { onMounted } from 'vue';
@@ -747,11 +787,28 @@ watch(selectedYear, (newYear) => {
 
 // Watch for hasData changes to initialize ranges when data becomes available
 watch(() => props.hasData, (newHasData) => {
-  if (newHasData && !props.loading && localEditableRanges.value.length === 0) {
-    // Data became available and we don't have ranges initialized yet
-    if (props.editableRanges && Array.isArray(props.editableRanges) && props.editableRanges.length >= 4) {
-      localEditableRanges.value = JSON.parse(JSON.stringify(props.editableRanges));
-      localScaleToData.value = true;
+  if (newHasData && !props.loading) {
+    // First: rebuild the charts so chartSeries is populated for scaling
+    try {
+      buildYearChartSeries(selectedYear.value);
+      if (showMonthView.value) {
+        const monthIdx = props.monthNames.indexOf(selectedMonth.value);
+        buildMonthChartSeries(monthIdx, selectedYear.value);
+      }
+    } catch (e) {
+      console.warn('Error rebuilding heatmap series after data arrived', e);
+    }
+
+    // Then initialize ranges if needed and apply scaling now that data exists
+    if (localEditableRanges.value.length === 0) {
+      if (props.editableRanges && Array.isArray(props.editableRanges) && props.editableRanges.length >= 4) {
+        localEditableRanges.value = JSON.parse(JSON.stringify(props.editableRanges));
+        localScaleToData.value = true;
+        // applyRanges relies on chartSeries being populated, so call it after rebuild
+        applyRanges();
+      }
+    } else if (scaleToData.value) {
+      // If scale-to-data was already enabled, re-apply to reflect the newly-arrived data
       applyRanges();
     }
   }
@@ -761,11 +818,11 @@ function decrementMonth() {
   let monthIdx = props.monthNames.indexOf(selectedMonth.value);
   if (monthIdx === 0) {
     // Go to December of previous year
-    const yearIdx = props.yearOptions.indexOf(selectedYear.value);
-    if (yearIdx < props.yearOptions.length - 1) {
-      selectedYear.value = props.yearOptions[yearIdx + 1];
-      selectedMonth.value = props.monthNames[11];
-    }
+    const yearIdx = effectiveYearOptions.value.indexOf(selectedYear.value);
+      if (yearIdx < effectiveYearOptions.value.length - 1) {
+        selectedYear.value = effectiveYearOptions.value[yearIdx + 1];
+        selectedMonth.value = props.monthNames[11];
+      }
   } else {
     selectedMonth.value = props.monthNames[monthIdx - 1];
   }
@@ -775,25 +832,25 @@ function incrementMonth() {
   let monthIdx = props.monthNames.indexOf(selectedMonth.value);
   if (monthIdx === 11) {
     // Go to January of next year
-    const yearIdx = props.yearOptions.indexOf(selectedYear.value);
-    if (yearIdx > 0) {
-      selectedYear.value = props.yearOptions[yearIdx - 1];
-      selectedMonth.value = props.monthNames[0];
-    }
+    const yearIdx = effectiveYearOptions.value.indexOf(selectedYear.value);
+      if (yearIdx > 0) {
+        selectedYear.value = effectiveYearOptions.value[yearIdx - 1];
+        selectedMonth.value = props.monthNames[0];
+      }
   } else {
     selectedMonth.value = props.monthNames[monthIdx + 1];
   }
 }
 function decrementYear() {
-  const idx = props.yearOptions.indexOf(selectedYear.value);
-  if (idx < props.yearOptions.length - 1) {
-    selectedYear.value = props.yearOptions[idx + 1];
+  const idx = effectiveYearOptions.value.indexOf(selectedYear.value);
+  if (idx < effectiveYearOptions.value.length - 1) {
+    selectedYear.value = effectiveYearOptions.value[idx + 1];
   }
 }
 function incrementYear() {
-  const idx = props.yearOptions.indexOf(selectedYear.value);
+  const idx = effectiveYearOptions.value.indexOf(selectedYear.value);
   if (idx > 0) {
-    selectedYear.value = props.yearOptions[idx - 1];
+    selectedYear.value = effectiveYearOptions.value[idx - 1];
   }
 }
 

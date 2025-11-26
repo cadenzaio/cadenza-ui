@@ -20,7 +20,7 @@ interface RoutineRow {
   created: string | Date;
   started: string | Date;
   ended: string | Date;
-  contract_id: string;
+  trace_id: string;
   context_id: string;
   result_context_id: string;
   input_context: Record<string, unknown>;
@@ -41,7 +41,7 @@ interface RoutineMapped {
   label: string;
   description: string;
   routineDescription: string;
-  serviceId: string; // Updated from serverId
+  serviceId: string; 
   routineId: string;
   status: string;
   previousRoutineExecution: string;
@@ -49,9 +49,9 @@ interface RoutineMapped {
   started: string;
   ended: string;
   duration: number;
-  serviceName: string; // Updated from serverName
+  serviceName: string; 
   previousRoutineName: string;
-  contract_id: string;
+  trace_id: string;
   processingGraph: string;
   inputContext: Record<string, unknown>;
   outputContext: Record<string, unknown>;
@@ -137,29 +137,29 @@ async function getRoutines({
                 ? row.created
                 : row.created.toISOString()
             )
-          : '', // Use empty string as fallback for created
+          : '', 
         ended: row.ended
           ? formatDate(
               typeof row.ended === 'string'
                 ? row.ended
                 : row.ended.toISOString()
             )
-          : '', // Use empty string as fallback for ended
+          : '', 
         duration: getDuration(
           row.created
             ? typeof row.created === 'string'
               ? new Date(row.created).getTime()
               : row.created.getTime()
-            : 0, // Use 0 as fallback for created
+            : 0, 
           row.ended
             ? typeof row.ended === 'string'
               ? new Date(row.ended).getTime()
               : row.ended.getTime()
-            : 0 // Use 0 as fallback for ended
+            : 0
         ),
         serviceName: row.service_name,
         previousRoutineName: row.routine_name,
-        contract_id: row.contract_id,
+        trace_id: row.trace_id,
         processingGraph: row.processing_graph,
         inputContext: removeMetaData(row.input_context),
         outputContext: removeMetaData(row.output_context),
@@ -186,16 +186,16 @@ export default defineEventHandler(async (event) => {
       : new URLSearchParams();
     const page = parseInt(urlParams.get('page') || '1', 10);
     const limit = parseInt(urlParams.get('limit') || '50', 10);
-    const contractId = urlParams.get('contractId') || undefined;
+    const traceId = urlParams.get('traceId') || undefined;
 
     try {
       const name = urlParams.get('name') || undefined;
       const data = await getRoutines({ name, page, limit });
 
-      // If contractId is provided, filter and return mapped data for contract page
-      if (contractId) {
+      // If traceId is provided, filter and return mapped data for contract page
+      if (traceId) {
         const filteredData = data.filter(
-          (r: RoutineMapped) => r.contract_id === contractId
+          (r: RoutineMapped) => r.trace_id === traceId
         );
 
         // Map for table display
@@ -214,7 +214,7 @@ export default defineEventHandler(async (event) => {
           scheduled: r.started,
           layer_index: (r as any).layer_index || 0,
           duration: r.duration,
-          contract_id: r.contract_id,
+          trace_id: r.trace_id,
           errored: r.referer === 'Errored',
           contextId: (r as any).context_id,
           inputContext: r.inputContext,

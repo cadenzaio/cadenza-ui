@@ -2,603 +2,485 @@
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
       <template #title>
-        {{ selectedItem?.label }} - {{ selectedItem?.uuid.slice(0, 8) }}
-        <q-btn color="warning" @click="showGenerateDialog = true">
-          Generate Trace
-          <q-tooltip anchor="top middle" self="bottom middle">
-            Generate a trace from this point
-          </q-tooltip>
-        </q-btn>
+        {{ selectedItem?.name }} {{ selectedItem?.version ? ` (v${selectedItem.version})` : '' }}
       </template>
-
-      <div>
-        <div class="q-pa-md flex-centered">
-          <q-tabs
-            v-model="selectedOption"
-            dense
-            class="text-grey-9 bg-transparent"
-            active-color="primary"
-            indicator-color="primary"
-            align="justify"
-            narrow-indicator
-          >
-            <q-tab name="routineMap" label="Map" />
-            <q-tab name="timeline" label="Timeline" />
-            <q-tab name="rangedTimeline" label="Ranged Timeline" />
-          </q-tabs>
-
-          <q-separator />
-
-          <div class="centered-container">
-            <transition
-              name="fade"
-              mode="out-in"
-              :duration="{ enter: 500, leave: 300 }"
-            >
-              <div class="flex" v-show="selectedOption === 'routineMap'">
-                <div
-                  v-if="routineMapLoading"
-                  class="flex justify-center items-center"
-                  style="min-height: 400px; width: 100%"
-                >
-                  <q-spinner-dots size="48px" color="primary" />
-                </div>
-                <FlowMap
-                  v-else
-                  :items="routineMap"
-                  id-field="name"
-                  label-field="name"
-                  previous-field="previousTaskExecutionId"
-                  @item-selected="(task) => onTaskSelected(mapTaskToSelectedTask(task))"
-                  style="width: 100%"
-                />
+      <div class="row q-mx-md">
+        <FlowMap
+          v-if="routineMap && routineMap.length > 0"
+          :items="routineMap"
+          id-field="name"
+          label-field="label"
+          previous-field="previousTaskExecutionName"
+          @item-selected="onTaskSelected"
+        />
+        <InfoCard v-if="selectedItem">
+          <template #title>
+            {{ selectedItem?.name }}
+          </template>
+          <template #info>
+            <div class="flex-column full-width">
+              <div class="q-mx-md q-my-sm">
+                Description: {{ selectedItem?.description }}
               </div>
-            </transition>
-
-            <transition
-              name="fade"
-              mode="out-in"
-              :duration="{ enter: 500, leave: 300 }"
-            >
-              <div v-show="selectedOption === 'timeline'">
-                <div
-                  v-if="routineMapLoading"
-                  class="flex justify-center items-center"
-                  style="min-height: 400px"
-                >
-                  <q-spinner-dots size="48px" color="primary" />
-                </div>
-                <Timeline
-                  v-else
-                  :itemMap="routineMap"
-                  @task-selected="
-                    (task) => onTaskSelected(mapTaskToSelectedTask(task))
-                  "
-                />
+                            <div
+                class="q-mx-md q-my-sm"
+                @click="
+                  navigateToItem(`/system/services/${selectedItem?.service}`)
+                "
+                @contextmenu.prevent="
+                  openLinkInNewTab(
+                    `/services/${selectedItem?.service}`
+                  )
+                "
+              >
+              Service:
+                <span class="text-primary cursor-pointer">{{
+                  selectedItem?.service
+                }}</span>
               </div>
-            </transition>
-
-            <transition
-              name="fade"
-              mode="out-in"
-              :duration="{ enter: 500, leave: 300 }"
-            >
-              <div v-show="selectedOption === 'rangedTimeline'">
-                <ApexTimeline
-                  :itemMap="routineMap"
-                  :loading="routineMapLoading"
-                  @task-selected="
-                    (task) => onTaskSelected(mapTaskToSelectedTask(task))
-                  "
-                />
+              <div class="q-separator" style="height: 2px"></div>
+              <div class="q-mx-md q-my-sm">Name: {{ selectedItem?.name }}</div>
+              <div
+                class="q-mx-md q-my-sm"
+                @click="
+                  navigateToItem(`/services/${selectedItem?.service_instance}`)
+                "
+                @contextmenu.prevent="
+                  openLinkInNewTab(
+                    `/services/${selectedItem?.service_instance}`
+                  )
+                "
+              >
+                <span class="text-primary cursor-pointer">
+                  {{ selectedItem?.serviceName }}
+                </span>
               </div>
-            </transition>
-          </div>
-        </div>
-
-        <div class="row q-mx-md justify-around">
-          <InfoCard v-if="selectedItem">
-            <template #title>
-              {{ selectedItem?.label }}
-            </template>
-            <template #info>
-              <div class="flex-column full-width">
-                <div class="q-mx-md q-my-sm">
-                  Description: {{ selectedItem?.routineDescription }}
-                </div>
-                <div class="q-mx-md q-my-sm">
-                  Executed tasks: {{ routineMap?.length ?? 0 }}
-                </div>
-                <div class="q-separator" style="height: 2px"></div>
-
-                <div class="flex">
-                  <div>
-                    <div class="q-mx-md q-my-sm">
-                      Progress: {{ selectedItem?.progress }}
-                    </div>
-                    <div class="q-mx-md q-my-sm">
-                      Started: {{ formatDate(selectedItem?.started) }}
-                    </div>
-                    <div class="q-mx-md q-my-sm">
-                      Ended: {{ formatDate(selectedItem?.ended) }}
-                    </div>
-                    <div class="q-mx-md q-my-sm">
-                      Duration:
-                      {{
-                        getDuration(selectedItem?.started, selectedItem?.ended)
-                      }}
-                      sec
-                    </div>
-                  </div>
-                  <ProgressRadialBarChart
-                    v-if="selectedItem"
-                    :name="selectedItem?.label"
-                    :value="selectedItem.progress.toString()"
-                  />
-                </div>
-
-                <div class="q-separator" style="height: 2px"></div>
-                <div class="q-mx-md q-my-sm">
-                  Status: {{ selectedItem.status }}
-                </div>
-                <div class="q-separator" style="height: 2px"></div>
-
-                <div
-                  v-if="selectedItem?.routineId"
-                  class="q-mx-md q-my-sm"
-                  @click="
-                    navigateToItem(
-                      `/services/routines/${selectedItem?.routineId}`
-                    )
-                  "
-                  @contextmenu.prevent="
-                    openLinkInNewTab(
-                      `/services/routines/${selectedItem?.routineId}`
-                    )
-                  "
-                >
-                  Routine id:
-                  <span class="text-primary cursor-pointer">{{
-                    selectedItem?.label
-                  }}</span>
-                </div>
-                <div
-                  class="q-mx-md q-my-sm"
-                  @click="
-                    navigateToItem(
-                      `/services/${selectedItem?.serverName?.split('@')[0]}`
-                    )
-                  "
-                  @contextmenu.prevent="
-                    openLinkInNewTab(
-                      `/services/${selectedItem?.serverName?.split('@')[0]}`
-                    )
-                  "
-                >
-                  Service id:
-                  <span class="text-primary cursor-pointer">{{
-                    selectedItem?.serverName
-                  }}</span>
-                </div>
-                <div
-                  v-if="selectedItem?.previousRoutineExecution"
-                  class="q-mx-md q-my-sm"
-                  @click="
-                    navigateToItem(
-                      `/activity/routines/${selectedItem?.previousRoutineExecution}`
-                    )
-                  "
-                  @contextmenu.prevent="
-                    openLinkInNewTab(
-                      `/activity/routines/${selectedItem?.previousRoutineExecution}`
-                    )
-                  "
-                >
-                  Previous routine:<span class="text-warning cursor-pointer">
-                    {{ selectedItem?.previousRoutineName }}</span
-                  >
-                </div>
-                <div
-                  class="q-mx-md q-my-sm"
-                  @click="
-                    navigateToItem(
-                      `/activity/traces/${selectedItem?.contract_id}`
-                    )
-                  "
-                  @contextmenu.prevent="
-                    openLinkInNewTab(
-                      `/activity/traces/${selectedItem?.contract_id}`
-                    )
-                  "
-                >
-                  <span class="text-warning cursor-pointer">Trace</span>
-                </div>
+              <div class="q-mx-md q-my-sm">
+                Created:
+                {{
+                  selectedItem?.created
+                    ? new Date(selectedItem.created).toLocaleString()
+                    : 'N/A'
+                }}
               </div>
-            </template>
-          </InfoCard>
-
-          <div v-if="selectedTask" ref="flashCard">
-            <InfoCard :class="{ 'flash-bg': flashActive }">
-              <template #title>
-                {{ selectedTask?.name }}
-              </template>
-              <template #info>
-                <div class="flex-column full-width">
-                  <div class="q-mx-md q-my-sm">
-                    Description: {{ selectedTask?.description }}
-                  </div>
-                  <div
-                    class="q-mx-md q-my-sm"
-                    @click="
-                      navigateToItem(`/activity/tasks/${selectedTask?.uuid}`)
-                    "
-                    @contextmenu.prevent="
-                      openLinkInNewTab(`/activity/tasks/${selectedTask?.uuid}`)
-                    "
-                  >
-                    Execution id:
-                    <span class="text-warning cursor-pointer">{{
-                      selectedTask?.label
-                    }}</span>
-                  </div>
-                  <div class="q-separator" style="height: 2px"></div>
-
-                  <div class="flex">
-                    <div>
-                      <div class="q-mx-md q-my-sm">
-                        Progress: {{ selectedTask.progress }}%
-                      </div>
-                      <div class="q-mx-md q-my-sm">
-                        Started: {{ formatDate(selectedTask?.started) }}
-                      </div>
-                      <div class="q-mx-md q-my-sm">
-                        Ended: {{ formatDate(selectedTask?.ended) }}
-                      </div>
-                      <div class="q-mx-md q-my-sm">
-                        Duration:
-                        {{
-                          getDuration(
-                            selectedTask?.started,
-                            selectedTask?.ended
-                          )
-                        }}
-                        sec
-                      </div>
-                    </div>
-                    <ProgressRadialBarChart
-                      v-if="selectedTask"
-                      :key="selectedTask.uuid"
-                      :name="selectedTask?.label"
-                      :value="selectedTask.progress.toString()"
-                    />
-                  </div>
-
-                  <div class="q-separator" style="height: 2px"></div>
-                  <div class="q-mx-md q-my-sm">
-                    Success:
-                    {{ !selectedTask?.failed && !selectedTask?.errored }}
-                  </div>
-                  <div class="q-separator" style="height: 2px"></div>
-
-                  <div
-                    v-if="selectedTask?.previousTaskExecutionId"
-                    class="q-mx-md q-my-sm"
-                    @click="
-                      navigateToItem(
-                        `/activity/tasks/${selectedTask?.previousTaskExecutionId}`
-                      )
-                    "
-                    @contextmenu.prevent="
-                      openLinkInNewTab(
-                        `/activity/tasks/${selectedTask?.previousTaskExecutionId}`
-                      )
-                    "
-                  >
-                    Previous task:
-                    <span class="text-warning cursor-pointer">{{
-                      selectedTask?.previous_task_name
-                    }}</span>
-                  </div>
-                  <div
-                    v-if="selectedTask?.taskId"
-                    class="q-mx-md q-my-sm"
-                    @click="
-                      navigateToItem(`/services/tasks/${selectedTask?.taskId}`)
-                    "
-                    @contextmenu.prevent="
-                      openLinkInNewTab(
-                        `/services/tasks/${selectedTask?.taskId}`
-                      )
-                    "
-                  >
-                    Task id:
-                    <span class="text-primary cursor-pointer">{{
-                      selectedTask?.label
-                    }}</span>
-                  </div>
-                  <div
-                    class="q-mx-md q-my-sm"
-                    @click="
-                      navigateToItem(
-                        `/services/${selectedItem?.serverName?.split('@')[0]}`
-                      )
-                    "
-                    @contextmenu.prevent="
-                      openLinkInNewTab(
-                        `/services/${selectedItem?.serverName?.split('@')[0]}`
-                      )
-                    "
-                  >
-                    Server id:
-                    <span class="text-primary cursor-pointer">{{
-                      selectedItem?.serverName
-                    }}</span>
-                  </div>
-                </div>
-              </template>
-            </InfoCard>
-          </div>
-
-          <div>
-            <InfoCard>
-              <template #title>Input Context</template>
-              <template #info>
-                <div class="q-mx-md q-my-sm">
-                  <pre>{{ selectedItem?.inputContext }}</pre>
-                </div>
-              </template>
-            </InfoCard>
-
-            <InfoCard>
-              <template #title>Output Context</template>
-              <template #info>
-                <div class="q-mx-md q-my-sm">
-                  <pre>{{ selectedItem?.outputContext }}</pre>
-                </div>
-              </template>
-            </InfoCard>
-          </div>
-        </div>
+              <div class="q-mx-md q-my-sm">
+                Deleted: {{ selectedItem?.deleted ? 'Yes' : 'No' }}
+              </div>
+            </div>
+          </template>
+        </InfoCard>
+        <ExecutionStatisticsPieChart
+          type="routine"
+          :routineName="String(route.params.id)"
+        />
+        <ExecutionTimeChart v-if="selectedItem" :series="executionTimeSeries" />
+        <Table
+          class="custom-table"
+          :columns="columns"
+          :rows="routines"
+          row-key="name"
+          @inspect-row="inspectRoutine"
+          @inspect-row-in-new-tab="inspectInNewTab"
+          @loadMoreData="loadMoreRoutines"
+          style="z-index: 1"
+          :enableInfiniteScroll="true"
+          :hasMoreData="hasMoreData"
+          :loadingMoreData="loadingMoreData"
+        >
+          <template #title> Active Executions </template>
+        </Table>
       </div>
-
-      <div>
-        <!-- Empty div for spacing -->
-      </div>
-
-      <q-dialog v-model="showGenerateDialog">
-        <q-card>
-          <q-card-section>
-            <div class="text-h6">Confirm Generate</div>
-            <div>Are you sure you want to generate a trace?</div>
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn
-              flat
-              label="Cancel"
-              color="primary"
-              @click="showGenerateDialog = false"
-            />
-            <q-btn
-              flat
-              label="Confirm"
-              color="secondary"
-              @click="confirmGenerate"
-            />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
+      <HeatMap
+        v-if="heatmapData"
+        :chartSeries="heatmapData.chartSeries"
+        :yearOptions="heatmapData.yearOptions"
+        :monthNames="heatmapData.monthNames"
+        :editableRanges="heatmapData.editableRanges"
+        :rawHeatmapData="heatmapData.rawData"
+        @update:editableRanges="
+          (val) => {
+            if (heatmapData) heatmapData.editableRanges = val;
+          }
+        "
+      />
     </NuxtLayout>
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue';
+import { useFetch, useRoute, useRouter } from '#app';
+import { useAppStore } from '~/stores/app';
+import InfoCard from '~/components/InfoCard.vue';
+import FlowMap from '~/components/FlowMap.vue';
+// import HeatMap from '~/components/HeatMap.vue';
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
-import { useRoute } from '#app';
-import { ref, onMounted, watchEffect } from 'vue';
-import { useRouter } from '#vue-router';
-import { useAppStore } from '~/stores/app';
 
-interface SelectedItem {
-  label: string;
-  uuid: string;
-  routineDescription: string;
-  progress: number;
-  started: string;
-  ended: string;
-  status: string;
-  routineId?: string;
-  serverId: string;
-  previousRoutineExecution?: string;
-  serverName: string;
-  previousRoutineName: string;
-  contract_id: string;
-  layer_index: number;
-  inputContext: string;
-  outputContext: string;
-}
-
-interface SelectedTask {
-  label: string;
+interface Item {
+  type: string;
   name: string;
   description: string;
-  uuid: string;
-  progress: number;
-  started: string;
-  ended: string;
-  errored: boolean;
-  previousTaskExecutionId?: string;
-  previous_task_name: string;
-  taskId?: string;
-  serverId: string;
-  serverName: string;
-  failed: boolean;
-  layer_index: number;
+  function_string: string;
+  executionName: any;
+  progress: any;
+  service_instance: string;
+  created: string;
+  deleted: boolean;
+  service: string;
+  serviceName?: string;
+  version?: string | number;
+}
+
+interface ExecutionTime {
+  date: any;
+  hour: number;
+  executions: number;
+  total_execution_time: number;
+  slowest_time: number;
+  fastest_time: number;
+  average_time: number;
 }
 
 const layout = 'dashboard-layout';
-const selectedItem = ref<SelectedItem | null>(null);
+const selectedItem = ref<Item | null>(null);
+const executionTimeSeries = ref<{ name: string; data: [number, number][] }[]>(
+  []
+);
 const route = useRoute();
-const selectedTask = ref<SelectedTask | null>(null);
-const dialogVisible = ref(false);
-const selectedOption = ref('routineMap');
-const routineMap = ref<any[]>([]);
-const routineMapLoading = ref(false);
-const error = ref<string | null>(null);
+interface HeatmapData {
+  chartSeries: any[];
+  yearOptions: number[];
+  monthNames: string[];
+  editableRanges: { from: number; to: number }[];
+  rawData: any[];
+}
+
+const heatmapData = ref<HeatmapData | null>(null);
+
+// Fetch meta routine definitions (returns list). We'll normalize lookup by name/label/uuid later.
+const { data: Items, error } = await useFetch<Item[]>(`/api/meta/routines/metaRoutines`);
+if (error.value) {
+  console.error('Error fetching Items:', error.value);
+}
+
+// Fetch the execution times chart series data
+const { data: executionData, error: executionError } = await useFetch(
+  `/api/activity/routines/routineExecutionTimes?routineName=${route.params.id}`
+);
+if (executionError.value) {
+  console.error('Error fetching execution times:', executionError.value);
+} else if (
+  executionData.value &&
+  'series' in executionData.value &&
+  Array.isArray(executionData.value.series)
+) {
+  executionTimeSeries.value = executionData.value.series.map((series: any) => ({
+    name: series.name,
+    data: Array.isArray(series.data)
+      ? series.data
+          .filter(
+            (d: any) =>
+              Array.isArray(d) &&
+              d.length === 2 &&
+              typeof d[1] === 'number' &&
+              (typeof d[0] === 'number' || typeof d[0] === 'string') &&
+              !(typeof d[0] === 'string' && Number.isNaN(Date.parse(d[0])))
+          )
+          .map((d: any) => {
+            const ts = typeof d[0] === 'number' ? d[0] : Date.parse(d[0]);
+            return [ts, d[1]];
+          })
+      : [],
+  }));
+}
+
+interface Routine {
+  uuid: string;
+  name: string;
+  type: string;
+  label: string;
+  description: string;
+  routineDescription: string;
+  serviceName: string;
+  status: string;
+  previousRoutineExecution: string;
+  progress: number;
+  started: string;
+  ended: string;
+  duration: string;
+  previousRoutineName: string;
+  traceId: string;
+  serviceInstance: string;
+  inputContext: any;
+  outputContext: any;
+  isRunning: boolean;
+  referer: string | null;
+  routineId: string;
+}
+
+const selectedRoutine = ref<Routine[] | undefined>(undefined);
+
+interface RoutineMapTask {
+  name: any;
+  label: any;
+  layer_index: any;
+  previousTaskExecutionName: any;
+  description: any;
+  is_unique: any;
+  concurrency: any;
+}
+
+const routineMap = ref<(RoutineMapTask & { name: any })[]>([]);
+
+const columns = [
+  {
+    name: 'label',
+    label: 'Name',
+    field: 'label',
+    required: true,
+    sortable: true,
+  },
+  {
+    name: 'progress',
+    label: 'Progress',
+    field: 'progress',
+    required: true,
+    sortable: false,
+  },
+  {
+    name: 'started',
+    label: 'Started',
+    field: 'started',
+    required: true,
+    sortable: true,
+  },
+];
+
+const routines = ref<Routine[]>([]);
+const hasMoreData = ref(true);
+const loadingMoreData = ref(false);
+const currentPage = ref(1);
+const pageSize = 50;
+
 const router = useRouter();
 
-function onTaskSelected(task: SelectedTask) {
-  selectedTask.value = task;
-  // Set isSelected for nodes in routineMap
-  routineMap.value = routineMap.value.map((t) => ({
-    ...t,
-    isSelected: t.uuid === task.uuid, // or t.id === task.id depending on your id field
-  }));
-  dialogVisible.value = true;
+function inspectRoutine(routine: Routine) {
+  navigateToItem(`/activity/routines/${routine.routineId}`);
 }
 
-function mapTaskToSelectedTask(task: any): SelectedTask {
-  return {
-    label: task.label,
-    name: task.name,
-    description: task.description,
-    uuid: task.uuid,
-    progress: task.progress,
-    started: task.started,
-    ended: task.ended,
-    errored: task.errored,
-    previousTaskExecutionId: task.previousTaskExecutionId,
-    previous_task_name: task.previous_task_name,
-    taskId: task.taskId,
-    serverId: task.serverId,
-    serverName: task.serverName,
-    failed: task.failed,
-    layer_index: task.layer_index,
-  };
-}
-
-function formatDate(date: string) {
-  if (!date) {
-    return 'Not finished';
-  }
-  const datetime = new Date(date);
-  return `${datetime.toDateString()} ${datetime.toLocaleTimeString()}`;
-}
-
-function getDuration(start: string, end: string | undefined) {
-  const startTime = new Date(start);
-  let endTime: Date;
-  if (!end) {
-    endTime = new Date(Date.now());
-  } else {
-    endTime = new Date(end);
-  }
-  const duration = +endTime - +startTime;
-  return duration / 1000;
+function inspectInNewTab(routine: Routine) {
+  openLinkInNewTab(`/activity/routines/${routine.routineId}`);
 }
 
 const navigateToItem = (route: string) => {
   router.push(route);
 };
 
+function onTaskSelected(task: any) {
+  console.log('Task selected:', task);
+  if (task && task.name) {
+    const path = `/meta/tasks/${encodeURIComponent(String(task.name))}`;
+    const qs: string[] = [];
+    const version = (task as any).version ?? (task as any).task_version ?? null;
+    const service = (task as any).service ?? (task as any).service_name ?? (task as any).serviceName ?? null;
+    if (version) qs.push(`version=${encodeURIComponent(String(version))}`);
+    if (service) qs.push(`service=${encodeURIComponent(String(service))}`);
+    navigateToItem(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
+  }
+}
+
+async function fetchHeatmapData(routineName: string) {
+  try {
+    const response = await fetch(
+      `/api/services/routines/heatmapData?routineName=${routineName}`
+    );
+    const rawData = await response.json();
+    const dates = rawData.map((r: any) => new Date(r.date));
+    const years = Array.from(
+      new Set<number>(dates.map((d: Date) => d.getFullYear()))
+    ).sort((a: number, b: number) => b - a);
+    const monthNames = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    const editableRanges = [
+      { from: 1, to: 10 },
+      { from: 11, to: 20 },
+      { from: 21, to: 30 },
+      { from: 31, to: 40 },
+    ];
+    heatmapData.value = {
+      chartSeries: [],
+      yearOptions: years,
+      monthNames,
+      editableRanges,
+      rawData,
+    };
+  } catch (error) {
+    console.error('Error fetching heatmap data:', error);
+    heatmapData.value = null;
+  }
+}
+
 onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('meta');
 
-  const itemId = route.params.id as string;
-  try {
-    // Fetch the specific routine by uuid using the new query param
-    const response = await fetch(
-      `/api/meta/routines/metaRoutine?uuid=${itemId}`
-    );
-    if (!response.ok) throw new Error('Failed to fetch routine');
-    const data = await response.json();
-    selectedItem.value = data || null;
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unknown error';
-    selectedItem.value = null;
+  const itemName: string = Array.isArray(route.params.id)
+    ? route.params.id[0]
+    : route.params.id;
+
+  if (Items.value && Array.isArray(Items.value)) {
+    const found = Items.value.find(
+      (item: any) =>
+        item.name === itemName || item.label === itemName || item.uuid === itemName
+    ) as any;
+    if (found) {
+      // Ensure `name` property exists for compatibility with other codepaths
+      if (!found.name && found.label) found.name = found.label;
+      selectedItem.value = found;
+    } else {
+      selectedItem.value = null;
+    }
   }
 
-  // Fetch the routine map for this routine
+  // Apply query overrides (version/service) when present in the URL
+  const qVersion = route.query.version ?? route.query.v ?? null;
+  const qService = route.query.service ?? route.query.s ?? null;
+  if (selectedItem.value) {
+    if (qVersion) (selectedItem.value as any).version = String(qVersion);
+    if (qService) selectedItem.value.service = String(qService);
+  }
+
+  fetchActiveRoutines(itemName, false);
+
+  // Fetch routine map data
   if (selectedItem.value) {
     try {
-      routineMapLoading.value = true;
-      const tasks = await fetch(
-        `/api/activity/tasks/tasksInRoutines?routineId=${selectedItem.value.uuid}`
+      const tasks = await $fetch<any>(
+        `/api/services/tasks/staticTasksInRoutine?routineName=${selectedItem.value.name}`
       );
-      if (!tasks.ok) throw new Error('Failed to fetch routine map');
-      const tasksData = await tasks.json();
-      routineMap.value = tasksData || [];
+      routineMap.value = Array.isArray(tasks)
+        ? tasks.map((task: any) => ({
+            ...task,
+            name: task.name, // Add 'name' property required by FlowItem
+          }))
+        : [];
     } catch (error) {
+      console.error('Error fetching routine map:', error);
       routineMap.value = [];
-    } finally {
-      routineMapLoading.value = false;
     }
-  } else {
-    routineMap.value = [];
-    routineMapLoading.value = false;
   }
+
+  fetchHeatmapData(
+    Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+  );
 });
 
-const showStopDialog = ref(false);
-const showGenerateDialog = ref(false);
+watch(
+  () => route.params.id,
+  async (newId) => {
+    const itemName: string = Array.isArray(newId) ? newId[0] : newId;
 
-function confirmStop() {
-  showStopDialog.value = false;
-  // Add logic to handle stopping the process
-}
+    if (Items.value && Array.isArray(Items.value)) {
+      const found = (Items.value as any[]).find(
+        (item: any) => item.name === itemName || item.label === itemName || item.uuid === itemName
+      ) as any;
+      if (found) {
+        if (!found.name && found.label) found.name = found.label;
+        selectedItem.value = found;
+      } else {
+        selectedItem.value = null;
+      }
 
-function confirmGenerate() {
-  showGenerateDialog.value = false;
-  // Add logic to handle generating the contract
-}
-// Flash animation for InfoCard when selectedTask updates
-import { nextTick } from 'vue';
-const flashActive = ref(false);
-const flashCard = ref(null);
+      // Apply query overrides (version/service) when present in the URL
+      const qVersion = route.query.version ?? route.query.v ?? null;
+      const qService = route.query.service ?? route.query.s ?? null;
+      if (selectedItem.value) {
+        if (qVersion) (selectedItem.value as any).version = String(qVersion);
+        if (qService) selectedItem.value.service = String(qService);
+      }
+    } else {
+      selectedItem.value = null;
+    }
 
-watch(selectedTask, async (newVal, oldVal) => {
-  if (newVal && oldVal && newVal.uuid !== oldVal.uuid) {
-    flashActive.value = false;
-    await nextTick();
-    flashActive.value = true;
-    setTimeout(() => {
-      flashActive.value = false;
-    }, 700); // Animation duration
+    fetchActiveRoutines(itemName, false);
+
+    // Re-fetch routine map for the newly-selected routine
+    if (selectedItem.value) {
+      try {
+        const tasks = await $fetch<any>(
+          `/api/services/tasks/staticTasksInRoutine?routineName=${selectedItem.value.name}`
+        );
+        routineMap.value = Array.isArray(tasks)
+          ? tasks.map((task: any) => ({
+              ...task,
+              name: task.name,
+            }))
+          : [];
+      } catch (error) {
+        console.error('Error fetching routine map:', error);
+        routineMap.value = [];
+      }
+    } else {
+      routineMap.value = [];
+    }
+
+    fetchHeatmapData(itemName);
   }
-});
+);
+
+async function fetchActiveRoutines(itemName: string, isLoadMore = false) {
+  try {
+    if (isLoadMore) {
+      loadingMoreData.value = true;
+      currentPage.value++;
+    }
+
+    const data = await $fetch<any>(
+      `/api/activity/routines/routineActivity?name=${itemName}&page=${currentPage.value}&limit=${pageSize}`
+    );
+
+    const normalized: Routine[] = Array.isArray(data) ? data : data ? [data] : [];
+
+    if (isLoadMore) {
+      routines.value = [...routines.value, ...normalized];
+    } else {
+      routines.value = normalized;
+    }
+
+    hasMoreData.value = normalized.length === pageSize;
+  } catch (error) {
+    console.error('Error fetching active routines:', error);
+    hasMoreData.value = false;
+  } finally {
+    if (isLoadMore) {
+      loadingMoreData.value = false;
+    }
+  }
+}
+
+async function loadMoreRoutines() {
+  const itemName: string = Array.isArray(route.params.id)
+    ? route.params.id[0]
+    : route.params.id;
+  await fetchActiveRoutines(itemName, true);
+}
 </script>
 
-<style>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
-}
-.centered-container {
-  width: 100%;
-  margin: 0 auto;
-}
-</style>
 <style scoped>
-.flash-bg {
-  animation: flash-fade 5s;
-}
-@keyframes flash-fade {
-  0% {
-    box-shadow: #e3b434 0px 0px 30px;
-    border-radius: 20px;
-  }
-  60% {
-    box-shadow: #e3b434 0px 0px 15px;
-    border-radius: 20px;
-  }
-  100% {
-    background-color: transparent;
-    border-radius: 20px;
-  }
+.custom-table {
+  background-color: #e6b30dc4;
 }
 </style>

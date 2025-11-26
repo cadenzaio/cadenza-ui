@@ -73,7 +73,7 @@ SELECT
 FROM task_to_routine_map ttrm
 LEFT OUTER JOIN task t ON ttrm.task_name = t.name
 LEFT OUTER JOIN directional_task_graph_map dtm ON ttrm.task_name = dtm.task_name
-WHERE routine_name = $1 AND t.is_meta = false;
+WHERE routine_name = $1;
   `;
 
   const result = await client!.query(query, [routineName]);

@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useFetch } from '#app';
 import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
@@ -118,14 +118,29 @@ async function loadTasks(isLoadMore = false) {
     );
     if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();
+    console.log('Fetched tasks response:', data);
+
+    // Normalize tasks and provide a fallback for missing uuid
+    const incomingTasks = Array.isArray(data.tasks) ? data.tasks : [];
+    const normalized = incomingTasks.map((t: any, idx: number) => {
+      const fallbackUuid = t.uuid || t.id || t.name || `task-${currentPage.value}-${idx}`;
+      if (!t.uuid) {
+        console.warn('Task missing uuid, falling back to:', fallbackUuid, t);
+      }
+      return {
+        ...t,
+        uuid: fallbackUuid,
+      };
+    });
 
     if (isLoadMore) {
-      tasks.value = [...tasks.value, ...data.tasks];
+      tasks.value = [...tasks.value, ...normalized];
     } else {
-      tasks.value = data.tasks;
+      tasks.value = normalized;
     }
+    console.log('Tasks count after set:', tasks.value.length);
 
-    hasMoreData.value = data.tasks.length === pageSize;
+    hasMoreData.value = normalized.length === pageSize;
   } catch (error) {
     console.error('Error fetching tasks:', error);
     hasMoreData.value = false;

@@ -53,10 +53,10 @@ const loading = ref(false);
 const router = useRouter();
 
 function inspectSignal(signal: Signal) {
-  navigateToItem(`/activity/signals/${signal.uuid}`);
+  navigateToItem(`/meta/signals/${signal.uuid}`);
 }
 function inspectInNewTab(signal: Signal) {
-  const url = `/activity/signals/${signal.uuid}`;
+  const url = `/meta/signals/${signal.uuid}`;
   window.open(url, '_blank');
 }
 

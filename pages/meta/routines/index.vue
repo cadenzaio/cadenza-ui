@@ -1,20 +1,18 @@
 <template>
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
-      <template #title> Meta Routine executions </template>
+      <template #title> Meta Routines </template>
       <div class="row q-mx-md">
         <Table
           :columns="columns"
           :rows="routines"
           row-key="uuid"
-          @inspect-row="inspectRoutine"
+          @inspect-row="inspectRoutines"
           @inspect-row-in-new-tab="inspectInNewTab"
-          @loadMoreData="loadMoreRoutines"
-          :hasMoreData="hasMoreData"
           :enableInfiniteScroll="true"
-          :loadingMoreData="loadingMoreData"
+          :hasMoreData="hasMoreData"
+          @load-more="loadMoreRoutines"
         />
-        <FrequencyPieChart v-if="routines.length > 0" :values="routines" />
       </div>
     </NuxtLayout>
   </NuxtLayout>
@@ -23,106 +21,83 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useFetch } from '#app';
-import { useRouter, viewDepthKey } from '#vue-router';
+import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
-import { useVirtualList } from '@vueuse/core';
 
-interface Routine {
+interface routines {
   type: string;
   label: string;
-  description: string;
-  id: any;
+  service: string;
   executionId: any;
   progress: any;
   uuid: string;
 }
 
 const layout = 'dashboard-layout';
-const selectedRoutine = ref<Routine[] | undefined>(undefined);
-watch(selectedRoutine, (newValue) => {});
+const selectedRoutine = ref<routines[] | undefined>(undefined);
+const routines = ref<routines[]>([]);
+const hasMoreData = ref(true);
+const currentPage = ref(1);
+const pageSize = 50;
+const router = useRouter();
 
 const columns = [
   {
-    name: 'name',
+    name: 'label',
     label: 'Name',
     field: 'label',
     required: true,
     sortable: true,
   },
   {
-    name: 'status',
-    label: 'Status',
-    field: 'status',
+    name: 'version',
+    label: 'Version',
+    field: 'version',
     required: true,
     sortable: true,
   },
   {
-    name: 'progress',
-    label: 'Progress',
-    field: 'progress',
+    name: 'service',
+    label: 'Service',
+    field: 'service',
     required: true,
     sortable: false,
   },
-  {
-    name: 'started',
-    label: 'Started',
-    field: 'started',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'ended',
-    label: 'Ended',
-    field: 'ended',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'duration',
-    label: 'Duration (sec)',
-    field: 'duration',
-    required: true,
-    sortable: true,
-  },
 ];
 
-const routines = ref<Routine[]>([]);
-const hasMoreData = ref(true);
-const loadingMoreData = ref(false);
-const currentPage = ref(1);
-const pageSize = 50;
 
-const router = useRouter();
-
-function inspectRoutine(routine: Routine) {
-  navigateToItem(`/meta/routines/${routine.uuid}`);
+function inspectRoutines(routines: routines) {
+  const path = `/meta/routines/${encodeURIComponent(String(routines.label))}`;
+  const qs: string[] = [];
+  // If the routine row contains service/version (from server) pass them through
+  if ((routines as any).service) qs.push(`service=${encodeURIComponent(String((routines as any).service))}`);
+  if ((routines as any).version) qs.push(`version=${encodeURIComponent(String((routines as any).version))}`);
+  navigateToItem(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
-function inspectInNewTab(routine: Routine) {
-  openLinkInNewTab(`/meta/routines/${routine.uuid}`);
+function inspectInNewTab(routine: routines) {
+  const path = `/meta/routines/${encodeURIComponent(String(routine.label))}`;
+  const qs: string[] = [];
+  if ((routine as any).service) qs.push(`service=${encodeURIComponent(String((routine as any).service))}`);
+  if ((routine as any).version) qs.push(`version=${encodeURIComponent(String((routine as any).version))}`);
+  openLinkInNewTab(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
 }
 
 const navigateToItem = (route: string) => {
   router.push(route);
 };
 
-async function loadRoutines(isLoadMore = false) {
+async function loadRoutines(page: number = 1, append: boolean = false) {
   try {
-    if (isLoadMore) {
-      loadingMoreData.value = true;
-      currentPage.value++;
-      console.log(`Loading more routines, current page: ${currentPage.value}`);
-    }
-
     const response = await fetch(
-      `/api/meta/routines/metaRoutines?page=${currentPage.value}&limit=${pageSize}`
+      `/api/meta/routines/metaRoutines?page=${page}&limit=${pageSize}`
     );
     if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();
 
-    if (isLoadMore) {
+    if (append) {
       routines.value = [...routines.value, ...data];
     } else {
       routines.value = data;
@@ -132,21 +107,17 @@ async function loadRoutines(isLoadMore = false) {
   } catch (error) {
     console.error('Error loading routines:', error);
     hasMoreData.value = false;
-  } finally {
-    if (isLoadMore) {
-      loadingMoreData.value = false;
-    }
   }
 }
 
 async function loadMoreRoutines() {
-  await loadRoutines(true);
+  currentPage.value++;
+  await loadRoutines(currentPage.value, true);
 }
 
-// Fetch server stats and set the current section on component mount
 onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('meta');
-  await loadRoutines();
+  await loadRoutines(1, false);
 });
 </script>

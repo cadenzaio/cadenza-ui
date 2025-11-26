@@ -21,6 +21,7 @@ async function getRoutineMap() {
       SUM(CASE WHEN failed THEN 1 ELSE 0 END) +
       SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as errors
     FROM "routine_execution"
+    WHERE is_meta = false
     GROUP BY date, hour
     ORDER BY date, hour
   `;
@@ -37,6 +38,7 @@ async function getRoutineMap() {
 // Types for heatmap data
 interface HeatmapRow {
   date: string | Date;
+  created_at?: string | Date;
   hour: number;
   executions: number;
   errors: number;

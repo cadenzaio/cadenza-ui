@@ -11,7 +11,7 @@ async function getClient() {
 }
 
 // Get TaskExecutions by task_id
-async function getTaskMap(taskId: string) {
+async function getTaskMap(taskName: string) {
   const query = `
     SELECT
       DATE_TRUNC('day', created) as date,
@@ -21,12 +21,12 @@ async function getTaskMap(taskId: string) {
       SUM(CASE WHEN failed THEN 1 ELSE 0 END) +
       SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as errors
     FROM task_execution
-    WHERE task_id = $1
+    WHERE task_name = $1
     GROUP BY date, hour
     ORDER BY date, hour
   `;
   const client = await getClient();
-  const result = await client.query(query, [taskId]);
+  const result = await client.query(query, [taskName]);
   return result.rows;
 }
 
@@ -36,17 +36,17 @@ export default defineEventHandler(async (event) => {
     event.node.req.url ?? '',
     `http://${event.node.req.headers.host}`
   );
-  const taskId = url.searchParams.get('taskId');
+  const taskName = url.searchParams.get('taskName');
 
-  if (method === 'GET' && taskId) {
+  if (method === 'GET' && taskName) {
     try {
-      return await getTaskMap(taskId);
+      return await getTaskMap(taskName);
     } catch (error) {
       console.error('Error fetching TaskExecutions:', error);
       throw error;
     }
   } else {
-    console.error('Invalid request:', { method, taskId });
+    console.error('Invalid request:', { method, taskName });
     return { error: 'Invalid request' };
   }
 });

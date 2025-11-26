@@ -4,6 +4,9 @@
     elevated
     style="max-width: 50dvw; max-height: 70dvh; overflow-y: auto"
   >
+  <div>
+    <span class="text-h6 q-ml-lg" style="color: red;">  RANDOM DATA  </span> <!-- remove when live data is connected -->
+  </div>
     <div v-if="loading" class="col q-pa-md flex column items-center justify-center" style="min-height: 200px;">
       <q-spinner-dots size="40px" color="primary" class="q-mb-md" />
       <div class="text-subtitle1">Loading server stats...</div>

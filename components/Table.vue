@@ -413,7 +413,7 @@ import type { PropType } from 'vue';
 const router = useRouter();
 const appStore = useAppStore();
 const inspectButtonColor = computed(() =>
-  appStore.currentSection === 'services'
+  appStore.currentSection === 'system'
     ? 'primary'
     : appStore.currentSection === 'serviceActivity'
     ? 'warning'

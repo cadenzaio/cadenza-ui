@@ -55,6 +55,8 @@ async function getTaskExecution(
     `;
   const params = name ? [name, limit, offset] : [limit, offset];
   const result = await client.query(query, params);
+  console.log('activeTasks query params:', { name, page, limit, offset });
+  console.log('activeTasks result rows:', result.rows.length);
 
   // Map the results to match the expected frontend format
   const mappedRows = result.rows.map((row) => ({

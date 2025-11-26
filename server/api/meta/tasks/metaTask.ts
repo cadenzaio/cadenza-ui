@@ -38,7 +38,7 @@ async function getSingleTaskExecution(id: string) {
     LEFT JOIN context ctx ON te.context_id = ctx.uuid
     LEFT JOIN context ctx2 ON te.result_context_id = ctx2.uuid
     LEFT JOIN task t ON te.task_name = t.name
-    WHERE te.uuid = $1 AND te.is_meta = true
+    WHERE te.uuid = $1
   `;
 
   const result = await client.query(query, [id]);
