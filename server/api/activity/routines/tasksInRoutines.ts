@@ -49,7 +49,9 @@ async function getTaskDetailsByExecutionId(executionId: string) {
 
 async function getLatestExecutionIdForTaskName(taskName: string) {
 	const q = `
-		SELECT uuid FROM task_execution
+		SELECT
+			uuid
+		FROM task_execution
 		WHERE task_name = $1
 		ORDER BY started DESC NULLS LAST
 		LIMIT 1
@@ -60,7 +62,9 @@ async function getLatestExecutionIdForTaskName(taskName: string) {
 
 async function getSignalsConsumedByExecutionId(taskExecutionId: string) {
 	const q = `
-		SELECT DISTINCT signal_name, service_name
+		SELECT DISTINCT
+			signal_name,
+			service_name
 		FROM signal_consumption
 		WHERE task_execution_id = $1
 	`;
@@ -70,7 +74,10 @@ async function getSignalsConsumedByExecutionId(taskExecutionId: string) {
 
 async function getEmittersForSignal(signalName: string) {
 	const q = `
-		SELECT DISTINCT task_execution_id, task_name, service_name
+		SELECT DISTINCT
+			task_execution_id,
+			task_name,
+			service_name
 		FROM signal_emission
 		WHERE signal_name = $1
 	`;
@@ -80,7 +87,8 @@ async function getEmittersForSignal(signalName: string) {
 
 async function getSignalsEmittedByExecutionId(taskExecutionId: string) {
 	const q = `
-		SELECT DISTINCT signal_name
+		SELECT DISTINCT
+			signal_name
 		FROM signal_emission
 		WHERE task_execution_id = $1
 	`;
@@ -90,28 +98,170 @@ async function getSignalsEmittedByExecutionId(taskExecutionId: string) {
 
 async function getConsumersForSignal(signalName: string) {
 	const q = `
-		SELECT DISTINCT task_execution_id, task_name, service_name
+		SELECT DISTINCT
+			task_execution_id,
+			task_name,
+			service_name
 		FROM signal_consumption
 		WHERE signal_name = $1
 	`;
 	const r = await client!.query(q, [signalName]);
 	return r.rows; 
 }
+// Batch helpers to reduce many DB round-trips
+async function getSignalsConsumedByExecutionIds(taskExecutionIds: string[]) {
+	if (!taskExecutionIds || taskExecutionIds.length === 0) return {};
+	const q = `
+		SELECT
+			task_execution_id,
+			signal_name
+		FROM signal_consumption
+		WHERE task_execution_id = ANY($1)
+	`;
+	const r = await client!.query(q, [taskExecutionIds]);
+	const map: Record<string, string[]> = {};
+	for (const row of r.rows) {
+		const id = String(row.task_execution_id);
+		map[id] = map[id] || [];
+		if (row.signal_name && !map[id].includes(row.signal_name)) map[id].push(row.signal_name);
+	}
+	return map;
+}
+
+async function getSignalsEmittedByExecutionIds(taskExecutionIds: string[]) {
+	if (!taskExecutionIds || taskExecutionIds.length === 0) return {};
+	const q = `
+		SELECT
+			task_execution_id,
+			signal_name
+		FROM signal_emission
+		WHERE task_execution_id = ANY($1)
+	`;
+	const r = await client!.query(q, [taskExecutionIds]);
+	const map: Record<string, string[]> = {};
+	for (const row of r.rows) {
+		const id = String(row.task_execution_id);
+		map[id] = map[id] || [];
+		if (row.signal_name && !map[id].includes(row.signal_name)) map[id].push(row.signal_name);
+	}
+	return map;
+}
+
+async function getEmittersForSignals(signals: string[]) {
+	if (!signals || signals.length === 0) return {};
+	const q = `
+		SELECT
+			signal_name,
+			task_execution_id,
+			task_name,
+			service_name
+		FROM signal_emission
+		WHERE signal_name = ANY($1)
+	`;
+	const r = await client!.query(q, [signals]);
+	const map: Record<string, Array<{ task_execution_id: string; task_name?: string; service_name?: string }>> = {};
+	for (const row of r.rows) {
+		const sig = row.signal_name;
+		map[sig] = map[sig] || [];
+		const entry = { task_execution_id: row.task_execution_id, task_name: row.task_name, service_name: row.service_name };
+		if (!map[sig].some((e) => String(e.task_execution_id) === String(entry.task_execution_id))) map[sig].push(entry);
+	}
+	return map;
+}
+
+async function getConsumersForSignals(signals: string[]) {
+	if (!signals || signals.length === 0) return {};
+	const q = `
+		SELECT
+			signal_name,
+			task_execution_id,
+			task_name,
+			service_name
+		FROM signal_consumption
+		WHERE signal_name = ANY($1)
+	`;
+	const r = await client!.query(q, [signals]);
+	const map: Record<string, Array<{ task_execution_id: string; task_name?: string; service_name?: string }>> = {};
+	for (const row of r.rows) {
+		const sig = row.signal_name;
+		map[sig] = map[sig] || [];
+		const entry = { task_execution_id: row.task_execution_id, task_name: row.task_name, service_name: row.service_name };
+		if (!map[sig].some((e) => String(e.task_execution_id) === String(entry.task_execution_id))) map[sig].push(entry);
+	}
+	return map;
+}
 
 async function getPredecessorsByExecutionId(executionId: string) {
-	const q = `SELECT previous_task_execution_id FROM task_execution_map WHERE task_execution_id = $1`;
+	const q = `
+		SELECT
+			previous_task_execution_id
+		FROM task_execution_map
+		WHERE task_execution_id = $1
+	`;
 	const r = await client!.query(q, [executionId] as any);
 	return r.rows || [];
 }
 
 async function getSuccessorsByExecutionId(executionId: string) {
-	const q = `SELECT task_execution_id FROM task_execution_map WHERE previous_task_execution_id = $1`;
+	const q = `
+		SELECT
+			task_execution_id
+		FROM task_execution_map
+		WHERE previous_task_execution_id = $1
+	`;
 	const r = await client!.query(q, [executionId] as any);
 	return r.rows || [];
 }
 
+// Batch predecessors/successors helpers
+async function getPredecessorsByExecutionIds(executionIds: string[]) {
+	if (!executionIds || executionIds.length === 0) return {};
+	const q = `
+		SELECT
+			task_execution_id,
+			previous_task_execution_id
+		FROM task_execution_map
+		WHERE task_execution_id = ANY($1)
+	`;
+	const r = await client!.query(q, [executionIds]);
+	const map: Record<string, string[]> = {};
+	for (const row of r.rows) {
+		const id = String(row.task_execution_id);
+		map[id] = map[id] || [];
+		if (row.previous_task_execution_id) map[id].push(row.previous_task_execution_id);
+	}
+	// ensure uniqueness
+	for (const k of Object.keys(map)) map[k] = Array.from(new Set(map[k]));
+	return map;
+}
+
+async function getSuccessorsByExecutionIds(previousIds: string[]) {
+	if (!previousIds || previousIds.length === 0) return {};
+	const q = `
+		SELECT
+			previous_task_execution_id,
+			task_execution_id
+		FROM task_execution_map
+		WHERE previous_task_execution_id = ANY($1)
+	`;
+	const r = await client!.query(q, [previousIds]);
+	const map: Record<string, string[]> = {};
+	for (const row of r.rows) {
+		const pid = String(row.previous_task_execution_id);
+		map[pid] = map[pid] || [];
+		if (row.task_execution_id) map[pid].push(row.task_execution_id);
+	}
+	for (const k of Object.keys(map)) map[k] = Array.from(new Set(map[k]));
+	return map;
+}
+
 async function getTaskExecutionIdsForRoutineExecutionId(routineExecutionId: string) {
-    const q = `SELECT uuid FROM task_execution WHERE routine_execution_id = $1`;
+	const q = `
+		SELECT
+			uuid
+		FROM task_execution
+		WHERE routine_execution_id = $1
+	`;
     const r = await client!.query(q, [routineExecutionId] as any);
     return r.rows.map((row: any) => row.uuid);
 }
@@ -171,89 +321,64 @@ export default defineEventHandler(async (event) => {
 	const predecessorsMap: Record<string, string[]> = {};
 	const successorsMap: Record<string, string[]> = {};
 
+	// Process nodes in batches to reduce DB round-trips when fetching predecessors/successors
+	const batchSize = 50;
 	while (toVisit.length > 0 && visited.size < maxNodes) {
-		const cur = toVisit.shift() as string;
-		if (!cur || visited.has(cur)) continue;
-		visited.add(cur);
+		const batch = toVisit.splice(0, batchSize).filter((id) => !!id && !visited.has(id)) as string[];
+		if (batch.length === 0) continue;
 
+		// mark visited
+		batch.forEach((id) => visited.add(id));
+
+		// fetch predecessors and successors for the whole batch
+		let predsMap: Record<string, string[]> = {};
+		let succsMap: Record<string, string[]> = {};
 		try {
-			const preds = await getPredecessorsByExecutionId(cur);
-			const predIds = Array.from(new Set((preds || []).map((p: any) => p.previous_task_execution_id).filter(Boolean)));
+			predsMap = await getPredecessorsByExecutionIds(batch) as Record<string, string[]>;
+		} catch (e) {
+			predsMap = {};
+		}
+		try {
+			succsMap = await getSuccessorsByExecutionIds(batch) as Record<string, string[]>;
+		} catch (e) {
+			succsMap = {};
+		}
+
+		for (const cur of batch) {
+			const predIds = Array.from(new Set((predsMap[cur] || []).filter(Boolean)));
 			predecessorsMap[cur] = predIds;
 			predIds.forEach((pid) => {
 				if (!itemsMap[pid]) itemsMap[pid] = { name: null, version: null, service: null };
 				if (!visited.has(pid) && !toVisit.includes(pid)) toVisit.push(pid);
 			});
-		} catch (e) {
-			predecessorsMap[cur] = predecessorsMap[cur] || [];
-		}
 
-		try {
-			const succs = await getSuccessorsByExecutionId(cur);
-			const succIds = Array.from(new Set((succs || []).map((s: any) => s.task_execution_id).filter(Boolean)));
+			const succIds = Array.from(new Set((succsMap[cur] || []).filter(Boolean)));
 			successorsMap[cur] = succIds;
 			succIds.forEach((sid) => {
 				if (!itemsMap[sid]) itemsMap[sid] = { name: null, version: null, service: null };
 				if (!visited.has(sid) && !toVisit.includes(sid)) toVisit.push(sid);
 			});
-		} catch (e) {
-			successorsMap[cur] = successorsMap[cur] || [];
 		}
 	}
 
 	const items = Object.keys(itemsMap).filter((k) => visited.has(k)).map((k) => ({ id: k, name: itemsMap[k].name ?? null, version: itemsMap[k].version ?? null, service: itemsMap[k].service }));
 
+	// Build predecessorIdsMap from traversal results and batch-fetch consumed/emitted signals and their emitter/consumer relationships
 	const predecessorIdsMap: Record<string, string[]> = {};
-	const consumedSignalsMap: Record<string, string[]> = {};
-	await Promise.all(items.map(async (it) => {
-		try {
-			const preds = await getPredecessorsByExecutionId(it.id);
-			predecessorIdsMap[it.id] = Array.from(new Set((preds || []).map((p: any) => p.previous_task_execution_id).filter(Boolean)));
-		} catch (e) {
-			predecessorIdsMap[it.id] = [];
-		}
+	items.forEach((it) => {
+		predecessorIdsMap[it.id] = Array.from(new Set((predecessorsMap[it.id] || []).filter(Boolean)));
+	});
 
-		try {
-			const consumed = await getSignalsConsumedByExecutionId(it.id);
-			consumedSignalsMap[it.id] = Array.from(new Set((consumed || []).map((c: any) => c.signal_name).filter(Boolean)));
-		} catch (e) {
-			consumedSignalsMap[it.id] = [];
-		}
-	}));
+	const itemIds = items.map((it) => it.id);
+	const consumedSignalsMap: Record<string, string[]> = await getSignalsConsumedByExecutionIds(itemIds);
+	const emittedSignalsMap: Record<string, string[]> = await getSignalsEmittedByExecutionIds(itemIds);
 
-	
 	const allSignals = Array.from(new Set(Object.values(consumedSignalsMap).flat()));
-	const emittersMap: Record<string, Array<{ task_execution_id: string; task_name?: string; service_name?: string }>> = {};
-	await Promise.all(allSignals.map(async (s) => {
-		try {
-			const emitters = await getEmittersForSignal(s);
-			emittersMap[s] = Array.from(new Map((emitters || []).map((e: any) => [String(e.task_execution_id), { task_execution_id: e.task_execution_id, task_name: e.task_name, service_name: e.service_name }])).values());
-		} catch (e) {
-			emittersMap[s] = [];
-		}
-	}));
-
-	const emittedSignalsMap: Record<string, string[]> = {};
-	await Promise.all(items.map(async (it) => {
-		try {
-			emittedSignalsMap[it.id] = await getSignalsEmittedByExecutionId(it.id) || [];
-		} catch (e) {
-			emittedSignalsMap[it.id] = [];
-		}
-	}));
+	const emittersMap = await getEmittersForSignals(allSignals);
 
 	const allEmittedSignals = Array.from(new Set(Object.values(emittedSignalsMap).flat()));
-
 	const signalsToFetchConsumers = Array.from(new Set([...allEmittedSignals, ...allSignals]));
-	const consumersMap: Record<string, Array<{ task_execution_id: string; task_name?: string; service_name?: string }>> = {};
-	await Promise.all(signalsToFetchConsumers.map(async (s) => {
-		try {
-			const consumers = await getConsumersForSignal(s);
-			consumersMap[s] = Array.from(new Map((consumers || []).map((c: any) => [String(c.task_execution_id), { task_execution_id: c.task_execution_id, task_name: c.task_name, service_name: c.service_name }])).values());
-		} catch (e) {
-			consumersMap[s] = [];
-		}
-	}));
+	const consumersMap = await getConsumersForSignals(signalsToFetchConsumers);
 
 
 	const enriched = await Promise.all(items.map(async (it) => {

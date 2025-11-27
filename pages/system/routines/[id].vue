@@ -280,6 +280,21 @@ const navigateToItem = (route: string) => {
 
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
+  if (!task) return;
+
+  // If this node represents a signal, route to the system signals page
+  // using the signal name and include serviceName when available.
+  const canonicalId = task.uuid || task.id || task.name || '';
+  if (task.signal === true || String(canonicalId).startsWith('signal::')) {
+    const signalName = task.name || String(canonicalId).replace(/^signal::/, '');
+    if (signalName) {
+      const svc = (task as any).service || (task as any).serviceName || (task as any).service_instance || '';
+      const qs = svc ? `?serviceName=${encodeURIComponent(String(svc))}` : '';
+      navigateToItem(`/system/signals/${encodeURIComponent(String(signalName))}${qs}`);
+      return;
+    }
+  }
+
   if (task && task.name) {
     const path = `/system/tasks/${encodeURIComponent(String(task.name))}`;
     const qs: string[] = [];

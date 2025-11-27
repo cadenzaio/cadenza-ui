@@ -87,47 +87,37 @@ interface TableColumn {
 
 const columns: TableColumn[] = [
   {
-    name: 'graph',
+    // server/api/meta/metaServices.ts returns objects with `label` (display name)
+    // and `name` (canonical name). Use `label` for the visible service name.
+    name: 'label',
     label: 'Service',
-    field: 'graph',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'address',
-    label: 'Address',
-    field: 'address',
-    required: true,
-    sortable: true,
-  },
-  {
-    name: 'port',
-    label: 'Port',
-    field: 'port',
+    field: 'label',
     required: true,
     sortable: true,
   },
 ];
 
 interface Server {
+  // Fields returned by `server/api/meta/metaServices.ts`
   uuid: string;
-  address: string;
-  port: string;
-  graph: string;
-  status: string;
-  isPrimary: boolean;
-  processPid: number;
-  modified: string;
+  label: string; // display name
+  name: string; // canonical name
+  description?: string;
+  displayName?: string;
+  // legacy/optional fields kept for compatibility
+  address?: string;
+  port?: string;
+  graph?: string;
 }
 
 function inspectServer(server: Server): void {
-  navigateToItem(`/meta/services/${server.uuid}`);
+  navigateToItem(`/meta/services/${server.name}`);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(server: Server): void {
-  openLinkInNewTab(`/meta/services/${server.uuid}`);
+  openLinkInNewTab(`/meta/services/${server.name}`);
 }
 const navigateToItem = (route: string) => {
   router.push(route);
@@ -151,18 +141,28 @@ const fetchServerStats = async (isLoadMore = false) => {
   error.value = null;
   try {
     const response = await fetch(
-      `/api/meta/activeMetaServices?page=${currentPage.value}&limit=${pageSize}`
+      `/api/meta/metaServices?page=${currentPage.value}&limit=${pageSize}`
     );
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
 
-    if (isLoadMore) {
-      servers.value = [...servers.value, ...(data.servers || [])];
-    } else {
-      servers.value = data.servers || [];
+    // Support two possible response shapes:
+    // - An array of services (returned by this endpoint currently)
+    // - An object with a `servers` array (older/alternate shape)
+    let items: Server[] = [];
+    if (Array.isArray(data)) {
+      items = data;
+    } else if (data && Array.isArray((data as any).servers)) {
+      items = (data as any).servers;
     }
 
-    hasMoreData.value = (data.servers || []).length === pageSize;
+    if (isLoadMore) {
+      servers.value = [...servers.value, ...items];
+    } else {
+      servers.value = items;
+    }
+
+    hasMoreData.value = items.length === pageSize;
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'An error occurred';
     console.error('Error fetching server stats:', err);

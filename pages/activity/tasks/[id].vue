@@ -16,7 +16,7 @@
           id-field="uuid"
           label-field="name"
           previous-field="previousTaskExecutionName"
-          @item-selected="(task) => navigateToItem(`/activity/tasks/${task.uuid || task.id}`)"
+          @item-selected="onItemSelected"
         ></FlowMap>
       </div>
 
@@ -310,6 +310,51 @@ function getDuration(start?: string, end?: string) {
 const navigateToItem = (path: string) => {
   router.push(path);
 };
+
+// Handle clicks from FlowMap items. If the clicked item is a signal node
+// (ids like `signal::<uuid>` or `item.signal === true`), navigate to the
+// signal details page. Otherwise, navigate to the task execution page.
+async function onItemSelected(item: any) {
+  if (!item) return;
+
+  const canonicalId = item.uuid || item.id || item.name || '';
+  if (!canonicalId) return;
+
+  // If the node is marked as a signal, resolve the emission UUID then navigate
+  if (item.signal === true || String(canonicalId).startsWith('signal::')) {
+    const raw = String(item.uuid || canonicalId);
+    const stripped = raw.replace(/^signal::/, '');
+
+    const looksLikeUuid = /^[0-9a-fA-F-]{36}$/.test(stripped);
+    if (looksLikeUuid) {
+      router.push(`/activity/signals/${stripped}`);
+      return;
+    }
+
+    // Try to resolve by signal name to the latest emission uuid.
+    try {
+      const resp = await fetch(`/api/activity/signals/by-name?name=${encodeURIComponent(stripped)}`);
+      if (!resp.ok) {
+        console.warn('Failed to resolve signal name to emission:', stripped);
+        return;
+      }
+      const body = await resp.json();
+      const emission = body?.emission;
+      if (emission && emission.uuid) {
+        router.push(`/activity/signals/${emission.uuid}`);
+      } else {
+        console.warn('No emission returned for signal name:', stripped);
+      }
+    } catch (err) {
+      console.error('Error resolving signal name to emission:', err);
+    }
+    return;
+  }
+
+  // Otherwise assume this is a task execution node
+  const execId = item.uuid || item.id || canonicalId;
+  router.push(`/activity/tasks/${execId}`);
+}
 
 onMounted(() => {
   const appStore = useAppStore();

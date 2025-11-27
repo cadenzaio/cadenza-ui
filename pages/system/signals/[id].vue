@@ -2,8 +2,8 @@
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
       <template #title>Signal Details</template>
-      <div>
-        <FlowMap :items="flowItems" />
+        <div>
+          <FlowMap :items="flowItems" @item-selected="onItemSelected" />
         <InfoCard>
           <template #title> Signal Data </template>
           <template #info>
@@ -25,7 +25,7 @@
 import FlowMap from '~/components/FlowMap.vue';
 import { ref, onMounted, computed } from 'vue';
 import { useAppStore } from '~/stores/app';
-import { useRoute, useAsyncData } from '#imports';
+import { useRoute, useAsyncData, useRouter } from '#imports';
 
 // Define the Task interface
 interface Task {
@@ -43,6 +43,7 @@ onMounted(() => {
 const flowItems = ref<any[]>([]);
 
 const route = useRoute();
+const router = useRouter();
 
 // Fetch signal flow (the API may return either an items array or an object with previousTasks)
 const { data: apiData, pending, error } = await useAsyncData(
@@ -138,4 +139,20 @@ const formattedCreatedAt = computed(() => {
     return String(s.created);
   }
 });
+
+// Handle clicks from FlowMap nodes: navigate to task pages when a task node
+// is selected. Signal nodes are ignored here since this page already shows
+// signal details.
+function onItemSelected(item: any) {
+  if (!item) return;
+  // Ignore signal nodes
+  if (item.signal === true) return;
+
+  // Nodes created in this file use `id`/`name` like `task-<task_name>`
+  const canonical = item.name || item.id || item.uuid || '';
+  if (!canonical) return;
+  const taskName = String(canonical).replace(/^task-/, '');
+  if (!taskName) return;
+  router.push(`/system/tasks/${encodeURIComponent(String(taskName))}`);
+}
 </script>

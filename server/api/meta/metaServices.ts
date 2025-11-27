@@ -3,42 +3,45 @@ import { initializeClient } from '~/server/api/utils';
 
 let client: pg.Client | null = null;
 
-async function getSignals(page: number = 1, limit: number = 100) {
+// Get all services with pagination support
+async function getservices(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
   const query = `
-    SELECT 
-    name, 
-    domain, 
-    action, 
-    is_meta, 
-    service_name, 
-    created, 
-    deleted
-    FROM signal_registry
+    SELECT * FROM service
     WHERE is_meta = true
     ORDER BY name ASC
     LIMIT $1 OFFSET $2
   `;
-
   const res = await client!.query(query, [limit, offset]);
-  return res.rows;
+  // Map the results to match the ListItem interface
+
+  return res.rows.map((row) => ({
+    type: 'service',
+    label: row.display_name || row.name,
+    uuid: row.uuid,
+    description: row.description,
+    displayName: row.display_name,
+    // include canonical name for routing/navigation
+    name: row.name,
+  }));
+
 }
 
+// Event handler
 export default defineEventHandler(async (event) => {
   if (!client) {
     client = await initializeClient();
   }
-
   const { method } = event.node.req;
 
   if (method === 'GET') {
     try {
       const query = getQuery(event);
       const page = parseInt(query.page as string) || 1;
-      const limit = parseInt(query.limit as string) || 1000;
-      return await getSignals(page, limit);
+      const limit = parseInt(query.limit as string) || 100;
+      return await getservices(page, limit);
     } catch (error) {
-      console.error('Error fetching signals:', error);
+      console.error('Error fetching services:', error);
       throw error;
     }
   }

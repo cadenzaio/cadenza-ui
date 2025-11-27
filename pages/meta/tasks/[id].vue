@@ -320,6 +320,19 @@ watch([selectedItem, routines], updateTaskMap, { immediate: true });
 
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
+  if (!task) return;
+
+  const canonicalId = task.uuid || task.id || task.name || '';
+  if (task.signal === true || String(canonicalId).startsWith('signal::')) {
+    const signalName = task.name || String(canonicalId).replace(/^signal::/, '');
+    if (signalName) {
+      const svc = task.service || task.serviceName || task.serviceDbName || '';
+      const qs = svc ? `?serviceName=${encodeURIComponent(String(svc))}` : '';
+      navigateToItem(`/meta/signals/${encodeURIComponent(String(signalName))}${qs}`);
+      return;
+    }
+  }
+
   if (task && task.name) {
     const path = `/meta/tasks/${encodeURIComponent(String(task.name))}`;
     const qs: string[] = [];

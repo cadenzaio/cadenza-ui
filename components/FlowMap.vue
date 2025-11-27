@@ -171,7 +171,12 @@ async function processFlowItems(items: FlowItem[]) {
       failed: item.failed ?? false,
       isRunning: item.is_running ?? false,
       isScheduled: item.is_scheduled ?? false,
-      signal: item.signal === true,
+      // Detect signal nodes from several possible shapes returned by APIs
+      signal:
+        item.signal === true ||
+        (item as any).nodeType === 'signal' ||
+        (item as any).type === 'signal' ||
+        String(nodeId).startsWith('signal::'),
       item: item,
     };
 

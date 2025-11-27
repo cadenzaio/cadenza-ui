@@ -1,7 +1,7 @@
 <template>
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
-      <template #title> Meta Signal Executions </template>
+      <template #title> Signals </template>
       <div class="row q-mx-md">
         <Table
           :columns="columns"
@@ -9,11 +9,10 @@
           row-key="uuid"
           @inspect-row="inspectSignal"
           @inspect-row-in-new-tab="inspectInNewTab"
-          :enableInfiniteScroll="false"
-          :hasMoreData="false"
-          :loadingMoreData="false"
+          :enableInfiniteScroll="true"
+          :hasMoreData="hasMoreData"
+          :loadingMoreData="loadingMoreData"
         />
-        <FrequencyPieChart v-if="signals.length > 0" :values="signals" />
       </div>
     </NuxtLayout>
   </NuxtLayout>
@@ -23,12 +22,16 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
-import FrequencyPieChart from '~/components/FrequencyPieChart.vue';
 
 interface Signal {
   name: string;
+  status: string;
+  value: string;
+  started: string;
+  ended: string;
+  duration: number;
   uuid: string;
-  service: string;
+  service: string; // Added service field
 }
 
 const columns = [
@@ -40,50 +43,111 @@ const columns = [
     sortable: true,
   },
   {
+    name: 'status',
+    label: 'Status',
+    field: 'status',
+    required: true,
+    sortable: true,
+  },
+  {
     name: 'service',
     label: 'Service',
     field: 'service',
+    required: true,
+    sortable: false,
+  },
+  {
+    name: 'started',
+    label: 'Started',
+    field: 'started',
+    required: true,
+    sortable: true,
+  },
+  {
+    name: 'ended',
+    label: 'Ended',
+    field: 'ended',
+    required: true,
+    sortable: true,
+  },
+  {
+    name: 'duration',
+    label: 'Duration (sec)',
+    field: 'duration',
     required: true,
     sortable: true,
   },
 ];
 
 const signals = ref<Signal[]>([]);
-const loading = ref(false);
+const hasMoreData = ref(true);
+const loadingMoreData = ref(false);
+const currentPage = ref(1);
+const pageSize = 50000;
+
+async function loadSignals(isLoadMore = false) {
+  try {
+    if (isLoadMore) {
+      loadingMoreData.value = true;
+      currentPage.value++;
+    }
+
+    const response = await $fetch(`/api/meta/signals/metaSignals?page=${currentPage.value}&limit=${pageSize}`);
+    const rows = response || [];
+
+    // Map DB rows to the table's expected Signal interface
+    const data = rows.map((r: any) => ({
+      name: r.name,
+      status: r.is_meta ? 'meta' : 'signal',
+      service: r.service_name || '', // Ensure no duplicate property
+      started: r.created || '',
+      ended: '',
+      duration: 0,
+      uuid: r.name,
+      value: r.value || '', // Include the value field
+    }));
+
+    if (isLoadMore) {
+      signals.value = [...signals.value, ...data];
+    } else {
+      signals.value = data;
+    }
+
+    hasMoreData.value = data.length === pageSize;
+  } catch (error) {
+    console.error('Error loading signals:', error);
+    hasMoreData.value = false;
+  } finally {
+    if (isLoadMore) {
+      loadingMoreData.value = false;
+    }
+  }
+}
+
+async function loadMoreSignals() {
+  await loadSignals(true);
+}
+
 const router = useRouter();
 
 function inspectSignal(signal: Signal) {
-  navigateToItem(`/meta/signals/${signal.uuid}`);
+  navigateToItem(`/meta/signals/${signal.name}?serviceName=${encodeURIComponent(signal.service)}`);
 }
+import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
+const { openLinkInNewTab } = useOpenLinkInNewTab();
+
 function inspectInNewTab(signal: Signal) {
-  const url = `/meta/signals/${signal.uuid}`;
-  window.open(url, '_blank');
+  openLinkInNewTab(`/meta/signals/${signal.name}?serviceName=${encodeURIComponent(signal.service)}`);
 }
 
 const navigateToItem = (route: string) => {
   router.push(route);
 };
 
-async function fetchSignals() {
-  loading.value = true;
-  try {
-    const response = await fetch('/api/meta/signals/metaSignals');
-    const result = await response.json();
-    signals.value = result.map((item: any) => ({
-      name: item.name,
-      uuid: item.uuid,
-      service: item.service,
-    }));
-  } catch (error) {
-    console.error('Error fetching signals:', error);
-  } finally {
-    loading.value = false;
-  }
-}
-
-onMounted(() => {
+onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('meta');
-  fetchSignals();
+  currentPage.value = 1;
+  await loadSignals(false);
 });
 </script>

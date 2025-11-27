@@ -29,9 +29,15 @@ async function getEmissionByUuid(uuid: string) {
   return res.rows;
 }
 
-async function getConsumptionsForSignal(signalName: string) {
-  const query = `SELECT * FROM signal_consumption WHERE signal_name = $1 ORDER BY consumed_at DESC LIMIT 200`;
-  const res = await client!.query(query, [signalName]);
+async function getConsumptionsForEmissionId(signalEmissionId: string) {
+  const query = `
+    SELECT *
+    FROM signal_consumption
+    WHERE signal_emission_id = $1
+    ORDER BY consumed_at DESC
+    LIMIT 200
+  `;
+  const res = await client!.query(query, [signalEmissionId]);
   return res.rows;
 }
 
@@ -74,8 +80,8 @@ export default defineEventHandler(async (event) => {
       // Usually uuid is unique and returns a single emission; handle list defensively
       const emission = emissions[0];
 
-      // Get consumptions for the signal name (optionally scoped by service)
-      const consumptions = await getConsumptionsForSignal(emission.signal_name);
+      // Get consumptions for this specific signal emission (use signal_emission_id)
+      const consumptions = await getConsumptionsForEmissionId(emission.uuid);
 
       // Build list of task execution ids to fetch related executions
       const execIds = new Set<string>();

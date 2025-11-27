@@ -49,7 +49,7 @@
                   id-field="uuid"
                   label-field="name"
                   previous-field="previousTaskExecutionId"
-                 @item-selected="(task) => navigateToItem(`/activity/tasks/${task.uuid || task.id}`)"
+                  @item-selected="onItemSelected"
                   style="width: 100%"
                 />
               </div>
@@ -503,6 +503,59 @@ function getDuration(start: string, end: string | undefined) {
 const navigateToItem = (route: string) => {
   router.push(route);
 };
+
+// Handle clicks from FlowMap items. If the clicked item is a signal node
+// (ids like `signal::<uuid>` or `item.signal === true`), navigate to the
+// signal details page. Otherwise, navigate to the task execution page.
+async function onItemSelected(item: any) {
+  if (!item) return;
+
+  // Prefer explicit `uuid` field for routing. Some nodes may expose a
+  // prefixed id like `signal::<uuid>`, while others provide the plain
+  // emission uuid in `uuid` — prefer the latter for signals.
+  const canonicalId = item.uuid || item.id || item.name || '';
+  if (!canonicalId) return;
+
+  // If the node is marked as a signal, use the emission UUID when possible.
+  if (item.signal === true) {
+    // If `uuid` looks like a real UUID (36 chars with hyphens), assume it's
+    // already the emission id and navigate directly. Otherwise the node may
+    // be using the signal name (e.g. `signal::health.check`) so attempt to
+    // resolve the latest emission via the new backend helper.
+    const raw = String(item.uuid || canonicalId);
+    const stripped = raw.replace(/^signal::/, '');
+
+    const looksLikeUuid = /^[0-9a-fA-F-]{36}$/.test(stripped);
+    if (looksLikeUuid) {
+      router.push(`/activity/signals/${stripped}`);
+      return;
+    }
+
+    // Otherwise try to resolve by signal name to the latest emission uuid.
+    try {
+      const resp = await fetch(`/api/activity/signals/by-name?name=${encodeURIComponent(stripped)}`);
+      if (!resp.ok) {
+        // fallback: navigate to a signal list or open nothing
+        console.warn('Failed to resolve signal name to emission:', stripped);
+        return;
+      }
+      const body = await resp.json();
+      const emission = body?.emission;
+      if (emission && emission.uuid) {
+        router.push(`/activity/signals/${emission.uuid}`);
+      } else {
+        console.warn('No emission returned for signal name:', stripped);
+      }
+    } catch (err) {
+      console.error('Error resolving signal name to emission:', err);
+    }
+    return;
+  }
+
+  // Otherwise assume it's a task execution node and navigate there
+  const execId = item.uuid || item.id || canonicalId;
+  router.push(`/activity/tasks/${execId}`);
+}
 
 onMounted(async () => {
   const appStore = useAppStore();

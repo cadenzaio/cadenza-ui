@@ -279,6 +279,25 @@ const navigateToItem = (route: string) => {
 
 function onTaskSelected(task: any) {
   console.log('Task selected:', task);
+  if (!task) return;
+
+  const canonicalId = task.uuid || task.id || task.name || '';
+
+  // If the node is a signal, navigate to the meta signal page (requires serviceName)
+  if (task.signal === true || String(canonicalId).startsWith('signal::')) {
+    const raw = String(task.name || canonicalId);
+    const stripped = raw.replace(/^signal::/, '');
+
+    // Prefer a service coming from the selected routine, fall back to the task's service
+    const serviceName =
+      (selectedItem as any)?.service || (task as any).service || (task as any).service_name || null;
+
+    const query = serviceName ? `?serviceName=${encodeURIComponent(String(serviceName))}` : '';
+    navigateToItem(`/meta/signals/${encodeURIComponent(stripped)}${query}`);
+    return;
+  }
+
+  // Otherwise treat as a task node
   if (task && task.name) {
     const path = `/meta/tasks/${encodeURIComponent(String(task.name))}`;
     const qs: string[] = [];

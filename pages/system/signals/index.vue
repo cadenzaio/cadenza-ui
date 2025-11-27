@@ -131,13 +131,13 @@ async function loadMoreSignals() {
 const router = useRouter();
 
 function inspectSignal(signal: Signal) {
-  navigateToItem(`/system/signals/${signal.uuid}?serviceName=${encodeURIComponent(signal.service)}`);
+  navigateToItem(`/system/signals/${signal.name}?serviceName=${encodeURIComponent(signal.service)}`);
 }
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
 function inspectInNewTab(signal: Signal) {
-  openLinkInNewTab(`/system/signals/${signal.uuid}?serviceName=${encodeURIComponent(signal.service)}`);
+  openLinkInNewTab(`/system/signals/${signal.name}?serviceName=${encodeURIComponent(signal.service)}`);
 }
 
 const navigateToItem = (route: string) => {
