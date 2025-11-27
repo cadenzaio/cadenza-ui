@@ -104,6 +104,8 @@ const cssVars = computed(() => {
 }
 .custom.signal path {
   stroke: #00d1ff;
+  stroke-dasharray: 6 6;
+  animation: edge-dash 1s linear infinite;
 }
 .custom.meta path {
   stroke: #ab0ac0;

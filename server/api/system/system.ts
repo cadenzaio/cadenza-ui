@@ -258,6 +258,34 @@ export default defineEventHandler(async (event) => {
       console.error('Error fetching directional task graph map:', dtmErr);
     }
 
+    // deputy task mapping: create edges between deputy and triggered tasks across routines/services
+    try {
+      const depQ = `SELECT deputy_task_name, triggered_task_name FROM deputy_task_map WHERE deleted = false`;
+      const depRes = await client!.query(depQ);
+      for (const row of (depRes.rows || [])) {
+        const deputyName = row.deputy_task_name;
+        const triggeredName = row.triggered_task_name;
+        if (!deputyName || !triggeredName) continue;
+
+        // find all task nodes matching these task names across the graph (independent of routine/service)
+        const deputyNodes = nodes.filter((n) => n.nodeType === 'task' && n.data?.taskName === deputyName);
+        const triggeredNodes = nodes.filter((n) => n.nodeType === 'task' && n.data?.taskName === triggeredName);
+
+        if (deputyNodes.length > 0 && triggeredNodes.length > 0) {
+          for (const srcNode of deputyNodes) {
+            for (const tgtNode of triggeredNodes) {
+              const edgeId = `e-${srcNode.id}-${tgtNode.id}`;
+              if (!edges.some((e) => e.id === edgeId)) {
+                edges.push({ id: edgeId, source: srcNode.id, target: tgtNode.id });
+              }
+            }
+          }
+        }
+      }
+    } catch (depErr) {
+      console.error('Error fetching deputy_task_map:', depErr);
+    }
+
     // Post-process edges: only show task->task and task->signal edges; hide all others
     for (const edge of edges) {
       if (edge.style && edge.style.display === 'none') continue;

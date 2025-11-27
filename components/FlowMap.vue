@@ -196,10 +196,20 @@ async function processFlowItems(items: FlowItem[]) {
       }
       const sourceId = previousId;
       const targetId = nodeId;
+      // mark edge as a signal edge if either endpoint node data indicates a signal
+      const sourceNode = nodeMap.get(sourceId);
+      const targetNode = nodeMap.get(targetId);
+      const isSignal = Boolean(
+        (sourceNode && (sourceNode.data as any)?.signal) ||
+        (targetNode && (targetNode.data as any)?.signal)
+      );
+
       newEdges.push({
         id: `${sourceId}-${targetId}`,
         source: sourceId,
         target: targetId,
+        data: { signal: isSignal },
+        animated: isSignal,
       });
     });
   });

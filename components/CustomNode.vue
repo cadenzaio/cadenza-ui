@@ -128,8 +128,8 @@ const nodeSelectedBorder = computed(() =>
       Concurrency: {{ data.concurrency }}<br/>
     </q-tooltip>
     <template v-if="data.signal">
-      <Handle type="target" :position="Position.Top" />
-      <Handle type="source" :position="Position.Bottom" />
+      <Handle type="target" :position="Position.Left" />
+      <Handle type="source" :position="Position.Right" />
     </template>
     <template v-else>
       <Handle type="target" :position="Position.Left" />

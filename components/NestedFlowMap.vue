@@ -260,12 +260,24 @@ async function layoutNodes(nodesArr, edgesArr) {
         return null;
       }
 
+      // mark edge data.signal true when either endpoint is a signal node
+      const isSignalEdge = Boolean(
+        (sourceNode.nodeType === 'signal') ||
+        (targetNode.nodeType === 'signal') ||
+        (sourceNode.signal) ||
+        (targetNode.signal) ||
+        (edge.data && edge.data.signal)
+      );
+
       return {
         id: edge.id || `${edge.source}-${edge.target}`,
         sources: [edge.source],
         targets: [edge.target],
         type: edge.type || 'default',
         style: edge.style || { strokeWidth: 2 },
+        data: { ...(edge.data || {}), signal: isSignalEdge },
+        animated: isSignalEdge,
+        ...edge,
       };
     })
     .filter(Boolean);
@@ -337,12 +349,24 @@ async function updateLayout(newNodes, newEdges) {
         });
         return null;
       }
+
+      // determine if this edge should be treated as a signal edge (animated)
+      const sourceNode = nodes.find((n) => n.id === edge.source);
+      const targetNode = nodes.find((n) => n.id === edge.target);
+      const isSignal = Boolean(
+        (sourceNode && (sourceNode.nodeType === 'signal' || (sourceNode.data && sourceNode.data.signal))) ||
+        (targetNode && (targetNode.nodeType === 'signal' || (targetNode.data && targetNode.data.signal))) ||
+        (edge.data && edge.data.signal)
+      );
+
       return {
         id: edge.id,
         source: edge.source,
         target: edge.target,
         type: edge.type || 'default',
         style: edge.style || {  strokeWidth: 2 },
+        data: { ...(edge.data || {}), signal: isSignal },
+        animated: isSignal,
         ...edge,
       };
     }).filter(Boolean);
