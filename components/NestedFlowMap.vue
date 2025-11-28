@@ -99,9 +99,15 @@ const getChainAfterNode = (nodeId) => {
 
 const emit = defineEmits(['item-selected']);
 
-const onNodeClick = (node) => {
-  console.log('[NestedFlowMap] onNodeClick called:', node);
-  const clickedNode = node.node || node; // support both payload and direct node
+const onNodeClick = (...args) => {
+  // Normalize Vue Flow's node-click arguments. Vue Flow may call the handler
+  // with either `(event, node)` or a single `node` payload. Accept both.
+  const maybeEvent = args[0];
+  const maybeNode = args[1];
+  const payload = maybeNode || (maybeEvent && maybeEvent.node) || maybeEvent;
+  const clickedNode = payload || null;
+  if (!clickedNode) return;
+
   if (clickedNode.nodeType === 'service') {
     // BFS to find all downstream services
     const serviceChain = [];

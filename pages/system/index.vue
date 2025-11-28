@@ -3,12 +3,13 @@
     <NuxtLayout name="dashboard-main-layout">
       <template #title> System </template>
       <div v-show="selectedOption === 'routineMap'">
-        <NestedFlowMap
-          :nodes="nodes"
-          :edges="edges"
-          style="height: 80dvh !important"
-        />
-      </div>
+            <NestedFlowMap
+              :nodes="nodes"
+              :edges="edges"
+              style="height: 80dvh !important"
+              @item-selected="handleNodeSelected"
+            />
+          </div>
     </NuxtLayout>
   </NuxtLayout>
 </template>
@@ -17,10 +18,13 @@
 import { onMounted, ref } from 'vue';
 import NestedFlowMap from '@/components/NestedFlowMap.vue';
 import { useAppStore } from '@/stores/app';
+import { useRouter } from 'vue-router';
 
 const selectedOption = ref('routineMap');
 const nodes = ref<any[]>([]);
 const edges = ref<any[]>([]);
+const appStore = useAppStore();
+const router = useRouter();
 
 async function fetchSystemMap() {
   try {
@@ -112,8 +116,31 @@ async function fetchSystemMap() {
 }
 
 onMounted(() => {
-  const appStore = useAppStore();
   appStore.setCurrentSection('system');
   fetchSystemMap();
 });
+
+// Handle node selection emitted by NestedFlowMap
+function handleNodeSelected(node: any) {
+  const clickedNode = node?.node || node;
+  const base = appStore.currentSection || 'system';
+
+  if (clickedNode.nodeType === 'task') {
+    const taskName = clickedNode.data?.label || clickedNode.data?.id;
+    if (taskName) {
+      router.push(`/system/tasks/${encodeURIComponent(taskName)}`);
+    }
+  } else if (clickedNode.nodeType === 'signal') {
+    const signalName = clickedNode.data?.label || clickedNode.data?.id;
+    const serviceName = clickedNode.data?.service_name || base;
+    if (signalName) {
+      router.push(`/system/signals/${encodeURIComponent(signalName)}?serviceName=${encodeURIComponent(serviceName)}`);
+    }
+  } else if (clickedNode.nodeType === 'service') {
+    const serviceName = clickedNode.data?.label || clickedNode.id;
+    if (serviceName) {
+      router.push(`/system/services/${encodeURIComponent(serviceName)}`);
+    }
+  }
+}
 </script>
