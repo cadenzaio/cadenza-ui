@@ -33,13 +33,26 @@
         class="no-data-badge"
       />
     </div>
+    <div class="zoom-slider" aria-hidden="false">
+      <label class="zoom-label">Zoom</label>
+      <input
+        type="range"
+        v-model.number="zoom"
+        :min="minZoom"
+        :max="maxZoom"
+        step="0.01"
+        aria-label="Zoom slider"
+      />
+      <span class="zoom-value">{{ Math.round(zoom * 100) }}%</span>
+    </div>
     <VueFlow
       ref="vueFlowInstance"
       :nodes="displayedNodes"
       :edges="displayedEdges"
       @node-click="onNodeClick"
-      :max-zoom="5"
-      :min-zoom="0"
+      :max-zoom="maxZoom"
+      :min-zoom="minZoom"
+      :zoom-on-scroll="false"
       fit-view-on-init
       contenteditable="false"
       :nodes-draggable="false"
@@ -84,6 +97,8 @@ const getChainAfterNode = (nodeId) => {
   return chain;
 };
 
+const emit = defineEmits(['item-selected']);
+
 const onNodeClick = (node) => {
   console.log('[NestedFlowMap] onNodeClick called:', node);
   const clickedNode = node.node || node; // support both payload and direct node
@@ -114,24 +129,22 @@ const onNodeClick = (node) => {
         }
       }
     }
-    // For each service, include its routines and tasks
+    // For each service, include its direct tasks (service -> tasks)
     const idsToShow = new Set();
     for (const service of serviceChain) {
       idsToShow.add(service.id);
-      // Routines whose parentNode is this service
-      const routines = fullNodes.filter(
-        (n) => n.nodeType === 'routine' && n.parentNode === service.id
+      // Tasks whose parentNode is this service
+      const tasks = fullNodes.filter(
+        (n) => n.nodeType === 'task' && n.parentNode === service.id
       );
-      for (const routine of routines) {
-        idsToShow.add(routine.id);
-        // Tasks whose parentNode is this routine
-        const tasks = fullNodes.filter(
-          (n) => n.nodeType === 'task' && n.parentNode === routine.id
-        );
-        for (const task of tasks) {
-          idsToShow.add(task.id);
-        }
+      for (const task of tasks) {
+        idsToShow.add(task.id);
       }
+      // Also include any signals that are parented to this service
+      const signals = fullNodes.filter(
+        (n) => n.nodeType === 'signal' && n.parentNode === service.id
+      );
+      for (const sig of signals) idsToShow.add(sig.id);
     }
     displayedNodes.value = fullNodes.filter((n) => idsToShow.has(n.id));
     displayedEdges.value = fullEdges.filter(
@@ -139,18 +152,65 @@ const onNodeClick = (node) => {
     );
     filtered.value = true;
     console.log('[NestedFlowMap] Filtered node IDs:', Array.from(idsToShow));
+    // notify parent about selection
+    emit('item-selected', clickedNode);
+  }
+  // Navigate to task or signal pages when clicked
+  else if (clickedNode.nodeType === 'task') {
+    // emit selection so parent can decide how to handle navigation
+    emit('item-selected', clickedNode);
+  } else if (clickedNode.nodeType === 'signal') {
+    // emit selection so parent can decide how to handle navigation
+    emit('item-selected', clickedNode);
   }
 };
 
 const vueFlowInstance = ref(null);
 
-onMounted(() => {
-    typeof onNodeClick;
+// Zoom slider state and bounds
+const minZoom = 0.05;
+const maxZoom = 5;
+const zoom = ref(1);
+
+// Keep Vue Flow viewport in sync with the slider
+watch(zoom, async (val) => {
+  if (!vueFlowInstance.value) return;
+  const api = vueFlowInstance.value;
+  if (api && typeof api.zoomTo === 'function') {
+    try {
+      await api.zoomTo(val);
+    } catch (err) {
+      // ignore
+    }
+  } else if (api && typeof api.setViewport === 'function') {
+    try {
+      await api.setViewport({ x: 0, y: 0, zoom: val });
+    } catch (err) {
+      // ignore
+    }
+  }
+});
+
+onMounted(async () => {
+  // existing no-op preserved
+  typeof onNodeClick;
+  // initialize slider from current viewport if available
+  await nextTick();
+  if (!vueFlowInstance.value) return;
+  try {
+    const vp = typeof vueFlowInstance.value.getViewport === 'function' ? await vueFlowInstance.value.getViewport() : null;
+    if (vp && typeof vp.zoom === 'number') {
+      zoom.value = vp.zoom;
+    }
+  } catch (err) {
+    // ignore
+  }
 });
 
 import { defineProps } from 'vue';
 import { useAppStore } from '~/stores/app';
 import { colors } from 'quasar';
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
   nodes: {
@@ -176,7 +236,13 @@ async function layoutNodes(nodesArr, edgesArr) {
 
   // Build nested children: service > routine > task
   const elkServices = services.map((service) => {
+    // Include tasks that are direct children of the service, then routines (if any), then signals
+    const serviceDirectTasks = tasks
+      .filter((t) => t.parentNode === service.id)
+      .map((task) => ({ id: task.id, width: 70, height: 40, ...task }));
+
     const elkChildren = [
+      ...serviceDirectTasks,
       ...routines
         .filter((r) => r.parentNode === service.id)
         .map((routine) => {
@@ -405,6 +471,7 @@ watch(
 
 const appStore = useAppStore();
 const currentSection = computed(() => appStore.currentSection);
+const router = useRouter();
 const sectionColor = computed(() => {
   switch (currentSection.value) {
     case 'system':
@@ -523,5 +590,33 @@ onMounted(() => {
 }
 .back-btn {
   min-width: 80px;
+}
+
+/* Zoom slider overlay */
+.zoom-slider {
+  position: absolute;
+  top: 10px;
+  right: 60px;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 6px 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  z-index: 12;
+}
+.zoom-slider .zoom-label {
+  font-size: 12px;
+  color: #444;
+}
+.zoom-slider input[type="range"] {
+  width: 120px;
+}
+.zoom-slider .zoom-value {
+  font-size: 12px;
+  color: #333;
+  min-width: 36px;
+  text-align: right;
 }
 </style>

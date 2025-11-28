@@ -26,15 +26,20 @@ async function generateNodesAndEdges(traceUuid: string) {
   const query = `
     SELECT 
       et.uuid AS trace_uuid,
+      et.context_id,
+      ctx.context AS trace_context,
       et.service_name,
       re.name AS routine_name,
       re.uuid AS routine_uuid,
       te.task_name,
       te.uuid AS task_uuid,
       tem.previous_task_execution_id,
+      se.uuid AS signal_emission_uuid,
       se.signal_name AS signal_emission_name,
+      sc.signal_emission_id AS signal_consumption_uuid,
       sc.signal_name AS signal_consumption_name
     FROM execution_trace et
+    LEFT JOIN context ctx ON et.context_id = ctx.uuid
     LEFT JOIN routine_execution re
       ON et.uuid = re.execution_trace_id
     LEFT JOIN task_execution te
@@ -103,19 +108,21 @@ async function generateNodesAndEdges(traceUuid: string) {
     }
     if (row.signal_emission_name) {
       let signalEmissionNodeId;
-      if (!signalNodes[row.signal_emission_name]) {
+      // keep signalNodes keyed by signal name to combine same-named signals, but include the emission UUID in node data when available
+      const key = row.signal_emission_name;
+      if (!signalNodes[key]) {
         signalEmissionNodeId = `${row.task_uuid}-emission-${row.signal_emission_name}`;
-        signalNodes[row.signal_emission_name] = signalEmissionNodeId;
+        signalNodes[key] = signalEmissionNodeId;
         const signalEmissionNode = {
           id: signalEmissionNodeId,
           type: 'custom',
           nodeType: 'signal',
           parentNode: row.trace_uuid,
-          data: { label: row.signal_emission_name, signal: true }, // Explicitly set signal property
+          data: { label: row.signal_emission_name, signal: true, uuid: row.signal_emission_uuid || null }, // include uuid when available
         };
         nodes.push(signalEmissionNode);
       } else {
-        signalEmissionNodeId = signalNodes[row.signal_emission_name];
+        signalEmissionNodeId = signalNodes[key];
       }
 
       edges.push({
@@ -137,19 +144,20 @@ async function generateNodesAndEdges(traceUuid: string) {
 
     if (row.signal_consumption_name) {
       let signalConsumptionNodeId;
-      if (!signalNodes[row.signal_consumption_name]) {
+      const key = row.signal_consumption_name;
+      if (!signalNodes[key]) {
         signalConsumptionNodeId = `${row.task_uuid}-consumption-${row.signal_consumption_name}`;
-        signalNodes[row.signal_consumption_name] = signalConsumptionNodeId;
+        signalNodes[key] = signalConsumptionNodeId;
         const signalConsumptionNode = {
           id: signalConsumptionNodeId,
           type: 'custom',
           nodeType: 'signal',
           parentNode: row.trace_uuid,
-          data: { label: row.signal_consumption_name, signal: true }, // Explicitly set signal property
+          data: { label: row.signal_consumption_name, signal: true, uuid: row.signal_consumption_uuid || null }, // include uuid when available
         };
         nodes.push(signalConsumptionNode);
       } else {
-        signalConsumptionNodeId = signalNodes[row.signal_consumption_name];
+        signalConsumptionNodeId = signalNodes[key];
       }
 
       edges.push({
@@ -170,10 +178,10 @@ async function generateNodesAndEdges(traceUuid: string) {
     }
   });
 
-  // Log edges for debugging
-  console.log('[generateNodesAndEdges] Generated edges:', edges);
+  // capture trace context from the first row (if available)
+  const traceContext = res.rows[0].trace_context ?? null;
 
-  return { nodes, edges };
+  return { nodes, edges, context: traceContext };
 }
 
 export default defineEventHandler(async (event) => {

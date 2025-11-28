@@ -6,13 +6,12 @@
       </template>
 
       <div class="row q-mx-md">
-        <NestedFlowMap
-          v-if="nodes.length > 0"
-          :nodes="nodes"
-          :edges="edges"
-          />
-        <div v-else-if="isLoading" class="text-center q-pa-md">Loading...</div>
-        <InfoCard v-if="selectedItem">
+        <div class="col-8">
+          <FlowMap v-if="flowItems.length > 0" :items="flowItems" :full-width="true" @item-selected="onFlowItemSelected" />
+          <div v-else-if="isLoading" class="text-center q-pa-md">Loading...</div>
+        </div>
+        <div class="col-4">
+          <InfoCard v-if="selectedItem">
           <template #title>
             {{ selectedItem?.name }}
           </template>
@@ -39,7 +38,8 @@
               </div>
             </div>
           </template>
-        </InfoCard>
+          </InfoCard>
+        </div>
          <!-- <ExecutionStatisticsPieChart 
           type="routine"
           :routineName="String(route.params.id)"
@@ -86,11 +86,13 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter, useRoute } from '#app';
 import InfoCard from '~/components/InfoCard.vue';
-import NestedFlowMap from '~/components/NestedFlowMap.vue';
+import FlowMap from '~/components/FlowMap.vue';
 import { useAppStore } from '~/stores/app';
 
 const router = useRouter();
 const route = useRoute();
+const appStore = useAppStore();
+const currentSection = computed(() => appStore.currentSection);
 const activeProcesses = ref<Service[]>([]);
 const nodes = ref<any[]>([]);
 const edges = ref<any[]>([]);
@@ -102,6 +104,40 @@ const pageSize = 50;
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const selectedItem = ref<Item | null>(null);
+
+const flowItems = computed(() => {
+  // Map nodes/edges to the FlowMap `items` shape, only include tasks and signals
+  try {
+    const nodeById = new Map(nodes.value.map((n: any) => [n.id ?? n.uuid ?? n.name, n]));
+    return (nodes.value || [])
+      .filter((n: any) => n.nodeType === 'task' || n.nodeType === 'signal')
+      .map((n: any) => {
+        // find incoming sources as previousId
+        const incoming = (edges.value || [])
+          .filter((e: any) => e.target === (n.id ?? n.uuid ?? n.name))
+          .map((e: any) => e.source);
+
+        return {
+          id: n.id ?? n.uuid ?? n.name,
+          name: n.name ?? n.label ?? n.id ?? n.uuid,
+          label: n.data?.label ?? n.label ?? n.name ?? n.id,
+          description: n.data?.description ?? n.description ?? '',
+          signal: n.nodeType === 'signal' || n.data?.signal === true,
+          nodeType: n.nodeType,
+          parentNode: n.parentNode,
+          // expose version/service for navigation convenience
+          version: n.data?.version ?? n.version ?? (n?.metadata?.version ?? undefined),
+          service: n.data?.service_name ?? n.service ?? n.parentNode ?? undefined,
+          previousId: incoming.length > 0 ? incoming : undefined,
+          // preserve original node for click handlers in FlowMap
+          original: n,
+        };
+      });
+  } catch (err) {
+    console.error('Error building flowItems:', err);
+    return [];
+  }
+});
 
 const columns = [
   {
@@ -224,7 +260,6 @@ async function fetchActiveExecutions() {
 }
 
 onMounted(async () => {
-  const appStore = useAppStore();
   appStore.setCurrentSection('system');
 
   try {
@@ -282,6 +317,58 @@ interface Item {
   function_string?: string; // Added optional property
   type?: string; // Added optional property
   service_instance?: string; // Added optional property
+}
+
+function onFlowItemSelected(item: any) {
+  try {
+    const base = (currentSection.value as string) || 'system';
+
+    // Prefer original node payload if present
+    const payload = item?.original ?? item;
+
+    // Task navigation
+    if (item.nodeType === 'task' || payload?.nodeType === 'task') {
+      const taskName = item.name || item.label || payload?.data?.taskName || payload?.id;
+      if (!taskName) return;
+
+      const version = item.version ?? payload?.data?.version ?? payload?.version ?? '1';
+      const serviceName =
+        item.service ?? payload?.data?.service_name ?? payload?.service ?? payload?.parentNode ?? service;
+
+      router.push({
+        path: `/${base}/tasks/${encodeURIComponent(String(taskName))}`,
+        query: { version: String(version), service: String(serviceName) },
+      });
+      return;
+    }
+
+    // Signal navigation
+    if (item.nodeType === 'signal' || item.signal || payload?.nodeType === 'signal') {
+      // Prefer human-friendly label, then name, then id
+      let rawSignal = item.label ?? item.name ?? payload?.id ?? '';
+      // Normalize and strip 'signal::' prefix
+      let signalRawStr = String(rawSignal).replace(/^signal::/, '').trim();
+
+      // If the node label includes a service-to-signal prefix like 'ServiceName-to-signalName',
+      // take the part after the last '-to-'. Also handle '->' separators.
+      const toIdx = signalRawStr.lastIndexOf('-to-');
+      let signalName = toIdx !== -1 ? signalRawStr.substring(toIdx + 4) : signalRawStr;
+      if (signalName.includes('->')) {
+        const parts = signalName.split('->');
+        signalName = parts[parts.length - 1];
+      }
+      signalName = signalName.trim();
+      if (!signalName) return;
+
+      // Determine serviceName from parentNode, original node, or fallback to current service
+      const serviceName = item.parentNode || payload?.parentNode || payload?.data?.service_name || service;
+
+      router.push({ path: `/${base}/signals/${encodeURIComponent(String(signalName))}`, query: { serviceName } });
+      return;
+    }
+  } catch (err) {
+    console.error('Error handling FlowMap item-selected:', err);
+  }
 }
 </script>
 

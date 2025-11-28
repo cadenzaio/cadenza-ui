@@ -6,12 +6,17 @@
       </template>
 
       <div class="row q-mx-md">
-        <NestedFlowMap
-          v-if="nodes.length > 0"
-          :nodes="nodes"
-          :edges="edges"
-          />
-        <div v-else-if="isLoading" class="text-center q-pa-md">Loading...</div>
+        <FlowMap
+          v-if="flowItems.length > 0"
+          :items="flowItems"
+          @item-selected="handleFlowItemSelected"
+        />
+        <div class="q-pa-sm text-center">
+          <div v-if="hasMoreData" ref="loadMoreSentinel">
+            <span v-if="loadingMoreData">Loading page {{ currentPage }}...</span>
+          </div>
+        </div>
+        <div v-if="isLoading && flowItems.length === 0" class="text-center q-pa-md">Loading page {{ currentPage }}...</div>
         <InfoCard v-if="selectedItem">
           <template #title>
             {{ selectedItem?.name }}
@@ -40,14 +45,6 @@
             </div>
           </template>
         </InfoCard>
-         <!-- <ExecutionStatisticsPieChart 
-          type="routine"
-          :routineName="String(route.params.id)"
-        />
-        <ExecutionTimeChart v-if="selectedItem" :series="executionTimeSeries" />
-        <div v-if="error" class="text-negative q-pa-md">
-          {{ error }}
-        </div> -->
       </div>
       <div class="row q-mx-md">
         <Table
@@ -66,9 +63,7 @@
               v-for="row in props.rows"
               :key="row.uuid"
               @click="inspectService(row)"
-              @contextmenu.prevent="
-                openLinkInNewTab(`/activity/services/${row.uuid}`)
-              "
+              @contextmenu.prevent="openLinkInNewTab(`/activity/services/${row.uuid}`)"
             >
               <td v-for="col in props.cols" :key="col.name">
                 {{ row[col.field] }}
@@ -83,10 +78,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, computed, watch, onUnmounted, nextTick } from 'vue';
 import { useRouter, useRoute } from '#app';
 import InfoCard from '~/components/InfoCard.vue';
-import NestedFlowMap from '~/components/NestedFlowMap.vue';
+import FlowMap from '~/components/FlowMap.vue';
 import { useAppStore } from '~/stores/app';
 
 const router = useRouter();
@@ -98,10 +93,12 @@ const service = route.params.id as string;
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
 const currentPage = ref(1);
-const pageSize = 50;
+const pageSize = 100;
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const selectedItem = ref<Item | null>(null);
+const loadMoreSentinel = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
 
 const columns = [
   {
@@ -134,6 +131,61 @@ const columns = [
   },
 ];
 
+const flowItems = computed<any[]>(() => {
+  if (!nodes.value || nodes.value.length === 0) return [];
+
+  return nodes.value
+    .filter((n: any) => n.nodeType !== 'service' && n.nodeType !== 'routine')
+    .map((n: any) => {
+      const incoming = edges.value
+        .filter((e: any) => e.target === n.id)
+        .map((e: any) => e.source);
+      const previous = incoming.length === 0 ? undefined : incoming.length === 1 ? incoming[0] : incoming;
+      return {
+        name: n.id,
+        label: n.data?.label || n.id,
+        description: n.data?.description || '',
+        signal: n.nodeType === 'signal' || n.data?.signal === true,
+        signalUuid: n.data?.uuid || null,
+        previousId: previous,
+      };
+    });
+});
+
+function extractUuid(s: string | null | undefined) {
+  if (!s) return null;
+  const m = String(s).match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
+  return m ? m[0] : null;
+}
+
+// Handle clicks from the FlowMap nodes
+function handleFlowItemSelected(item: any) {
+  if (!item) return;
+  // Follow the same linking behavior as `pages/meta/routines/[id].vue`
+  const canonicalId = item.signalUuid || item.name || item.id || '';
+
+  // If the node is a signal, navigate to the meta signal page and include serviceName when available
+  if (item.signal === true || String(canonicalId).startsWith('signal::')) {
+    const raw = String(item.name || canonicalId);
+    const stripped = raw.replace(/^signal::/, '');
+    const serviceName = (selectedItem as any)?.value?.name || item.service || item.service_name || null;
+    const query = serviceName ? `?serviceName=${encodeURIComponent(String(serviceName))}` : '';
+    router.push(`/meta/signals/${encodeURIComponent(stripped)}${query}`);
+    return;
+  }
+
+  // Otherwise treat as a task node and navigate to the meta task page (include service/version if available)
+  if (item && item.name) {
+    const path = `/meta/tasks/${encodeURIComponent(String(item.name))}`;
+    const qs: string[] = [];
+    const version = item.version ?? item.task_version ?? null;
+    const serviceParam = (selectedItem as any)?.value?.name ?? item.service ?? item.service_name ?? null;
+    if (version) qs.push(`version=${encodeURIComponent(String(version))}`);
+    if (serviceParam) qs.push(`service=${encodeURIComponent(String(serviceParam))}`);
+    router.push(qs.length > 0 ? `${path}?${qs.join('&')}` : path);
+  }
+}
+
 function inspectService(service: Service) {
   navigateToItem(`/activity/services/${service.uuid}`);
 }
@@ -149,21 +201,68 @@ function navigateToItem(route: string) {
   router.push(route);
 }
 
-async function fetchTasksInService() {
+async function fetchTasksInService(page = 1) {
   try {
     error.value = null;
+    // indicate a load is in progress
+    loadingMoreData.value = true;
     const response = await fetch(
-      `/api/meta/metaService?serviceName=${encodeURIComponent(service)}`
+      `/api/meta/metaService?serviceName=${encodeURIComponent(service)}&page=${page}&pageSize=${pageSize}`
     );
     if (!response.ok) throw new Error('Failed to fetch tasks in service');
     const data = await response.json();
-    nodes.value = data.nodes;
-    edges.value = data.edges;
+
+    const incomingNodes: any[] = data.nodes || [];
+    const incomingEdges: any[] = data.edges || [];
+
+    // Determine how many NEW task nodes this page contains (to avoid being tricked by totalCount)
+    const existingTaskIds = new Set(nodes.value.filter((n: any) => n.nodeType === 'task').map((n: any) => n.id));
+    const incomingTaskNodes = incomingNodes.filter((n: any) => n.nodeType === 'task');
+    const newTaskNodes = incomingTaskNodes.filter((n: any) => !existingTaskIds.has(n.id));
+    const newTaskCount = newTaskNodes.length;
+
+    if (page === 1) {
+      nodes.value = incomingNodes;
+      edges.value = incomingEdges;
+    } else {
+      // append nodes but avoid duplicates
+      const existingNodeIds = new Set(nodes.value.map((n: any) => n.id));
+      incomingNodes.forEach((n) => {
+        if (!existingNodeIds.has(n.id)) {
+          nodes.value.push(n);
+          existingNodeIds.add(n.id);
+        }
+      });
+
+      // append edges but avoid duplicates
+      const existingEdgeIds = new Set(edges.value.map((e: any) => e.id));
+      incomingEdges.forEach((e) => {
+        if (!existingEdgeIds.has(e.id)) {
+          edges.value.push(e);
+          existingEdgeIds.add(e.id);
+        }
+      });
+    }
+
+    // update pagination state
+    const totalCount = typeof data.totalCount === 'number' ? data.totalCount : null;
+    const loadedTasks = nodes.value.filter((n: any) => n.nodeType === 'task').length;
+    if (!incomingNodes || incomingNodes.length === 0) {
+      hasMoreData.value = false;
+    } else if (totalCount !== null) {
+      hasMoreData.value = loadedTasks < totalCount;
+    } else if (newTaskCount === 0) {
+      hasMoreData.value = false;
+    } else {
+      hasMoreData.value = (incomingNodes.length ?? 0) >= pageSize;
+    }
   } catch (err) {
     const errorMessage =
       err instanceof Error ? err.message : 'Unknown error occurred';
     error.value = `Error fetching tasks: ${errorMessage}`;
     console.error('Error fetching tasks:', err);
+  } finally {
+    loadingMoreData.value = false;
   }
 }
 
@@ -229,11 +328,20 @@ onMounted(async () => {
 
   try {
     isLoading.value = true;
+    // reset pagination state
+    currentPage.value = 1;
+    nodes.value = [];
+    edges.value = [];
+
     await Promise.all([
-      fetchTasksInService(),
+      fetchTasksInService(currentPage.value),
       fetchServerDetails(),
       fetchActiveExecutions(),
     ]);
+    // after initial fetch, auto-load remaining pages until done
+    if (hasMoreData.value) {
+      await loadAllPages();
+    }
   } catch (err) {
     const errorMessage =
       err instanceof Error ? err.message : 'Unknown error occurred';
@@ -248,14 +356,91 @@ watch(
   () => route.params.id,
   async (newId, oldId) => {
     if (newId !== oldId) {
+      currentPage.value = 1;
+      nodes.value = [];
+      edges.value = [];
       await Promise.all([
-        fetchTasksInService(),
+        fetchTasksInService(currentPage.value),
         fetchServerDetails(),
         fetchActiveExecutions(),
       ]);
+        if (hasMoreData.value) {
+          await loadAllPages();
+        }
     }
   }
 );
+
+function loadMoreNodes() {
+  if (!hasMoreData.value || loadingMoreData.value) return;
+  loadingMoreData.value = true;
+  currentPage.value += 1;
+  fetchTasksInService(currentPage.value).catch((err) => {
+    console.error('Error loading more nodes:', err);
+  });
+}
+
+// Sequentially load pages until there is no more data
+async function loadAllPages() {
+  try {
+    while (hasMoreData.value) {
+      if (loadingMoreData.value) {
+        // if another load is in progress, wait a bit
+        await new Promise((r) => setTimeout(r, 50));
+        continue;
+      }
+      loadingMoreData.value = true;
+      currentPage.value += 1;
+      try {
+        await fetchTasksInService(currentPage.value);
+      } catch (err) {
+        console.error('Error loading page', currentPage.value, err);
+        break;
+      }
+    }
+  } finally {
+    loadingMoreData.value = false;
+  }
+}
+
+function setupAutoPager() {
+  // create observer if not present
+  if (observer) return;
+  observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting && hasMoreData.value && !loadingMoreData.value) {
+        loadMoreNodes();
+      }
+    }
+  }, {
+    root: null,
+    rootMargin: '200px',
+    threshold: 0.1,
+  });
+
+  watch(hasMoreData, async (val) => {
+    // when more data becomes available, ensure sentinel is observed
+    await nextTick();
+    if (val && loadMoreSentinel.value) observer!.observe(loadMoreSentinel.value);
+    if (!val && loadMoreSentinel.value) observer!.unobserve(loadMoreSentinel.value);
+  }, { immediate: true });
+
+  // observe after initial render
+  onMounted(async () => {
+    await nextTick();
+    if (hasMoreData.value && loadMoreSentinel.value) observer!.observe(loadMoreSentinel.value);
+  });
+
+  onUnmounted(() => {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+  });
+}
+
+// initialize the auto pager
+setupAutoPager();
 
 // Define missing types
 interface Service {

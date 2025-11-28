@@ -35,6 +35,7 @@
                 v-if="nodes.length > 0"
                 :nodes="nodes"
                 :edges="edges"
+                @item-selected="handleNodeSelected"
               />
             </div>
           </transition>
@@ -111,25 +112,14 @@
                 <template #info>
                   <div class="q-mx-md q-my-sm">
                     <pre>{{
-                      traceContext?.input_context
-                        ? JSON.stringify(traceContext.input_context, null, 2)
+                      traceContext
+                        ? JSON.stringify(traceContext, null, 2)
                         : ''
                     }}</pre>
                   </div>
                 </template>
               </InfoCard>
-              <InfoCard>
-                <template #title>Output Context</template>
-                <template #info>
-                  <div class="q-mx-md q-my-sm">
-                    <pre>{{
-                      traceContext?.output_context
-                        ? JSON.stringify(traceContext.output_context, null, 2)
-                        : ''
-                    }}</pre>
-                  </div>
-                </template>
-              </InfoCard>
+              
             </div>
           </div>
         </div>
@@ -166,6 +156,7 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useFetch, useRoute } from '#app';
 import { useRouter } from '#vue-router';
 import NestedFlowMap from '~/components/NestedFlowMap.vue';
+import { useAppStore } from '~/stores/app';
 
 function formatDate(date: string) {
   const datetime = new Date(date);
@@ -247,6 +238,8 @@ async function fetchTraceData(traceId: string) {
     const data = await response.json();
     nodes.value = data.nodes;
     edges.value = data.edges;
+    // populate traceContext from endpoint's returned context
+    traceContext.value = data.context ?? null;
   } catch (error) {
     console.error('Error fetching trace data:', error);
   }
@@ -279,6 +272,32 @@ watch(
 
 onMounted(() => {
 });
+
+// Handle node selection emitted by NestedFlowMap
+const appStore = useAppStore();
+function handleNodeSelected(node: any) {
+  const clickedNode = node?.node || node;
+  const base = appStore.currentSection || 'system';
+
+  if (clickedNode.nodeType === 'task') {
+    // Use the node id (UUID) for task links so they point to /activity/tasks/<uuid>
+    const taskId = clickedNode.id || clickedNode.data?.uuid || clickedNode.data?.id;
+    if (taskId) {
+      router.push(`/activity/tasks/${encodeURIComponent(taskId)}`);
+    }
+  } else if (clickedNode.nodeType === 'signal') {
+   const signalId = clickedNode.data?.uuid || clickedNode.data?.id;
+    if (signalId) {
+      router.push(`/activity/signals/${encodeURIComponent(signalId)}`);
+    }
+  } else if (clickedNode.nodeType === 'service') {
+    // Optionally navigate to service page; default behavior is handled inside NestedFlowMap (filtering view)
+    const serviceId = clickedNode.id || clickedNode.data?.uuid || clickedNode.data?.id;
+    if (serviceId) {
+      router.push(`/activity/services/${encodeURIComponent(serviceId)}`);
+    }
+  }
+}
 </script>
 
 <style scoped>

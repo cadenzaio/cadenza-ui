@@ -42,6 +42,19 @@ async function getTasksForRoutine(routineName: string) {
   return res.rows;
 }
 
+async function getTasksForService(serviceName: string) {
+  const query = `
+    SELECT name, description, service_name, layer_index, version, created, deleted
+    FROM task
+    WHERE service_name = $1
+      AND is_meta = false
+    ORDER BY layer_index ASC, name ASC
+  `;
+
+  const res = await client!.query(query, [serviceName]);
+  return res.rows;
+}
+
 export default defineEventHandler(async (event) => {
   if (!client) client = await initializeClient();
 
@@ -51,10 +64,11 @@ export default defineEventHandler(async (event) => {
   try {
     const services = await getNonMetaServices();
 
-    const servicesWithRoutines = await Promise.all(
+    // Fetch tasks for each service and attach them directly to the service
+    const servicesWithTasks = await Promise.all(
       services.map(async (svc: any) => {
-        const routines = await getRoutinesForService(svc.name);
-        return { ...svc, routines };
+        const tasks = await getTasksForService(svc.name);
+        return { ...svc, tasks };
       })
     );
 
@@ -71,111 +85,103 @@ export default defineEventHandler(async (event) => {
       return routine.uuid || `${svc.name}:${routine.name}`;
     }
 
-    for (const svc of servicesWithRoutines) {
+    for (const svc of servicesWithTasks) {
       const sId = serviceId(svc);
       serviceNameToId[svc.name] = sId;
 
       nodes.push({ id: sId, type: 'custom', nodeType: 'service', data: { label: svc.display_name || svc.name, isParent: true } });
 
-      if (!Array.isArray(svc.routines)) continue;
-
-      for (const rt of svc.routines) {
-        const rId = routineId(rt, svc);
-        nodes.push({ id: rId, type: 'custom', nodeType: 'routine', parentNode: sId, data: { label: rt.name || rt.description || rId, isParent: true } });
-        edges.push({ id: `e-${sId}-${rId}`, source: sId, target: rId });
-
-        const tasks = await getTasksForRoutine(rt.name || rt.routine_name || rId);
-        if (Array.isArray(tasks) && tasks.length > 0) {
-          for (const task of tasks) {
-            const tId = task.name ? `${rId}:${task.name}` : `${rId}:unnamed-task`;
-            nodes.push({ id: tId, type: 'custom', nodeType: 'task', parentNode: rId, data: { label: task.name || task.description || tId, taskName: task.name, service_name: task.service_name ?? svc.name } });
-            edges.push({ id: `e-${rId}-${tId}`, source: rId, target: tId });
-          }
+      const tasks = Array.isArray(svc.tasks) ? svc.tasks : [];
+      if (tasks.length > 0) {
+        for (const task of tasks) {
+          const tId = task.name ? `${sId}:${task.name}` : `${sId}:unnamed-task`;
+          nodes.push({ id: tId, type: 'custom', nodeType: 'task', parentNode: sId, data: { label: task.name || task.description || tId, taskName: task.name, service_name: task.service_name ?? svc.name } });
+          edges.push({ id: `e-${sId}-${tId}`, source: sId, target: tId });
         }
+      }
 
-        // Signals
-        try {
-          const taskNames = (tasks || []).map((t: any) => t.name).filter(Boolean);
-          if (taskNames.length > 0) {
-            const emitQ = `SELECT DISTINCT task_name, signal_name, service_name FROM task_to_signal_map WHERE task_name = ANY($1)`;
-            const emitRes = await client!.query(emitQ, [taskNames]);
+      // Signals for tasks in this service
+      try {
+        const taskNames = tasks.map((t: any) => t.name).filter(Boolean);
+        if (taskNames.length > 0) {
+          const emitQ = `SELECT DISTINCT task_name, signal_name, service_name FROM task_to_signal_map WHERE task_name = ANY($1)`;
+          const emitRes = await client!.query(emitQ, [taskNames]);
 
-            const consQ = `SELECT DISTINCT task_name, signal_name, signal_service_name AS service_name FROM signal_to_task_map WHERE task_name = ANY($1)`;
-            const consRes = await client!.query(consQ, [taskNames]);
+          const consQ = `SELECT DISTINCT task_name, signal_name, signal_service_name AS service_name FROM signal_to_task_map WHERE task_name = ANY($1)`;
+          const consRes = await client!.query(consQ, [taskNames]);
 
-            const emittersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
-            (emitRes.rows || []).forEach((r: any) => {
+          const emittersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
+          (emitRes.rows || []).forEach((r: any) => {
+            if (!emittersMap[r.signal_name]) emittersMap[r.signal_name] = [];
+            emittersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
+          });
+
+          const consumersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
+          (consRes.rows || []).forEach((r: any) => {
+            if (!consumersMap[r.signal_name]) consumersMap[r.signal_name] = [];
+            consumersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
+          });
+
+          const consumedSignals = Object.keys(consumersMap);
+          if (consumedSignals.length > 0) {
+            const externalEmitQ = `SELECT DISTINCT task_name, signal_name, service_name FROM task_to_signal_map WHERE signal_name = ANY($1)`;
+            const externalEmitRes = await client!.query(externalEmitQ, [consumedSignals]);
+            (externalEmitRes.rows || []).forEach((r: any) => {
               if (!emittersMap[r.signal_name]) emittersMap[r.signal_name] = [];
-              emittersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
+              if (!emittersMap[r.signal_name].some((e: any) => e.task_name === r.task_name)) {
+                emittersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
+              }
             });
+          }
 
-            const consumersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
-            (consRes.rows || []).forEach((r: any) => {
-              if (!consumersMap[r.signal_name]) consumersMap[r.signal_name] = [];
-              consumersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
-            });
+          const allSignals = Array.from(new Set([...Object.keys(emittersMap), ...Object.keys(consumersMap)]));
+          if (allSignals.length > 0) {
+            const regQ = `SELECT name, domain, action, is_meta, service_name, created, deleted FROM signal_registry WHERE name = ANY($1) AND is_meta = false`;
+            const regRes = await client!.query(regQ, [allSignals]);
+            const registryByName: Record<string, any> = {};
+            (regRes.rows || []).forEach((r: any) => (registryByName[r.name] = r));
 
-            const consumedSignals = Object.keys(consumersMap);
-            if (consumedSignals.length > 0) {
-              const externalEmitQ = `SELECT DISTINCT task_name, signal_name, service_name FROM task_to_signal_map WHERE signal_name = ANY($1)`;
-              const externalEmitRes = await client!.query(externalEmitQ, [consumedSignals]);
-              (externalEmitRes.rows || []).forEach((r: any) => {
-                if (!emittersMap[r.signal_name]) emittersMap[r.signal_name] = [];
-                if (!emittersMap[r.signal_name].some((e: any) => e.task_name === r.task_name)) {
-                  emittersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
+            for (const sig of allSignals) {
+              const sigNodeId = `signal::${sig}`;
+              const registry = registryByName[sig];
+              const parentServiceName = registry?.service_name ?? null;
+              let parentNodeId = sId;
+              if (parentServiceName) {
+                const svcMatch = servicesWithTasks.find((x: any) => x.name === parentServiceName);
+                if (svcMatch) parentNodeId = serviceId(svcMatch);
+              }
+
+              if (!nodes.some((n) => n.id === sigNodeId)) nodes.push({ id: sigNodeId, type: 'custom', nodeType: 'signal', parentNode: parentNodeId, data: { label: sig, signal: true, service_name: parentServiceName ?? svc.name } });
+
+              const emitters = emittersMap[sig] || [];
+              for (const e of emitters) {
+                const emittingTaskId = `${sId}:${e.task_name}`;
+                if (nodes.some((n) => n.id === emittingTaskId)) {
+                  edges.push({ id: `e-${emittingTaskId}-${sigNodeId}`, source: emittingTaskId, target: sigNodeId });
+                } else if (e.service_name) {
+                  const svcMatch = servicesWithTasks.find((x: any) => x.name === e.service_name);
+                  if (svcMatch) edges.push({ id: `e-${serviceId(svcMatch)}-${sigNodeId}`, source: serviceId(svcMatch), target: sigNodeId, style: { display: 'none' } });
+                  else edges.push({ id: `e-${sId}-${sigNodeId}`, source: sId, target: sigNodeId, style: { display: 'none' } });
+                } else {
+                  edges.push({ id: `e-${sId}-${sigNodeId}`, source: sId, target: sigNodeId, style: { display: 'none' } });
                 }
-              });
-            }
+              }
 
-            const allSignals = Array.from(new Set([...Object.keys(emittersMap), ...Object.keys(consumersMap)]));
-            if (allSignals.length > 0) {
-              const regQ = `SELECT name, domain, action, is_meta, service_name, created, deleted FROM signal_registry WHERE name = ANY($1) AND is_meta = false`;
-              const regRes = await client!.query(regQ, [allSignals]);
-              const registryByName: Record<string, any> = {};
-              (regRes.rows || []).forEach((r: any) => (registryByName[r.name] = r));
-
-              for (const sig of allSignals) {
-                const sigNodeId = `signal::${sig}`;
-                const registry = registryByName[sig];
-                const parentServiceName = registry?.service_name ?? null;
-                let parentNodeId = sId;
-                if (parentServiceName) {
-                  const svcMatch = servicesWithRoutines.find((x: any) => x.name === parentServiceName);
-                  if (svcMatch) parentNodeId = serviceId(svcMatch);
-                }
-
-                if (!nodes.some((n) => n.id === sigNodeId)) nodes.push({ id: sigNodeId, type: 'custom', nodeType: 'signal', parentNode: parentNodeId, data: { label: sig, signal: true } });
-
-                const emitters = emittersMap[sig] || [];
-                for (const e of emitters) {
-                  const emittingTaskId = `${rId}:${e.task_name}`;
-                  if (nodes.some((n) => n.id === emittingTaskId)) {
-                    edges.push({ id: `e-${emittingTaskId}-${sigNodeId}`, source: emittingTaskId, target: sigNodeId });
-                  } else if (e.service_name) {
-                    const svcMatch = servicesWithRoutines.find((x: any) => x.name === e.service_name);
-                    if (svcMatch) edges.push({ id: `e-${serviceId(svcMatch)}-${sigNodeId}`, source: serviceId(svcMatch), target: sigNodeId, style: { display: 'none' } });
-                    else edges.push({ id: `e-${sId}-${sigNodeId}`, source: sId, target: sigNodeId, style: { display: 'none' } });
-                  } else {
-                    edges.push({ id: `e-${sId}-${sigNodeId}`, source: sId, target: sigNodeId, style: { display: 'none' } });
-                  }
-                }
-
-                const consumers = consumersMap[sig] || [];
-                for (const c of consumers) {
-                  const consumingTaskId = `${rId}:${c.task_name}`;
-                  if (nodes.some((n) => n.id === consumingTaskId)) edges.push({ id: `e-${sigNodeId}-${consumingTaskId}`, source: sigNodeId, target: consumingTaskId });
-                  else if (c.service_name) {
-                    const svcMatch = servicesWithRoutines.find((x: any) => x.name === c.service_name);
-                    if (svcMatch) edges.push({ id: `e-${sigNodeId}-${serviceId(svcMatch)}`, source: sigNodeId, target: serviceId(svcMatch), style: { display: 'none' } });
-                    else edges.push({ id: `e-${sigNodeId}-${sId}`, source: sigNodeId, target: sId, style: { display: 'none' } });
-                  } else edges.push({ id: `e-${sigNodeId}-${sId}`, source: sigNodeId, target: sId, style: { display: 'none' } });
-                }
+              const consumers = consumersMap[sig] || [];
+              for (const c of consumers) {
+                const consumingTaskId = `${sId}:${c.task_name}`;
+                if (nodes.some((n) => n.id === consumingTaskId)) edges.push({ id: `e-${sigNodeId}-${consumingTaskId}`, source: sigNodeId, target: consumingTaskId });
+                else if (c.service_name) {
+                  const svcMatch = servicesWithTasks.find((x: any) => x.name === c.service_name);
+                  if (svcMatch) edges.push({ id: `e-${sigNodeId}-${serviceId(svcMatch)}`, source: sigNodeId, target: serviceId(svcMatch), style: { display: 'none' } });
+                  else edges.push({ id: `e-${sigNodeId}-${sId}`, source: sigNodeId, target: sId, style: { display: 'none' } });
+                } else edges.push({ id: `e-${sigNodeId}-${sId}`, source: sigNodeId, target: sId, style: { display: 'none' } });
               }
             }
           }
-        } catch (sigErr) {
-          console.error('Error fetching signals for routine', rt.name, sigErr);
         }
+      } catch (sigErr) {
+        console.error('Error fetching signals for service', svc.name, sigErr);
       }
     }
 
@@ -286,14 +292,16 @@ export default defineEventHandler(async (event) => {
       console.error('Error fetching deputy_task_map:', depErr);
     }
 
-    // Post-process edges: only show task->task and task->signal edges; hide all others
+    // Post-process edges: show task->task, task->signal, and signal->task edges; hide all others
     for (const edge of edges) {
       if (edge.style && edge.style.display === 'none') continue;
       const srcNode = nodes.find((n) => n.id === edge.source);
       const tgtNode = nodes.find((n) => n.id === edge.target);
       const srcType = srcNode?.nodeType ?? null;
       const tgtType = tgtNode?.nodeType ?? null;
-      const visible = srcType === 'task' && (tgtType === 'task' || tgtType === 'signal');
+      const visible =
+        (srcType === 'task' && (tgtType === 'task' || tgtType === 'signal')) ||
+        (srcType === 'signal' && tgtType === 'task');
       if (!visible) {
         edge.style = edge.style || {};
         edge.style.display = 'none';
