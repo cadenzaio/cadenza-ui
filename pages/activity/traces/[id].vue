@@ -130,6 +130,7 @@
           <q-card-section>
             <div class="text-h6">Confirm Generate</div>
             <div>Are you sure you want to generate a trace?</div>
+            <div style="color: red;">In development not functional</div>
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
@@ -175,55 +176,93 @@ const router = useRouter();
 const route = useRoute();
 const selectedOption = ref('routineMap');
 const routineMap = ref<any>([]);
-const rangedTimelineItems = ref<any[]>([]);
 const nodes = ref<any[]>([]);
 const edges = ref<any[]>([]);
 const timelineItems = computed(() => {
+  // If routineMap has structured data (older flows), prefer that mapping
   const services = routineMap.value?.servers || [];
   const routines = routineMap.value?.routines || [];
   const tasks = routineMap.value?.tasks || [];
 
-  const serviceItems = services.map((service: any) => ({
-    label: service.processing_graph || service.label || service.uuid,
-    nodeType: 'service',
-    started: service.created || '',
-    ended: service.modified || '',
-    description: service.description || '',
-    id: service.uuid,
-    timelineType: 'heading',
-    ...service,
-  }));
+  if ((services.length + routines.length + tasks.length) > 0) {
+    // Only include tasks in the timelines (services/routines remain in the flow map)
+    const taskItems = tasks.map((task: any) => ({
+      label: task.task_name || task.label || task.uuid,
+      nodeType: 'task',
+      started: task.started || task.created || '',
+      ended: task.ended || '',
+      description: task.description || '',
+      id: task.uuid,
+      parentNode: task.routine_execution_id,
+      timelineType: 'body',
+      ...task,
+    }));
 
-  const routineItems = routines.map((routine: any) => ({
-    label: routine.description || routine.label || routine.uuid,
-    nodeType: 'routine',
-    started: routine.created || '',
-    ended: routine.ended || '',
-    description: routine.description || '',
-    id: routine.uuid,
-    parentNode: routine.server_id,
-    timelineType: 'heading',
-    ...routine,
-  }));
+    return taskItems.sort((a: any, b: any) => {
+      const aTime = a.started ? new Date(a.started).getTime() : 0;
+      const bTime = b.started ? new Date(b.started).getTime() : 0;
+      return aTime - bTime;
+    });
+  }
 
-  const taskItems = tasks.map((task: any) => ({
-    label: task.task_name || task.label || task.uuid,
-    nodeType: 'task',
-    started: task.started || task.created || '',
-    ended: task.ended || '',
-    description: task.description || '',
-    id: task.uuid,
-    parentNode: task.routine_execution_id,
-    timelineType: 'body',
-    ...task,
-  }));
+  // Fallback: map from `nodes` returned by the trace endpoint so Timeline and ApexTimeline receive expected fields
+  const mapped = nodes.value.map((n: any) => {
+    const d = n.data || {};
+    const common = {
+      label: d.label || n.id,
+      nodeType: n.nodeType || d.nodeType || 'task',
+      description: d.description || d.label || '',
+      id: n.id,
+      uuid: d.uuid || n.id,
+      parentNode: n.parentNode || d.parentNode || null,
+      // expose top-level timestamps for Timeline/ApexTimeline components
+      created: d.created || null,
+      started: d.started || d.created || null,
+      ended: d.ended || null,
+      // preserve original data for downstream usage
+      raw: d,
+    };
 
-  const allItems = [...serviceItems, ...routineItems, ...taskItems];
-  return allItems.sort((a: any, b: any) => {
+    // timelineType: headings for service/routine, body for tasks/signals
+    return {
+      ...common,
+      timelineType: n.nodeType === 'service' || n.nodeType === 'routine' ? 'heading' : 'body',
+      ...d,
+    };
+  });
+
+  // Only keep tasks and signals for the timeline views (the full `nodes` remain unchanged for the flow map)
+  const filtered = mapped.filter((m: any) => {
+    const t = (m.nodeType || '').toString().toLowerCase();
+    return t === 'task' || t === 'signal';
+  });
+
+  return filtered.sort((a: any, b: any) => {
     const aTime = a.started ? new Date(a.started).getTime() : 0;
     const bTime = b.started ? new Date(b.started).getTime() : 0;
     return aTime - bTime;
   });
+});
+
+// Provide rangedTimelineItems for ApexTimeline (same data but flattened to expected shape)
+const rangedTimelineItems = computed(() => {
+  return timelineItems.value.map((it: any) => ({
+    label: it.label,
+    uuid: it.uuid || it.id,
+    name: it.label,
+    started: it.started || it.created || null,
+    created: it.created || null,
+    ended: it.ended || null,
+    progress: it.progress || 0,
+    errored: it.errored || false,
+    failed: it.failed || false,
+    isComplete: it.isComplete || false,
+    layer_index: it.layer_index || 0,
+    description: it.description || it.raw?.description || null,
+    // keep original node markers for signal detection
+    signal: it.raw?.signal || it.signal || false,
+    type: it.raw?.type || it.type || null,
+  }));
 });
 
 function confirmGenerate() {

@@ -91,27 +91,41 @@ const generateColors = (index: number) => {
   return colors[index % colors.length];
 };
 
-// Convert itemMap to ApexCharts series format - each task gets its own row
-// Debug: log incoming itemMap and highlight any with missing/invalid dates
+// Limit rendered rows to avoid freezing the browser with huge datasets
+const MAX_ROWS = 200;
+// Fallback length for unknown durations (200 milliseconds)
+const FALLBACK_LENGTH_MS = 200;
+const displayedItems = computed(() => {
+  const items = props.itemMap || [];
+  const seen = new Set<string>();
+  const out: TimelineItem[] = [];
+  for (const it of items) {
+    const id = (it && (it.uuid as string)) || (it && (it.id as string)) || null;
+    if (!id) continue;
+    if (!seen.has(id)) {
+      seen.add(id);
+      out.push(it as TimelineItem);
+    }
+  }
+  // Sort by started (fallback to created). Items with no parseable timestamp go last.
+  const parseTs = (it: TimelineItem) => {
+    const s = (it && ((it.started as unknown) || (it.created as unknown))) as string | undefined | null;
+    if (!s) return Number.POSITIVE_INFINITY;
+    const t = Date.parse(s);
+    return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY;
+  };
+
+  out.sort((a, b) => parseTs(a) - parseTs(b));
+  return out.slice(0, MAX_ROWS);
+});
+
+// Minimal debug: log only counts and a sample to avoid heavy console storms
 watch(
   () => props.itemMap,
   (val) => {
-    console.log('[ApexTimeline] received itemMap', val);
     if (Array.isArray(val)) {
-      val.forEach((item, idx) => {
-        if (!item.started || isNaN(new Date(item.started).getTime())) {
-          console.warn(
-            `[ApexTimeline] Item ${idx} missing or invalid started:`,
-            item
-          );
-        }
-        if (!item.ended && !item.isComplete) {
-          console.warn(
-            `[ApexTimeline] Item ${idx} missing ended (may be running):`,
-            item
-          );
-        }
-      });
+      console.log(`[ApexTimeline] received ${val.length} items, rendering ${displayedItems.value.length}`);
+      if (val.length > MAX_ROWS) console.warn(`[ApexTimeline] Display limited to first ${MAX_ROWS} items to avoid performance issues.`);
     }
   },
   { immediate: true }
@@ -125,32 +139,45 @@ const chartSeries = computed(() => {
   // Minimum bar length
   const MIN_BAR_LENGTH = 60;
 
-  // Create a single series with each task as a separate data point
-  const data = props.itemMap.map((item, index) => {
-    const startTime = new Date(
-      (item.started || item.created) as string
-    ).getTime();
-    let endTime = item.ended ? new Date(item.ended).getTime() : Date.now();
+  // Create a single series with each task as a separate data point (use displayedItems)
+  const data = displayedItems.value.map((item, index) => {
+    // Determine timestamps, with fallbacks for missing values
+    const parsedStart = (item.started || item.created) ? Date.parse(String(item.started || item.created)) : NaN;
+    const hasStart = Number.isFinite(parsedStart);
+    const parsedEnd = item.ended ? Date.parse(String(item.ended)) : NaN;
+    const hasEnd = Number.isFinite(parsedEnd);
 
-    // Enforce minimum bar length
-    if (endTime - startTime < MIN_BAR_LENGTH) {
+    let startTime = hasStart ? parsedStart : Date.now();
+    let endTime = hasEnd ? parsedEnd : (hasStart ? parsedStart + FALLBACK_LENGTH_MS : Date.now() + FALLBACK_LENGTH_MS);
+
+    // If either start or end is missing, enforce a fallback 1 second length
+    const missingTs = !hasStart || !hasEnd;
+    if (missingTs) {
+      // ensure a short, visible bar of exactly 1 second
+      startTime = startTime;
+      endTime = startTime + FALLBACK_LENGTH_MS;
+    }
+
+    // Enforce minimum bar length for fully-known timestamps as well
+    if (!missingTs && endTime - startTime < MIN_BAR_LENGTH) {
       endTime = startTime + MIN_BAR_LENGTH;
     }
 
     // Create a unique row name by combining task name with index or UUID
     const uniqueRowName = `${index + 1}: ${item.name || item.label}`;
-    console.log(
-      `[ApexTimeline] Task ${index} (${item.name || item.label}) times:`,
-      new Date(startTime).toISOString(),
-      'to',
-      new Date(endTime).toISOString()
-    );
+    // Prepare fill. For missing timestamps, use an SVG gradient id we will inject
+    const baseColor = generateColors(index);
+    const safeId = `grad-${String(item.uuid || item.id || index).replace(/[^a-z0-9-_]/gi, '-')}`;
+    const fill = missingTs ? `url(#${safeId})` : baseColor;
+
+    // Attach meta flags so we can inject/update gradients in chart events
+    const meta = { ...item, _shortDuration: !!missingTs, _baseColor: baseColor, _gradId: safeId } as any;
+
     return {
       x: uniqueRowName,
       y: [startTime, endTime],
-      fillColor: generateColors(index),
-      strokeColor: '#fff',
-      meta: item,
+      fillColor: fill,
+      meta,
     };
   });
 
@@ -203,6 +230,23 @@ const chartOptions = computed(() => {
       zoom: {
         enabled: false,
       },
+      // inject gradients for short/missing-duration bars after mount/update
+      events: {
+        mounted: function (chartContext: any, config: any) {
+          try {
+            injectGradients(chartContext);
+          } catch (e) {
+            console.error('injectGradients error (mounted):', e);
+          }
+        },
+        updated: function (chartContext: any, config: any) {
+          try {
+            injectGradients(chartContext);
+          } catch (e) {
+            console.error('injectGradients error (updated):', e);
+          }
+        },
+      },
     },
     plotOptions: {
       bar: {
@@ -235,17 +279,19 @@ const chartOptions = computed(() => {
       },
     },
     xaxis: (() => {
-      // Calculate min and max for x-axis to always show the full second
+      // Calculate min and max for x-axis to always show the full second (use displayedItems)
       let minX, maxX;
-      if (props.itemMap && props.itemMap.length > 0) {
-        minX = Math.min(
-          ...props.itemMap.map((item) => new Date(item.started).getTime())
-        );
-        maxX = Math.max(
-          ...props.itemMap.map((item) =>
-            item.ended ? new Date(item.ended).getTime() : Date.now()
-          )
-        );
+      if (displayedItems.value && displayedItems.value.length > 0) {
+        const starts = displayedItems.value
+          .map((item) => Date.parse(String(item.started || item.created)))
+          .filter((t) => Number.isFinite(t));
+        const ends = displayedItems.value
+          .map((item) => (item.ended ? Date.parse(String(item.ended)) : NaN))
+          .filter((t) => Number.isFinite(t));
+        const allStarts = starts.length > 0 ? starts : [Date.now()];
+        const allEnds = ends.length > 0 ? ends : [Math.max(...allStarts) + FALLBACK_LENGTH_MS];
+        minX = Math.min(...allStarts);
+        maxX = Math.max(...allEnds);
         minX = Math.floor(minX / 1000) * 1000;
         maxX = Math.ceil(maxX / 1000) * 1000;
         if (maxX - minX < 1000) {
@@ -275,22 +321,29 @@ const chartOptions = computed(() => {
     // Add vertical markers at every 0.5 second between minX and maxX
     annotations: (() => {
       let minX, maxX;
-      if (props.itemMap && props.itemMap.length > 0) {
-        minX = Math.min(
-          ...props.itemMap.map((item) => new Date(item.started).getTime())
-        );
-        maxX = Math.max(
-          ...props.itemMap.map((item) =>
-            item.ended ? new Date(item.ended).getTime() : Date.now()
-          )
-        );
+      if (displayedItems.value && displayedItems.value.length > 0) {
+        const starts = displayedItems.value
+          .map((item) => Date.parse(String(item.started || item.created)))
+          .filter((t) => Number.isFinite(t));
+        const ends = displayedItems.value
+          .map((item) => (item.ended ? Date.parse(String(item.ended)) : NaN))
+          .filter((t) => Number.isFinite(t));
+        const allStarts = starts.length > 0 ? starts : [Date.now()];
+        const allEnds = ends.length > 0 ? ends : [Math.max(...allStarts) + FALLBACK_LENGTH_MS];
+        minX = Math.min(...allStarts);
+        maxX = Math.max(...allEnds);
         minX = Math.floor(minX / 1000) * 1000;
         maxX = Math.ceil(maxX / 1000) * 1000;
         if (maxX - minX < 1000) {
           maxX = minX + 1000;
         }
         const markers = [];
-        for (let t = minX + 500; t < maxX; t += 1000) {
+        // limit number of markers to avoid performance issues
+        const maxMarkers = 1000;
+        let markerCount = Math.floor((maxX - minX) / 1000);
+        if (markerCount > maxMarkers) markerCount = maxMarkers;
+        const step = Math.max(1000, Math.floor((maxX - minX) / markerCount) || 1000);
+        for (let t = minX + 500; t < maxX; t += step) {
           markers.push({
             x: t,
             borderColor: '#bbb',
@@ -353,49 +406,133 @@ const chartOptions = computed(() => {
       },
       custom: function ({ series, seriesIndex, dataPointIndex, w }: any) {
         const data = w.config.series[seriesIndex].data[dataPointIndex];
-        const item = data.meta;
-        const start = new Date(data.y[0]);
-        const end = new Date(data.y[1]);
-        const duration = (end.getTime() - start.getTime()) / 1000;
+        const item = data.meta || {};
 
-        const formatDuration = (seconds: number) => {
+        const start = data && data.y && data.y[0] ? new Date(data.y[0]) : null;
+        const end = item.ended && data && data.y && data.y[1] ? new Date(data.y[1]) : null;
+        const durationSeconds = start
+          ? ((item.ended && end ? end.getTime() : Date.now()) - start.getTime()) / 1000
+          : null;
+
+        const formatDuration = (seconds: number | null) => {
+          if (seconds === null) return '';
           if (seconds < 60) return `${seconds.toFixed(1)}s`;
           if (seconds < 3600) return `${(seconds / 60).toFixed(1)}m`;
           return `${(seconds / 3600).toFixed(1)}h`;
         };
 
-        return `
-        <div class="apex-tooltip">
-          <div class="tooltip-title">${item.name || item.label}</div>
-          <div class="tooltip-content">
-            <div><strong>UUID:</strong> ${item.uuid.slice(0, 8)}...</div>
-            <div><strong>Started:</strong> ${start.toLocaleString()}</div>
-            <div><strong>Ended:</strong> ${
-              item.ended ? end.toLocaleString() : 'Running...'
-            }</div>
-            <div><strong>Duration:</strong> ${formatDuration(duration)}</div>
-            <div><strong>Progress:</strong> ${item.progress}%</div>
-            <div><strong>Layer:</strong> ${item.layer_index}</div>
-            <div><strong>Status:</strong> <span class="status-${getStatusClass(
-              item
-            )}">${getStatusText(item)}</span></div>
-            ${
-              item.description
-                ? `<div><strong>Description:</strong> ${item.description}</div>`
-                : ''
-            }
-            <div class="tooltip-action">Click to view details</div>
-          </div>
-        </div>
-      `;
+        let html = '<div class="apex-tooltip">';
+
+        if (item.name || item.label) {
+          html += `<div class="tooltip-title">${item.name || item.label}</div>`;
+        }
+
+        html += '<div class="tooltip-content">';
+
+        if (item.uuid) {
+          html += `<div><strong>UUID:</strong> ${String(item.uuid).slice(0, 8)}...</div>`;
+        }
+
+        // Show Type if available (prefer `type`, fall back to `signal` flag)
+        const typeVal = item.type || (item.signal ? 'signal' : null);
+        if (typeVal) {
+          const prettyType = String(typeVal).charAt(0).toUpperCase() + String(typeVal).slice(1);
+          html += `<div><strong>Type:</strong> ${prettyType}</div>`;
+        }
+
+        if (start) {
+          html += `<div><strong>Started:</strong> ${start.toLocaleString()}</div>`;
+        }
+
+        if (end) {
+          html += `<div><strong>Ended:</strong> ${end.toLocaleString()}</div>`;
+        }
+
+        // Do not show duration for signal nodes
+        if (durationSeconds !== null && !item.signal) {
+          html += `<div><strong>Duration:</strong> ${formatDuration(durationSeconds)}</div>`;
+        }
+
+        if (typeof item.progress === 'number') {
+          html += `<div><strong>Progress:</strong> ${item.progress}%</div>`;
+        }
+
+        if (item.layer_index !== undefined && item.layer_index !== null) {
+          html += `<div><strong>Layer:</strong> ${item.layer_index}</div>`;
+        }
+
+        const hasStatusField =
+          item.errored !== undefined || item.failed !== undefined || item.isComplete !== undefined;
+        if (hasStatusField) {
+          html += `<div><strong>Status:</strong> <span class="status-${getStatusClass(
+            item
+          )}">${getStatusText(item)}</span></div>`;
+        }
+
+        if (item.description) {
+          html += `<div><strong>Description:</strong> ${item.description}</div>`;
+        }
+
+        html += '<div class="tooltip-action">Click to view details</div>';
+        html += '</div></div>';
+
+        return html;
       },
     },
     stroke: {
-      width: 1,
-      colors: ['#fff'],
+      width: 0,
+      colors: [],
     },
   };
 });
+
+// Inject per-item SVG linearGradients for items that were marked as short/missing timestamps
+function injectGradients(chartContext: any) {
+  if (!chartContext || !chartContext.el) return;
+  const root = chartContext.el;
+  const svg = root.querySelector && root.querySelector('svg');
+  if (!svg) return;
+
+  let defs = svg.querySelector('defs');
+  if (!defs) {
+    defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    svg.insertBefore(defs, svg.firstChild);
+  }
+
+  const seriesData = chartSeries.value && chartSeries.value[0] && chartSeries.value[0].data ? chartSeries.value[0].data : [];
+
+  for (let i = 0; i < seriesData.length; i++) {
+    const dp = seriesData[i];
+    const m = dp.meta || {};
+    if (!m._shortDuration) continue;
+    const id = m._gradId;
+    if (!id) continue;
+
+    // If gradient already exists, skip
+    if (defs.querySelector(`#${id}`)) continue;
+
+    const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    grad.setAttribute('id', id);
+    grad.setAttribute('x1', '0%');
+    grad.setAttribute('y1', '0%');
+    grad.setAttribute('x2', '100%');
+    grad.setAttribute('y2', '0%');
+
+    const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop1.setAttribute('offset', '0%');
+    stop1.setAttribute('stop-color', m._baseColor || '#666');
+    stop1.setAttribute('stop-opacity', '1');
+
+    const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop2.setAttribute('offset', '100%');
+    stop2.setAttribute('stop-color', m._baseColor || '#666');
+    stop2.setAttribute('stop-opacity', '0');
+
+    grad.appendChild(stop1);
+    grad.appendChild(stop2);
+    defs.appendChild(grad);
+  }
+}
 
 const getStatusText = (item: TimelineItem) => {
   if (item.errored) return 'Error';

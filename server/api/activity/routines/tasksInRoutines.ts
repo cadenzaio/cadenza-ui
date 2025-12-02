@@ -1,6 +1,6 @@
 import pg from 'pg';
 import { initializeClient } from '~/server/api/utils';
-import { getQuery, readBody } from 'h3';
+import { getQuery } from 'h3';
 
 let client: pg.Client | null = null;
 
@@ -10,588 +10,290 @@ async function ensureClient() {
 	}
 }
 
-async function getTaskDetailsByExecutionId(executionId: string) {
-	// Fetch the task execution row by its UUID. 
-	const q = `
-		SELECT
-			task_name AS name,
-			NULL AS description,
-			NULL AS layer_index,
-			NULL AS is_unique,
-			NULL AS concurrency,
-			service_name,
-			task_version AS version,
-			uuid,
-			routine_execution_id,
-			context_id,
-			result_context_id,
-			service_instance_id,
-			execution_trace_id,
-			is_scheduled,
-			is_running,
-			is_complete,
-			is_meta,
-			errored,
-			failed,
-			reached_timeout,
-			error_message,
-			progress,
-			created,
-			started,
-			ended
-		FROM task_execution
-		WHERE uuid = $1
-		LIMIT 1
-	`;
-	const r = await client!.query(q, [executionId] as any);
-	return r.rows[0] ?? null;
-}
-
-async function getLatestExecutionIdForTaskName(taskName: string) {
-	const q = `
-		SELECT
-			uuid
-		FROM task_execution
-		WHERE task_name = $1
-		ORDER BY started DESC NULLS LAST
-		LIMIT 1
-	`;
-	const r = await client!.query(q, [taskName] as any);
-	return r.rows[0] ? r.rows[0].uuid : null;
-}
-
-async function getSignalsConsumedByExecutionId(taskExecutionId: string) {
-	const q = `
-		SELECT DISTINCT
-			signal_name,
-			service_name
-		FROM signal_consumption
-		WHERE task_execution_id = $1
-	`;
-	const r = await client!.query(q, [taskExecutionId]);
-	return r.rows; 
-}
-
-async function getEmittersForSignal(signalName: string) {
-	const q = `
-		SELECT DISTINCT
-			task_execution_id,
-			task_name,
-			service_name
-		FROM signal_emission
-		WHERE signal_name = $1
-	`;
-	const r = await client!.query(q, [signalName]);
-	return r.rows; 
-}
-
-async function getSignalsEmittedByExecutionId(taskExecutionId: string) {
-	const q = `
-		SELECT DISTINCT
-			signal_name
-		FROM signal_emission
-		WHERE task_execution_id = $1
-	`;
-	const r = await client!.query(q, [taskExecutionId]);
-	return r.rows.map((r: any) => r.signal_name);
-}
-
-async function getConsumersForSignal(signalName: string) {
-	const q = `
-		SELECT DISTINCT
-			task_execution_id,
-			task_name,
-			service_name
-		FROM signal_consumption
-		WHERE signal_name = $1
-	`;
-	const r = await client!.query(q, [signalName]);
-	return r.rows; 
-}
-// Batch helpers to reduce many DB round-trips
-async function getSignalsConsumedByExecutionIds(taskExecutionIds: string[]) {
-	if (!taskExecutionIds || taskExecutionIds.length === 0) return {};
-	const q = `
-		SELECT
-			task_execution_id,
-			signal_name
-		FROM signal_consumption
-		WHERE task_execution_id = ANY($1)
-	`;
-	const r = await client!.query(q, [taskExecutionIds]);
-	const map: Record<string, string[]> = {};
-	for (const row of r.rows) {
-		const id = String(row.task_execution_id);
-		map[id] = map[id] || [];
-		if (row.signal_name && !map[id].includes(row.signal_name)) map[id].push(row.signal_name);
-	}
-	return map;
-}
-
-async function getSignalsEmittedByExecutionIds(taskExecutionIds: string[]) {
-	if (!taskExecutionIds || taskExecutionIds.length === 0) return {};
-	const q = `
-		SELECT
-			task_execution_id,
-			signal_name
-		FROM signal_emission
-		WHERE task_execution_id = ANY($1)
-	`;
-	const r = await client!.query(q, [taskExecutionIds]);
-	const map: Record<string, string[]> = {};
-	for (const row of r.rows) {
-		const id = String(row.task_execution_id);
-		map[id] = map[id] || [];
-		if (row.signal_name && !map[id].includes(row.signal_name)) map[id].push(row.signal_name);
-	}
-	return map;
-}
-
-async function getEmittersForSignals(signals: string[]) {
-	if (!signals || signals.length === 0) return {};
-	const q = `
-		SELECT
-			signal_name,
-			task_execution_id,
-			task_name,
-			service_name
-		FROM signal_emission
-		WHERE signal_name = ANY($1)
-	`;
-	const r = await client!.query(q, [signals]);
-	const map: Record<string, Array<{ task_execution_id: string; task_name?: string; service_name?: string }>> = {};
-	for (const row of r.rows) {
-		const sig = row.signal_name;
-		map[sig] = map[sig] || [];
-		const entry = { task_execution_id: row.task_execution_id, task_name: row.task_name, service_name: row.service_name };
-		if (!map[sig].some((e) => String(e.task_execution_id) === String(entry.task_execution_id))) map[sig].push(entry);
-	}
-	return map;
-}
-
-async function getConsumersForSignals(signals: string[]) {
-	if (!signals || signals.length === 0) return {};
-	const q = `
-		SELECT
-			signal_name,
-			task_execution_id,
-			task_name,
-			service_name
-		FROM signal_consumption
-		WHERE signal_name = ANY($1)
-	`;
-	const r = await client!.query(q, [signals]);
-	const map: Record<string, Array<{ task_execution_id: string; task_name?: string; service_name?: string }>> = {};
-	for (const row of r.rows) {
-		const sig = row.signal_name;
-		map[sig] = map[sig] || [];
-		const entry = { task_execution_id: row.task_execution_id, task_name: row.task_name, service_name: row.service_name };
-		if (!map[sig].some((e) => String(e.task_execution_id) === String(entry.task_execution_id))) map[sig].push(entry);
-	}
-	return map;
-}
-
-async function getPredecessorsByExecutionId(executionId: string) {
-	const q = `
-		SELECT
-			previous_task_execution_id
-		FROM task_execution_map
-		WHERE task_execution_id = $1
-	`;
-	const r = await client!.query(q, [executionId] as any);
-	return r.rows || [];
-}
-
-async function getSuccessorsByExecutionId(executionId: string) {
-	const q = `
-		SELECT
-			task_execution_id
-		FROM task_execution_map
-		WHERE previous_task_execution_id = $1
-	`;
-	const r = await client!.query(q, [executionId] as any);
-	return r.rows || [];
-}
-
-// Batch predecessors/successors helpers
-async function getPredecessorsByExecutionIds(executionIds: string[]) {
-	if (!executionIds || executionIds.length === 0) return {};
-	const q = `
-		SELECT
-			task_execution_id,
-			previous_task_execution_id
-		FROM task_execution_map
-		WHERE task_execution_id = ANY($1)
-	`;
-	const r = await client!.query(q, [executionIds]);
-	const map: Record<string, string[]> = {};
-	for (const row of r.rows) {
-		const id = String(row.task_execution_id);
-		map[id] = map[id] || [];
-		if (row.previous_task_execution_id) map[id].push(row.previous_task_execution_id);
-	}
-	// ensure uniqueness
-	for (const k of Object.keys(map)) map[k] = Array.from(new Set(map[k]));
-	return map;
-}
-
-async function getSuccessorsByExecutionIds(previousIds: string[]) {
-	if (!previousIds || previousIds.length === 0) return {};
-	const q = `
-		SELECT
-			previous_task_execution_id,
-			task_execution_id
-		FROM task_execution_map
-		WHERE previous_task_execution_id = ANY($1)
-	`;
-	const r = await client!.query(q, [previousIds]);
-	const map: Record<string, string[]> = {};
-	for (const row of r.rows) {
-		const pid = String(row.previous_task_execution_id);
-		map[pid] = map[pid] || [];
-		if (row.task_execution_id) map[pid].push(row.task_execution_id);
-	}
-	for (const k of Object.keys(map)) map[k] = Array.from(new Set(map[k]));
-	return map;
-}
-
-async function getTaskExecutionIdsForRoutineExecutionId(routineExecutionId: string) {
-	const q = `
-		SELECT
-			uuid
-		FROM task_execution
-		WHERE routine_execution_id = $1
-	`;
-    const r = await client!.query(q, [routineExecutionId] as any);
-    return r.rows.map((row: any) => row.uuid);
+function isValidUuid(id: string) {
+	if (!id || typeof id !== 'string') return false;
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 }
 
 export default defineEventHandler(async (event) => {
 	await ensureClient();
+
+	// Only allow GET
+	if (event.node.req.method !== 'GET') {
+		throw createError({ statusCode: 405, statusMessage: 'Method not allowed' });
+	}
+
 	const query = getQuery(event) as Record<string, any>;
-	let taskExecutionId = query.task_execution_id || query.taskExecutionId || query.uuid || null;
-	let taskName = query.task_name || query.taskName || query.name || null;
-	let routineExecutionId = query.routine_execution_id || query.routineExecutionId || null;
-	const debugFlag = (query.debug === '1' || query.debug === 'true');
+	const routineExecutionId =
+		query.routine_execution_id || query.routineExecutionId || null;
 
-	if (event.node.req.method === 'POST') {
-		try {
-			const body = await readBody(event) as any;
-			taskExecutionId = taskExecutionId || body.task_execution_id || body.taskExecutionId || body.uuid || null;
-			taskName = taskName || body.task_name || body.taskName || body.name || null;
-			routineExecutionId = routineExecutionId || body.routine_execution_id || body.routineExecutionId || null;
-		} catch (e) {
-		}
-	}
-
-	if (!taskExecutionId && !taskName && !routineExecutionId) {
-		throw new Error('Missing required parameter: task_execution_id (or task_name / taskName / name / routine_execution_id)');
-	}
-
-	if (!taskExecutionId && taskName) {
-		try { taskName = decodeURIComponent((taskName as string).replace(/\+/g, ' ')); } catch (e) { /* ignore */ }
-		taskExecutionId = await getLatestExecutionIdForTaskName(taskName as string);
-		if (!taskExecutionId) throw new Error('No task execution found for task_name');
-	}
-
-	// If caller provided a routine_execution_id, get all task executions for that routine
-	let initialExecutionIds: string[] | null = null;
-	if (routineExecutionId) {
-		initialExecutionIds = await getTaskExecutionIdsForRoutineExecutionId(routineExecutionId as string);
-		if (!initialExecutionIds || initialExecutionIds.length === 0) {
-			throw new Error('No task executions found for routine_execution_id');
-		}
-	}
-
-	const maxNodes = 1000;
-	const toVisit: string[] = [];
-	const visited = new Set<string>();
-	const itemsMap: Record<string, { name?: string | null; version?: string | null; service?: string | null }> = {};
-
-	if (initialExecutionIds) {
-		initialExecutionIds.forEach((id) => {
-			toVisit.push(id);
-			itemsMap[id] = { name: null, version: null, service: null };
+	if (!routineExecutionId) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: 'Missing required query parameter `routine_execution_id`',
 		});
-	} else {
-		toVisit.push(taskExecutionId as string);
-		itemsMap[taskExecutionId as string] = { name: taskName as string ?? null, version: null, service: null };
 	}
 
-	const predecessorsMap: Record<string, string[]> = {};
-	const successorsMap: Record<string, string[]> = {};
-
-	// Process nodes in batches to reduce DB round-trips when fetching predecessors/successors
-	const batchSize = 50;
-	while (toVisit.length > 0 && visited.size < maxNodes) {
-		const batch = toVisit.splice(0, batchSize).filter((id) => !!id && !visited.has(id)) as string[];
-		if (batch.length === 0) continue;
-
-		// mark visited
-		batch.forEach((id) => visited.add(id));
-
-		// fetch predecessors and successors for the whole batch
-		let predsMap: Record<string, string[]> = {};
-		let succsMap: Record<string, string[]> = {};
-		try {
-			predsMap = await getPredecessorsByExecutionIds(batch) as Record<string, string[]>;
-		} catch (e) {
-			predsMap = {};
-		}
-		try {
-			succsMap = await getSuccessorsByExecutionIds(batch) as Record<string, string[]>;
-		} catch (e) {
-			succsMap = {};
-		}
-
-		for (const cur of batch) {
-			const predIds = Array.from(new Set((predsMap[cur] || []).filter(Boolean)));
-			predecessorsMap[cur] = predIds;
-			predIds.forEach((pid) => {
-				if (!itemsMap[pid]) itemsMap[pid] = { name: null, version: null, service: null };
-				if (!visited.has(pid) && !toVisit.includes(pid)) toVisit.push(pid);
-			});
-
-			const succIds = Array.from(new Set((succsMap[cur] || []).filter(Boolean)));
-			successorsMap[cur] = succIds;
-			succIds.forEach((sid) => {
-				if (!itemsMap[sid]) itemsMap[sid] = { name: null, version: null, service: null };
-				if (!visited.has(sid) && !toVisit.includes(sid)) toVisit.push(sid);
-			});
-		}
+	if (!isValidUuid(routineExecutionId)) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: 'Invalid UUID provided for `routine_execution_id`',
+		});
 	}
 
-	const items = Object.keys(itemsMap).filter((k) => visited.has(k)).map((k) => ({ id: k, name: itemsMap[k].name ?? null, version: itemsMap[k].version ?? null, service: itemsMap[k].service }));
+	try {
+		const q = `
+			SELECT
+				uuid,
+				routine_execution_id,
+				task_name AS name,
+				task_version,
+				service_name,
+				context_id,
+				result_context_id,
+				split_group_id,
+				service_instance_id,
+				execution_trace_id,
+				is_scheduled,
+				is_running,
+				is_complete,
+				is_meta,
+				errored,
+				failed,
+				reached_timeout,
+				error_message,
+				progress,
+				created,
+				started,
+				ended,
+				deleted
+			FROM task_execution
+			WHERE routine_execution_id = $1
+			ORDER BY created ASC
+		`;
 
-	// Build predecessorIdsMap from traversal results and batch-fetch consumed/emitted signals and their emitter/consumer relationships
-	const predecessorIdsMap: Record<string, string[]> = {};
-	items.forEach((it) => {
-		predecessorIdsMap[it.id] = Array.from(new Set((predecessorsMap[it.id] || []).filter(Boolean)));
-	});
+		const res = await client!.query(q, [routineExecutionId]);
 
-	const itemIds = items.map((it) => it.id);
-	const consumedSignalsMap: Record<string, string[]> = await getSignalsConsumedByExecutionIds(itemIds);
-	const emittedSignalsMap: Record<string, string[]> = await getSignalsEmittedByExecutionIds(itemIds);
+		// collect ids and fetch predecessors in a single batch
+		const ids = res.rows.map((r: any) => r.uuid).filter(Boolean);
+		let predecessorsMap: Record<string, string[]> = {};
+		if (ids.length > 0) {
+			const q2 = `
+				SELECT
+					task_execution_id,
+					previous_task_execution_id
+				FROM task_execution_map
+				WHERE task_execution_id = ANY($1)
+			`;
+			const r2 = await client!.query(q2, [ids]);
+			for (const row of r2.rows) {
+				const tid = String(row.task_execution_id);
+				predecessorsMap[tid] = predecessorsMap[tid] || [];
+				if (row.previous_task_execution_id) predecessorsMap[tid].push(row.previous_task_execution_id);
+			}
+			// dedupe
+			for (const k of Object.keys(predecessorsMap)) {
+				predecessorsMap[k] = Array.from(new Set(predecessorsMap[k]));
+			}
+		}
 
-	const allSignals = Array.from(new Set(Object.values(consumedSignalsMap).flat()));
-	const emittersMap = await getEmittersForSignals(allSignals);
+		// Transform DB rows into nodes like the example format.
+		// First, fetch signals consumed by these task executions so we can create
+		// duplicated task nodes that indicate `previousTaskExecutionName: signal::<emission_uuid>`.
+		let consumedMap: Record<string, string[]> = {};
+		const emissionNameMap: Record<string, string> = {};
+		if (ids.length > 0) {
+			try {
+				const qc = `
+				SELECT
+					task_execution_id,
+					signal_emission_id,
+					signal_name,
+					consumed_at 
+				FROM signal_consumption 
+				WHERE task_execution_id = ANY($1)`;
+				const rc = await client!.query(qc, [ids]);
+				for (const row of rc.rows) {
+					const tid = String(row.task_execution_id);
+					consumedMap[tid] = consumedMap[tid] || [];
+					const eid = row.signal_emission_id || row.uuid || null;
+					if (eid) {
+						if (!consumedMap[tid].includes(eid)) consumedMap[tid].push(eid);
+						if (row.signal_name) emissionNameMap[eid] = row.signal_name;
+							// track consumed_at per emission (use earliest consumed_at)
+							if (row.consumed_at) {
+								const ts = new Date(row.consumed_at).toISOString();
+								if (!emissionNameMap.__consumedAt) emissionNameMap.__consumedAt = {} as any;
+								const caMap: Record<string, string> = (emissionNameMap.__consumedAt as any);
+								if (!caMap[eid] || caMap[eid] > ts) caMap[eid] = ts;
+							}
+					}
+				}
+			} catch (e) {
+				console.error('Error fetching signal_consumption for tasks:', e);
+				consumedMap = {};
+			}
+		}
 
-	const allEmittedSignals = Array.from(new Set(Object.values(emittedSignalsMap).flat()));
-	const signalsToFetchConsumers = Array.from(new Set([...allEmittedSignals, ...allSignals]));
-	const consumersMap = await getConsumersForSignals(signalsToFetchConsumers);
-
-
-	const enriched = await Promise.all(items.map(async (it) => {
-
-		const prevList = predecessorIdsMap[it.id] ?? [];
-		const previousExecution = prevList.length > 0 ? prevList[0] : null;
-		const previousExecutions = prevList.length > 0 ? prevList : [];
-		try {
-			const det = await getTaskDetailsByExecutionId(it.id);
-			return {
-				id: it.id,
-				name: det ? det.name : it.name,
-				version: it.version ?? (det ? det.version : null),
-				service: it.service ?? (det ? det.service_name : null),
-				description: det ? det.description : null,
-				layer_index: det ? det.layer_index : null,
-				is_unique: det ? det.is_unique : null,
-				concurrency: det ? det.concurrency : null,
-				execution_trace_id: det ? det.execution_trace_id : null,
-				executionTraceId: det ? det.execution_trace_id : null,
-				previousExecution,
-				previousExecutions,
+		// Build task nodes, duplicating when the task consumed signals.
+		const taskNodes: any[] = [];
+		for (const row of res.rows) {
+			const base = {
+				uuid: row.uuid,
+				type: 'task',
+				name: row.name,
+				label: row.name,
+				description: null,
+				layer_index: null,
+				is_unique: null,
+				concurrency: null,
+				execution_trace_id: row.execution_trace_id || null,
+				executionTraceId: row.execution_trace_id || row.executionTraceId || null,
+				created: row.created ? new Date(row.created).toISOString() : null,
+				// include started so frontends can order and render tasks correctly
+				started: row.started ? new Date(row.started).toISOString() : null,
+				ended: row.ended ? new Date(row.ended).toISOString() : null,
+				previousTaskExecutionName: (predecessorsMap[row.uuid] && predecessorsMap[row.uuid].length > 0) ? predecessorsMap[row.uuid][0] : null,
+				previousTaskExecutionId: (predecessorsMap[row.uuid] && predecessorsMap[row.uuid].length > 0) ? predecessorsMap[row.uuid][0] : null,
 			};
+			taskNodes.push(base);
+
+			const consumed = consumedMap[row.uuid] || [];
+			for (const sig of consumed) {
+				const dup = { ...base };
+				dup.previousTaskExecutionName = `signal::${sig}`;
+				dup.previousTaskExecutionId = sig;
+				taskNodes.push(dup);
+			}
+		}
+
+		// Fetch signal emissions for this routine and build unique signal nodes keyed by emission uuid.
+		let emissionRows: any[] = [];
+		try {
+			const q3 = `
+				SELECT
+					uuid,
+					signal_name,
+					signal_tag,
+					task_name,
+					task_version,
+					task_execution_id,
+					service_name,
+					service_instance_id,
+					execution_trace_id,
+					routine_execution_id,
+					data,
+					metadata,
+					is_meta,
+					is_metric,
+					emitted_at,
+					created
+				FROM signal_emission
+				WHERE routine_execution_id = $1
+				ORDER BY created ASC
+			`;
+			const r3 = await client!.query(q3, [routineExecutionId]);
+			emissionRows = r3.rows;
 		} catch (e) {
-			return { id: it.id, name: it.name, version: it.version ?? null, service: it.service ?? null, execution_trace_id: null, executionTraceId: null, previousExecution, previousExecutions };
+			console.error('Error fetching signal emissions for routine:', e);
+			emissionRows = [];
 		}
-	}));
 
-	const outputNodes: any[] = [];
-	const pushedSignalIds = new Set<string>();
+		// Build unique signal nodes keyed by emission uuid
+		const signalMap: Record<string, any> = {};
+		const consumedEmissionSet = new Set<string>(Object.values(consumedMap).flat());
 
-	for (const it of enriched) {
-		const prevs: string[] = Array.isArray(it.previousExecutions) ? it.previousExecutions : [];
-		if (!prevs || prevs.length === 0) {
-				outputNodes.push({
-					uuid: it.id,
-					type: 'task',
-					name: it.name,
-					label: it.name,
-					description: it.description ?? null,
-					layer_index: it.layer_index ?? null,
-					is_unique: it.is_unique ?? null,
-					concurrency: it.concurrency ?? null,
-					execution_trace_id: it.execution_trace_id ?? null,
-					executionTraceId: it.executionTraceId ?? null,
+		// invert consumedMap (taskExecutionId -> [emissionIds]) to emissionId -> [consumerTaskExecutionIds]
+		const consumersByEmission: Record<string, string[]> = {};
+		// map of emissionId -> earliest consumed_at ISO string (if available)
+		const consumedAtByEmission: Record<string, string> = {};
+		for (const [tid, emissions] of Object.entries(consumedMap)) {
+			for (const eid of emissions) {
+				consumersByEmission[eid] = consumersByEmission[eid] || [];
+				if (!consumersByEmission[eid].includes(tid)) consumersByEmission[eid].push(tid);
+			}
+		}
+
+		// if we recorded consumed_at values on emissionNameMap.__consumedAt, move them to consumedAtByEmission
+		if ((emissionNameMap as any).__consumedAt) {
+			const caMap: Record<string, string> = (emissionNameMap as any).__consumedAt;
+			for (const [k, v] of Object.entries(caMap)) consumedAtByEmission[k] = v;
+			delete (emissionNameMap as any).__consumedAt;
+		}
+
+		for (const row of emissionRows) {
+			const emissionId = row.uuid || row.id || null;
+			const sig = row.signal_name || null;
+			if (!emissionId || !sig) continue;
+			if (!signalMap[emissionId]) {
+				const emitterTaskExecutionId = row.task_execution_id || null;
+				// prefer emitted_at for start, fallback to consumed_at; ended will be start + 500ms
+				const consumedAt = consumedAtByEmission[emissionId] || null;
+				const emittedAtTs = row.emitted_at ? new Date(row.emitted_at).getTime() : null;
+				const consumedAtTs = consumedAt ? new Date(consumedAt).getTime() : null;
+				const baseTs = emittedAtTs || consumedAtTs || null;
+				const startedIso = baseTs ? new Date(baseTs).toISOString() : null;
+				const endedIso = baseTs ? new Date(baseTs + 500).toISOString() : null;
+
+				signalMap[emissionId] = {
+					// Use the raw emission UUID as the node uuid (no prefix)
+					uuid: emissionId,
+					type: 'signal',
+					name: sig,
+					label: sig,
+					description: null,
+					layer_index: null,
+					is_unique: false,
+					concurrency: null,
+					// link to the emitter task execution
+					previousTaskExecutionName: emitterTaskExecutionId || null,
+					previousTaskExecutionId: emitterTaskExecutionId || null,
+					signal: true,
+					service_name: row.service_name || null,
+					created: row.emitted_at ? new Date(row.emitted_at).toISOString() : (row.created ? new Date(row.created).toISOString() : null),
+					// set started to emitted_at (if present) or consumed_at; ended = started + 500ms
+					started: startedIso,
+					ended: endedIso,
+					relation: consumedEmissionSet.has(emissionId) ? 'consumed_by' : 'emitted_by',
+					// list of task_execution_ids that consumed this emission
+					consumedBy: consumersByEmission[emissionId] || [],
+				};
+			}
+		}
+
+		// Add synthetic signal nodes for any consumed emissions that weren't present in `signal_emission`.
+		for (const eid of consumedEmissionSet) {
+			if (!signalMap[eid]) {
+				signalMap[eid] = {
+					uuid: eid,
+					type: 'signal',
+					name: emissionNameMap[eid] || ('signal'),
+					label: emissionNameMap[eid] || ('signal'),
+					description: null,
+					layer_index: null,
+					is_unique: false,
+					concurrency: null,
 					previousTaskExecutionName: null,
-				});
-
-				const emitted = emittedSignalsMap[it.id] ?? [];
-				for (const sig of emitted) {
-					const signalId = `signal::${sig}`;
-					if (!pushedSignalIds.has(signalId)) {
-						pushedSignalIds.add(signalId);
-						outputNodes.push({
-							uuid: signalId,
-							type: 'signal',
-							name: sig,
-							label: sig,
-							description: null,
-							layer_index: null,
-							is_unique: false,
-							concurrency: null,
-							previousTaskExecutionName: it.id,
-							signal: true,
-							service_name: (emittersMap[sig] && emittersMap[sig][0] && emittersMap[sig][0].service_name) ? emittersMap[sig][0].service_name : null,
-							relation: 'emitted_by'
-					});
-					}
-
-					const consumers = (consumersMap[sig] ?? []).filter((c: any) => visited.has(String(c.task_execution_id)));
-					for (const c of consumers) {
-						let detC = null;
-						try {
-							detC = await getTaskDetailsByExecutionId(c.task_execution_id);
-						} catch (e) {
-							detC = null;
-						}
-						outputNodes.push({
-							uuid: c.task_execution_id,
-							type: 'task',
-							name: c.task_name,
-							label: c.task_name,
-							description: detC ? detC.description : null,
-							layer_index: detC ? detC.layer_index : null,
-							is_unique: detC ? detC.is_unique : false,
-							concurrency: detC ? detC.concurrency : null,
-							execution_trace_id: detC ? detC.execution_trace_id : null,
-							executionTraceId: detC ? detC.execution_trace_id : null,
-							previousTaskExecutionName: `signal::${sig}`,
-						});
-					}
-				}
-
-				const consumedByThis = consumedSignalsMap[it.id] ?? [];
-				for (const csig of consumedByThis) {
-					const signalId2 = `signal::${csig}`;
-					if (!pushedSignalIds.has(signalId2)) {
-						pushedSignalIds.add(signalId2);
-						outputNodes.push({
-							uuid: signalId2,
-							type: 'signal',
-							name: csig,
-							label: csig,
-							description: null,
-							layer_index: null,
-							is_unique: false,
-							concurrency: null,
-							previousTaskExecutionName: null,
-							signal: true,
-							service_name: null,
-							relation: 'consumed_by'
-						});
-					}
-					outputNodes.push({
-						uuid: it.id,
-						type: 'task',
-						name: it.name,
-						label: it.name,
-						description: it.description ?? null,
-						layer_index: it.layer_index ?? null,
-						is_unique: it.is_unique ?? null,
-						concurrency: it.concurrency ?? null,
-						execution_trace_id: it.execution_trace_id ?? null,
-						executionTraceId: it.executionTraceId ?? null,
-						previousTaskExecutionName: `signal::${csig}`,
-					});
-				}
-
-				continue;
+					previousTaskExecutionId: null,
+					signal: true,
+					service_name: null,
+					// for synthetic nodes, prefer consumedAt for start/ended when available
+					created: null,
+					started: consumedAtByEmission[eid] ? new Date(consumedAtByEmission[eid]).toISOString() : null,
+					ended: consumedAtByEmission[eid] ? new Date(new Date(consumedAtByEmission[eid]).getTime() + 500).toISOString() : null,
+					relation: 'consumed_by',
+					consumedBy: consumersByEmission[eid] || [],
+				};
 			}
-
-		const consumed = consumedSignalsMap[it.id] ?? [];
-
-		prevs.forEach((p) => {
-			const matchingSignals = consumed.filter((s: string) => Array.isArray(emittersMap[s]) && emittersMap[s].some((e: any) => String(e.task_execution_id) === String(p)));
-
-			if (matchingSignals.length > 0) {
-				matchingSignals.forEach((sig) => {
-					const signalId = `signal::${sig}`;
-					if (!pushedSignalIds.has(signalId)) {
-						pushedSignalIds.add(signalId);
-						outputNodes.push({
-							uuid: signalId,
-							type: 'signal',
-							name: sig,
-							label: sig,
-							description: null,
-							layer_index: null,
-							is_unique: false,
-							concurrency: null,
-							previousTaskExecutionName: p,
-							signal: true,
-							service_name: (emittersMap[sig] && emittersMap[sig][0] && emittersMap[sig][0].service_name) ? emittersMap[sig][0].service_name : null,
-							relation: 'emitted_by'
-						});
-					}
-					outputNodes.push({
-						uuid: it.id,
-						type: 'task',
-						name: it.name,
-						label: it.name,
-						description: it.description ?? null,
-						layer_index: it.layer_index ?? null,
-						is_unique: it.is_unique ?? null,
-						concurrency: it.concurrency ?? null,
-						execution_trace_id: it.execution_trace_id ?? null,
-						executionTraceId: it.executionTraceId ?? null,
-						previousTaskExecutionName: `signal::${sig}`,
-					});
-				});
-			} else {
-				outputNodes.push({
-					uuid: it.id,
-					type: 'task',
-					name: it.name,
-					label: it.name,
-					description: it.description ?? null,
-					layer_index: it.layer_index ?? null,
-					is_unique: it.is_unique ?? null,
-					concurrency: it.concurrency ?? null,
-					execution_trace_id: it.execution_trace_id ?? null,
-					executionTraceId: it.executionTraceId ?? null,
-					previousTaskExecutionName: p ?? null,
-				});
-			}
-		});
-
-	}
-
-	// Ensure compatibility with FlowMap: provide `previousTaskExecutionId`
-	// by copying whatever is in `previousTaskExecutionName` (could be null, task uuid or signal id)
-	for (const n of outputNodes) {
-		if (n.previousTaskExecutionId === undefined) {
-			n.previousTaskExecutionId = n.previousTaskExecutionName ?? null;
 		}
-	}
 
-	if (debugFlag) {
-		return {
-			nodes: outputNodes,
-			diagnostics: {
-				items,
-				visited: Array.from(visited),
-				predecessorIdsMap,
-				consumedSignalsMap,
-				emittersMap,
-				emittedSignalsMap,
-				consumersMap,
-				successorsMap,
-			},
-		};
-	}
+		const signalNodes = Object.values(signalMap);
 
-	return outputNodes;
+		// Return tasks first, then signals
+		return [...taskNodes, ...signalNodes];
+	} catch (err) {
+		console.error('Error fetching task executions for routine:', err);
+		throw createError({ statusCode: 500, statusMessage: 'Failed to fetch task executions' });
+	}
 });
 

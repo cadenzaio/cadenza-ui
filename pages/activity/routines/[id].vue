@@ -97,121 +97,83 @@
         </div>
 
         <div class="row q-mx-md justify-around">
-          <InfoCard v-if="selectedItem">
+          <InfoCard v-if="selectedItem" class="full-width">
             <template #title>
               {{ selectedItem?.label }}
             </template>
             <template #info>
-              <div class="flex-column full-width">
-                <div class="q-mx-md q-my-sm">
-                  Description: {{ selectedItem?.routineDescription }}
+              <div class="row" style="flex-wrap: wrap;">
+                <!-- First Column -->
+                <div class="col" style="min-width: 300px;">
+                  <div class="q-mx-md q-my-sm">
+                    Description: {{ selectedItem?.routineDescription }}
+                  </div>
+                  <div class="q-mx-md q-my-sm">
+                    Execution ID: {{ selectedItem?.uuid }}
+                  </div>
+                  <div class="q-mx-md q-my-sm">
+                    Executed tasks: {{ routineMap?.length ?? 0 }}
+                  </div>
                 </div>
-                <div class="q-mx-md q-my-sm">
-                  Executed tasks: {{ routineMap?.length ?? 0 }}
-                </div>
-                <div class="q-separator" style="height: 2px"></div>
 
-                <div class="flex">
-                  <div>
-                    <div class="q-mx-md q-my-sm">
-                      Progress: {{ selectedItem?.progress * 100 }}%
+                <!-- Second Column -->
+                <div class="col" style="min-width: 300px;">
+                  <div class="row items-center">
+                    <div class="col">
+                      <div class="q-mx-md q-my-sm">
+                        Progress: {{ (selectedItem.progress * 100).toFixed(0) }}%
+                      </div>
+                      <div class="q-mx-md q-my-sm">
+                        Status: {{ selectedItem.status }}
+                      </div>
+                      <div class="q-mx-md q-my-sm">
+                        Started: {{ formatDate(selectedItem?.started) }}
+                      </div>
+                      <div class="q-mx-md q-my-sm">
+                        Ended: {{ formatDate(selectedItem?.ended) }}
+                      </div>
+                      <div class="q-mx-md q-my-sm">
+                        Duration:
+                        {{ getDuration(selectedItem?.started, selectedItem?.ended) }}
+                        sec
+                      </div>
                     </div>
-                    <div class="q-mx-md q-my-sm">
-                      Started: {{ formatDate(selectedItem?.started) }}
-                    </div>
-                    <div class="q-mx-md q-my-sm">
-                      Ended: {{ formatDate(selectedItem?.ended) }}
-                    </div>
-                    <div class="q-mx-md q-my-sm">
-                      Duration:
-                      {{
-                        getDuration(selectedItem?.started, selectedItem?.ended)
-                      }}
-                      sec
+                    <div class="col-auto">
+                      <ProgressRadialBarChart
+                        v-if="selectedItem"
+                        :name="selectedItem?.label"
+                        :value="String(selectedItem?.progress ?? '')"
+                      />
                     </div>
                   </div>
-                  <ProgressRadialBarChart
-                    v-if="selectedItem"
-                    :name="selectedItem?.label"
-                    :value="selectedItem.progress.toString()"
-                  />
                 </div>
 
-                <div class="q-separator" style="height: 2px"></div>
-                <div class="q-mx-md q-my-sm">
-                  Status: {{ selectedItem.status }}
-                </div>
-                <div class="q-separator" style="height: 2px"></div>
-
-                <div
-                  v-if="selectedItem?.routineId"
-                  class="q-mx-md q-my-sm"
-                  @click="
-                    navigateToItem(
-                      `/system/routines/${selectedItem?.name}`
-                    )
-                  "
-                  @contextmenu.prevent="
-                    openLinkInNewTab(
-                      `/system/routines/${selectedItem?.name}`
-                    )
-                  "
-                >
-                  Routine id:
-                  <span class="text-primary cursor-pointer">{{
-                    selectedItem?.uuid
-                  }}</span>
-                </div>
-                <div
-                  class="q-mx-md q-my-sm"
-                  @click="
-                    navigateToItem(
-                      `/activity/services/${selectedItem?.serviceName}`
-                    )
-                  "
-                  @contextmenu.prevent="
-                    openLinkInNewTab(
-                      `/activity/services/${selectedItem?.serviceName}`
-                    )
-                  "
-                >
-                  Service Name:
-                  <span class="text-primary cursor-pointer">{{
-                    selectedItem?.serviceName
-                  }}</span>
-                </div>
-                <div
-                  v-if="selectedItem?.previousRoutineExecution"
-                  class="q-mx-md q-my-sm"
-                  @click="
-                    navigateToItem(
-                      `/activity/routines/${selectedItem?.previousRoutineExecution}`
-                    )
-                  "
-                  @contextmenu.prevent="
-                    openLinkInNewTab(
-                      `/activity/routines/${selectedItem?.previousRoutineExecution}`
-                    )
-                  "
-                >
-                  Previous routine:<span class="text-warning cursor-pointer">
-                    {{ selectedItem?.previousRoutineName }}</span
+                <!-- Third Column -->
+                <div class="col" style="min-width: 300px;">
+                  <div
+                    v-if="selectedItem?.previousRoutineExecution"
+                    class="q-mx-md q-my-sm cursor-pointer text-warning"
+                    @click="navigateToItem(`/activity/routines/${selectedItem?.previousRoutineExecution}`)"
+                    @contextmenu.prevent="openLinkInNewTab(`/activity/routines/${selectedItem?.previousRoutineExecution}`)"
                   >
-                </div>
-                <div
-                  class="q-mx-md q-my-sm cursor-pointer text-warning"
-                  @click="
-                    navigateToItem(
-                      `/activity/traces/${selectedItem?.executionTraceId}`
-                    )
-                  "
-                  @contextmenu.prevent="
-                    openLinkInNewTab(
-                      `/activity/traces/${selectedItem?.executionTraceId}`
-                    )
-                  "
-                >
-                  Trace: {{ selectedItem?.executionTraceId }}
+                    Previous routine: {{ selectedItem?.previousRoutineName }}
+                  </div>
+
+                  <div
+                    class="q-mx-md q-my-sm cursor-pointer text-primary"
+                    @click="navigateToItem(`/activity/services/${selectedItem?.serviceName}`)"
+                    @contextmenu.prevent="openLinkInNewTab(`/activity/services/${selectedItem?.serviceName}`)"
+                  >
+                    Service: {{ selectedItem?.serviceName }}
+                  </div>
+
+                  <div
+                    class="q-mx-md q-my-sm cursor-pointer text-warning"
+                    @click="navigateToItem(`/activity/traces/${selectedItem?.executionTraceId}`)"
+                    @contextmenu.prevent="openLinkInNewTab(`/activity/traces/${selectedItem?.executionTraceId}`)"
+                  >
+                    Trace: {{ selectedItem?.executionTraceId }}
+                  </div>
                 </div>
               </div>
             </template>
@@ -339,8 +301,8 @@
             </InfoCard>
           </div>
 
-          <div>
-            <InfoCard>
+           <div class="row" style="flex-wrap: wrap;">
+            <InfoCard class="col" style="min-width: 40dvw;">
               <template #title>Input Context</template>
               <template #info>
                 <div class="q-mx-md q-my-sm">
@@ -349,7 +311,7 @@
               </template>
             </InfoCard>
 
-            <InfoCard>
+            <InfoCard class="col" style="min-width: 40dvw;">
               <template #title>Output Context</template>
               <template #info>
                 <div class="q-mx-md q-my-sm">
@@ -360,16 +322,12 @@
           </div>
         </div>
       </div>
-
-      <div>
-        <!-- Empty div for spacing -->
-      </div>
-
       <q-dialog v-model="showGenerateDialog">
         <q-card>
           <q-card-section>
             <div class="text-h6">Confirm Generate</div>
             <div>Are you sure you want to generate a trace?</div>
+            <div style="color: red;">In development not functional</div>
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
@@ -395,9 +353,14 @@
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 import { useRoute } from '#app';
-import { ref, onMounted, watchEffect } from 'vue';
+import { ref, onMounted, watchEffect, defineAsyncComponent } from 'vue';
 import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
+
+// Lazy-load heavier components similar to `pages/activity/tasks/[id].vue`
+const FlowMap = defineAsyncComponent(() => import('~/components/FlowMap.vue'));
+const ProgressRadialBarChart = defineAsyncComponent(() => import('~/components/ProgressRadialBarChart.vue'));
+const InfoCard = defineAsyncComponent(() => import('~/components/InfoCard.vue'));
 
 interface SelectedItem {
   name: string;
@@ -452,10 +415,9 @@ const router = useRouter();
 
 function onTaskSelected(task: SelectedTask) {
   selectedTask.value = task;
-  // Set isSelected for nodes in routineMap
   routineMap.value = routineMap.value.map((t) => ({
     ...t,
-    isSelected: t.uuid === task.uuid, // or t.id === task.id depending on your id field
+    isSelected: t.uuid === task.uuid,
   }));
   dialogVisible.value = true;
 }
@@ -503,25 +465,11 @@ function getDuration(start: string, end: string | undefined) {
 const navigateToItem = (route: string) => {
   router.push(route);
 };
-
-// Handle clicks from FlowMap items. If the clicked item is a signal node
-// (ids like `signal::<uuid>` or `item.signal === true`), navigate to the
-// signal details page. Otherwise, navigate to the task execution page.
 async function onItemSelected(item: any) {
   if (!item) return;
-
-  // Prefer explicit `uuid` field for routing. Some nodes may expose a
-  // prefixed id like `signal::<uuid>`, while others provide the plain
-  // emission uuid in `uuid` — prefer the latter for signals.
   const canonicalId = item.uuid || item.id || item.name || '';
   if (!canonicalId) return;
-
-  // If the node is marked as a signal, use the emission UUID when possible.
   if (item.signal === true) {
-    // If `uuid` looks like a real UUID (36 chars with hyphens), assume it's
-    // already the emission id and navigate directly. Otherwise the node may
-    // be using the signal name (e.g. `signal::health.check`) so attempt to
-    // resolve the latest emission via the new backend helper.
     const raw = String(item.uuid || canonicalId);
     const stripped = raw.replace(/^signal::/, '');
 
@@ -530,12 +478,9 @@ async function onItemSelected(item: any) {
       router.push(`/activity/signals/${stripped}`);
       return;
     }
-
-    // Otherwise try to resolve by signal name to the latest emission uuid.
     try {
       const resp = await fetch(`/api/activity/signals/by-name?name=${encodeURIComponent(stripped)}`);
       if (!resp.ok) {
-        // fallback: navigate to a signal list or open nothing
         console.warn('Failed to resolve signal name to emission:', stripped);
         return;
       }
@@ -607,7 +552,6 @@ function confirmStop() {
 
 function confirmGenerate() {
   showGenerateDialog.value = false;
-  // Add logic to handle generating the contract
 }
 // Flash animation for InfoCard when selectedTask updates
 import { nextTick } from 'vue';
@@ -621,7 +565,7 @@ watch(selectedTask, async (newVal, oldVal) => {
     flashActive.value = true;
     setTimeout(() => {
       flashActive.value = false;
-    }, 700); // Animation duration
+    }, 700); 
   }
 });
 </script>

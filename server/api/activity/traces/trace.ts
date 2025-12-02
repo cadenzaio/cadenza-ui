@@ -33,11 +33,16 @@ async function generateNodesAndEdges(traceUuid: string) {
       re.uuid AS routine_uuid,
       te.task_name,
       te.uuid AS task_uuid,
+      te.created AS task_created,
+      te.started AS task_started,
+      te.ended AS task_ended,
       tem.previous_task_execution_id,
       se.uuid AS signal_emission_uuid,
       se.signal_name AS signal_emission_name,
+      se.emitted_at AS signal_emitted_at,
       sc.signal_emission_id AS signal_consumption_uuid,
-      sc.signal_name AS signal_consumption_name
+      sc.signal_name AS signal_consumption_name,
+      sc.consumed_at AS signal_consumed_at
     FROM execution_trace et
     LEFT JOIN context ctx ON et.context_id = ctx.uuid
     LEFT JOIN routine_execution re
@@ -94,7 +99,14 @@ async function generateNodesAndEdges(traceUuid: string) {
         type: 'custom',
         nodeType: 'task',
         parentNode: row.routine_uuid, 
-        data: { label: row.task_name || row.task_uuid },        
+        data: {
+          label: row.task_name || row.task_uuid,
+          // include timestamps as ISO strings when available (use aliased fields)
+          created: row.task_created ? new Date(row.task_created).toISOString() : null,
+          started: row.task_started ? new Date(row.task_started).toISOString() : null,
+          ended: row.task_ended ? new Date(row.task_ended).toISOString() : null,
+          type: 'task',
+        },
       };
       nodes.push(taskNode);
     
@@ -113,12 +125,28 @@ async function generateNodesAndEdges(traceUuid: string) {
       if (!signalNodes[key]) {
         signalEmissionNodeId = `${row.task_uuid}-emission-${row.signal_emission_name}`;
         signalNodes[key] = signalEmissionNodeId;
+        // use emitted_at or fallback to consumed_at for created/started, ended = started + 500ms
+        const startTs = row.signal_emitted_at
+          ? new Date(row.signal_emitted_at).getTime()
+          : row.signal_consumed_at
+          ? new Date(row.signal_consumed_at).getTime()
+          : null;
+        const startedIso = startTs ? new Date(startTs).toISOString() : null;
+        const endedIso = startTs ? new Date(startTs + 500).toISOString() : null;
         const signalEmissionNode = {
           id: signalEmissionNodeId,
           type: 'custom',
           nodeType: 'signal',
           parentNode: row.trace_uuid,
-          data: { label: row.signal_emission_name, signal: true, uuid: row.signal_emission_uuid || null }, // include uuid when available
+          data: {
+            label: row.signal_emission_name,
+            signal: true,
+            uuid: row.signal_emission_uuid || null,
+            created: row.signal_emitted_at ? new Date(row.signal_emitted_at).toISOString() : null,
+            started: startedIso,
+            ended: endedIso,
+            type: 'signal',
+          }, // include uuid when available
         };
         nodes.push(signalEmissionNode);
       } else {
@@ -148,12 +176,28 @@ async function generateNodesAndEdges(traceUuid: string) {
       if (!signalNodes[key]) {
         signalConsumptionNodeId = `${row.task_uuid}-consumption-${row.signal_consumption_name}`;
         signalNodes[key] = signalConsumptionNodeId;
+        // use consumed_at or fallback to emitted_at for created/started, ended = started + 500ms
+        const startTs = row.signal_consumed_at
+          ? new Date(row.signal_consumed_at).getTime()
+          : row.signal_emitted_at
+          ? new Date(row.signal_emitted_at).getTime()
+          : null;
+        const startedIso = startTs ? new Date(startTs).toISOString() : null;
+        const endedIso = startTs ? new Date(startTs + 500).toISOString() : null;
         const signalConsumptionNode = {
           id: signalConsumptionNodeId,
           type: 'custom',
           nodeType: 'signal',
           parentNode: row.trace_uuid,
-          data: { label: row.signal_consumption_name, signal: true, uuid: row.signal_consumption_uuid || null }, // include uuid when available
+          data: {
+            label: row.signal_consumption_name,
+            signal: true,
+            uuid: row.signal_consumption_uuid || null,
+            created: row.signal_consumed_at ? new Date(row.signal_consumed_at).toISOString() : null,
+            started: startedIso,
+            ended: endedIso,
+            type: 'signal',
+          }, // include uuid when available
         };
         nodes.push(signalConsumptionNode);
       } else {

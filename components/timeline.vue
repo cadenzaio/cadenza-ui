@@ -1,8 +1,8 @@
 <template>
   <q-timeline layout="comfortable" style="max-width: 97%">
     <q-timeline-entry
-      v-for="(entry, index) in itemMap"
-      :key="index"
+      v-for="(entry, index) in dedupedItems"
+      :key="String(entry.uuid ?? index)"
       :title="entry.label"
       :subtitle="formatDate(entry.started)"
       :side="entry.layer_index % 2 === 0 ? 'left' : 'right'"
@@ -18,8 +18,12 @@
       }"
       @click="onTaskSelected(entry)"
     >
+      <!-- Show type if present (blue badge). Fall back to heading label for services/routines. -->
+      <q-badge v-if="entry.type" color="blue-8" class="q-mb-sm">
+        {{ String(entry.type).charAt(0).toUpperCase() + String(entry.type).slice(1) }}
+      </q-badge>
       <q-badge
-        v-if="entry.timelineType === 'heading'"
+        v-else-if="entry.timelineType === 'heading'"
         color="blue-8"
         class="q-mb-sm"
       >
@@ -48,6 +52,31 @@ interface TimelineEntry {
 }
 
 const props = defineProps<{ itemMap: TimelineEntry[] }>();
+
+// Dedupe incoming items by `uuid`, preserving original order
+const dedupedItems = computed(() => {
+  const items = props.itemMap || [];
+  const seen = new Set<string>();
+  const out: TimelineEntry[] = [];
+  for (const it of items) {
+    const id = (it && (it.uuid as string)) || (it && (it.id as string)) || null;
+    if (!id) continue;
+    if (!seen.has(id)) {
+      seen.add(id);
+      out.push(it as TimelineEntry);
+    }
+  }
+  // Sort by started (fallback to created). Items without a parseable timestamp go last.
+  const parseTs = (it: TimelineEntry) => {
+    const s = (it && ((it.started as unknown) || (it.created as unknown))) as string | undefined | null;
+    if (!s) return Number.POSITIVE_INFINITY;
+    const t = Date.parse(s);
+    return Number.isFinite(t) ? t : Number.POSITIVE_INFINITY;
+  };
+
+  out.sort((a, b) => parseTs(a) - parseTs(b));
+  return out;
+});
 
 function getDescription(entry: TimelineEntry): string | undefined {
   return entry.description;

@@ -197,6 +197,7 @@
           <q-card-section>
             <div class="text-h6">Confirm Generate</div>
             <div>Are you sure you want to generate a trace?</div>
+            <div style="color: red;">In development not functional</div>
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
