@@ -221,7 +221,64 @@ async function generateNodesAndEdges(traceUuid: string) {
 
   const traceContext = res.rows[0].trace_context ?? null;
 
-  return { nodes, edges, context: traceContext };
+  const timelineItems = nodes
+    .map((n: any) => {
+      const d = n.data || {};
+      const common = {
+        label: d.label || n.id,
+        nodeType: n.nodeType || d.nodeType || 'task',
+        description: d.description || d.label || '',
+        id: n.id,
+        uuid: d.uuid || n.id,
+        parentNode: n.parentNode || d.parentNode || null,
+        created: d.created || n.created || null,
+        started: d.started || n.started || n.created || null,
+        ended: d.ended || n.ended || null,
+        errored: n.errored ?? d.errored ?? false,
+        failed: n.failed ?? d.failed ?? false,
+        isComplete: n.isComplete ?? d.isComplete ?? false,
+        progress: n.progress ?? d.progress ?? 0,
+        layer_index: n.layer_index ?? d.layer_index ?? 0,
+        raw: d,
+      };
+
+      return {
+        ...common,
+        timelineType:
+          n.nodeType === 'service' || n.nodeType === 'routine'
+            ? 'heading'
+            : 'body',
+        ...d,
+      };
+    })
+    .filter((m: any) => {
+      const t = (m.nodeType || '').toString().toLowerCase();
+      return t === 'task' || t === 'signal';
+    })
+    .sort((a: any, b: any) => {
+      const aTime = a.started ? new Date(a.started).getTime() : 0;
+      const bTime = b.started ? new Date(b.started).getTime() : 0;
+      return aTime - bTime;
+    });
+
+  const rangedTimelineItems = timelineItems.map((it: any) => ({
+    label: it.label,
+    uuid: it.uuid || it.id,
+    name: it.label,
+    started: it.started || it.created || null,
+    created: it.created || null,
+    ended: it.ended || null,
+    progress: it.progress || 0,
+    errored: it.errored || false,
+    failed: it.failed || false,
+    isComplete: it.isComplete || false,
+    layer_index: it.layer_index || 0,
+    description: it.description || it.raw?.description || null,
+    signal: it.raw?.signal || it.signal || false,
+    type: it.raw?.type || it.type || null,
+  }));
+
+  return { nodes, edges, context: traceContext, timelineItems, rangedTimelineItems };
 }
 
 export default defineEventHandler(async (event) => {

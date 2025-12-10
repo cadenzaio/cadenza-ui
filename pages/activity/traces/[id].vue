@@ -153,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useFetch, useRoute } from '#app';
 import { useRouter } from '#vue-router';
 import NestedFlowMap from '~/components/NestedFlowMap.vue';
@@ -178,83 +178,8 @@ const selectedOption = ref('routineMap');
 const routineMap = ref<any>([]);
 const nodes = ref<any[]>([]);
 const edges = ref<any[]>([]);
-const timelineItems = computed(() => {
-const services = routineMap.value?.servers || [];
-const routines = routineMap.value?.routines || [];
-const tasks = routineMap.value?.tasks || [];
-
-  if ((services.length + routines.length + tasks.length) > 0) {
-    const taskItems = tasks.map((task: any) => ({
-      label: task.task_name || task.label || task.uuid,
-      nodeType: 'task',
-      started: task.started || task.created || '',
-      ended: task.ended || '',
-      description: task.description || '',
-      id: task.uuid,
-      parentNode: task.routine_execution_id,
-      timelineType: 'body',
-      ...task,
-    }));
-
-    return taskItems.sort((a: any, b: any) => {
-      const aTime = a.started ? new Date(a.started).getTime() : 0;
-      const bTime = b.started ? new Date(b.started).getTime() : 0;
-      return aTime - bTime;
-    });
-  }
-
-  const mapped = nodes.value.map((n: any) => {
-    const d = n.data || {};
-    const common = {
-      label: d.label || n.id,
-      nodeType: n.nodeType || d.nodeType || 'task',
-      description: d.description || d.label || '',
-      id: n.id,
-      uuid: d.uuid || n.id,
-      parentNode: n.parentNode || d.parentNode || null,
-      created: d.created || null,
-      started: d.started || d.created || null,
-      ended: d.ended || null,
-      raw: d,
-    };
-
-    return {
-      ...common,
-      timelineType: n.nodeType === 'service' || n.nodeType === 'routine' ? 'heading' : 'body',
-      ...d,
-    };
-  });
-
-  const filtered = mapped.filter((m: any) => {
-    const t = (m.nodeType || '').toString().toLowerCase();
-    return t === 'task' || t === 'signal';
-  });
-
-  return filtered.sort((a: any, b: any) => {
-    const aTime = a.started ? new Date(a.started).getTime() : 0;
-    const bTime = b.started ? new Date(b.started).getTime() : 0;
-    return aTime - bTime;
-  });
-});
-
-const rangedTimelineItems = computed(() => {
-  return timelineItems.value.map((it: any) => ({
-    label: it.label,
-    uuid: it.uuid || it.id,
-    name: it.label,
-    started: it.started || it.created || null,
-    created: it.created || null,
-    ended: it.ended || null,
-    progress: it.progress || 0,
-    errored: it.errored || false,
-    failed: it.failed || false,
-    isComplete: it.isComplete || false,
-    layer_index: it.layer_index || 0,
-    description: it.description || it.raw?.description || null,
-    signal: it.raw?.signal || it.signal || false,
-    type: it.raw?.type || it.type || null,
-  }));
-});
+const timelineItems = ref<any[]>([]);
+const rangedTimelineItems = ref<any[]>([]);
 
 function confirmGenerate() {
   showGenerateDialog.value = false;
@@ -269,6 +194,10 @@ async function fetchTraceData(traceId: string) {
     nodes.value = data.nodes;
     edges.value = data.edges;
     traceContext.value = data.context ?? null;
+    // Use server-provided timeline mappings when available
+    timelineItems.value = data.timelineItems || data.timeline || [];
+    rangedTimelineItems.value = data.rangedTimelineItems || data.rangedTimeline || [];
+    console.log('[id.vue] received timelineItems:', timelineItems.value.length, 'ranged:', rangedTimelineItems.value.length);
   } catch (error) {
     console.error('Error fetching trace data:', error);
   }

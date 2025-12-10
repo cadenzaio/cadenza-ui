@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 import { storeToRefs } from 'pinia';
 import { useAppStore } from '../stores/app';
@@ -197,7 +197,20 @@ const chartSeries = computed(() => {
   ];
 });
 
+const tick = ref(Date.now());
+let tickInterval: number | null = null;
+onMounted(() => {
+  tickInterval = window.setInterval(() => {
+    tick.value = Date.now();
+  }, 1000);
+});
+onBeforeUnmount(() => {
+  if (tickInterval) window.clearInterval(tickInterval);
+});
+
 const chartOptions = computed(() => {
+  // reference tick.value so computed re-evaluates each second and refreshes labels
+  const _now = tick.value;
   const labelColor = isDarkMode.value ? '#e0e0e0' : '#20242c';
   const xLabelColor = isDarkMode.value ? '#e0e0e0' : '#20242c';
   return {
@@ -254,16 +267,29 @@ const chartOptions = computed(() => {
     dataLabels: {
       enabled: true,
       formatter: function (val: any, opts: any) {
-        const start = new Date(val[0]);
-        const end = new Date(val[1]);
-        const duration = (end.getTime() - start.getTime()) / 1000;
+        try {
+          const start = val && val[0] ? new Date(val[0]) : null;
+          const seriesIndex = opts.seriesIndex;
+          const dataPointIndex = opts.dataPointIndex;
+          const series = opts.w && opts.w.config && opts.w.config.series ? opts.w.config.series : null;
+          const dataPoint = series && series[seriesIndex] && series[seriesIndex].data ? series[seriesIndex].data[dataPointIndex] : null;
+          const item = (dataPoint && dataPoint.meta) || {};
 
-        if (duration < 60) {
-          return `${duration.toFixed(1)}s`;
-        } else if (duration < 3600) {
-          return `${(duration / 60).toFixed(1)}m`;
-        } else {
-          return `${(duration / 3600).toFixed(1)}h`;
+          let end = null;
+          if (item.ended && val && val[1]) {
+            end = new Date(val[1]);
+          }
+          const durationSeconds = start ? ((end ? end.getTime() : Date.now()) - start.getTime()) / 1000 : 0;
+
+          if (durationSeconds < 60) {
+            return `${durationSeconds.toFixed(1)}s`;
+          } else if (durationSeconds < 3600) {
+            return `${(durationSeconds / 60).toFixed(1)}m`;
+          } else {
+            return `${(durationSeconds / 3600).toFixed(1)}h`;
+          }
+        } catch (e) {
+          return '';
         }
       },
       style: {
