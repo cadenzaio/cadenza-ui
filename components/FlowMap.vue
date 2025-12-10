@@ -1,5 +1,5 @@
 <template>
-  <div :class="['vue-flow-container q-mb-md', { 'full-width': props.fullWidth }]">
+  <div ref="containerRef" :class="['vue-flow-container q-mb-md', { 'full-width': props.fullWidth }]">
     <div class="zoom-slider" aria-hidden="false">
       <label class="zoom-label">Zoom</label>
       <input
@@ -11,6 +11,15 @@
         aria-label="Zoom slider"
       />
       <span class="zoom-value">{{ Math.round(zoom * 100) }}%</span>
+    </div>
+    <div
+      v-if="tooltipVisible"
+      class="wheel-tooltip"
+      :style="{ left: tooltipX + 'px', top: tooltipY + 'px' }"
+      role="status"
+      aria-live="polite"
+    >
+      Hold Ctrl and scroll to zoom
     </div>
     <VueFlow
       ref="vueFlowInstance"
@@ -33,7 +42,7 @@
 
 <script setup lang="ts">
 import CustomNode from '~/components/CustomNode.vue';
-import { ref, watch, nextTick, onMounted } from 'vue';
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { VueFlow, type Node, type Edge, type Position } from '@vue-flow/core';
 import ELK from 'elkjs/lib/elk.bundled.js';
 
@@ -71,6 +80,28 @@ const router = useRouter();
 const nodes = ref<Node[]>([]);
 const edges = ref<Edge[]>([]);
 const vueFlowInstance = ref<InstanceType<typeof VueFlow> | null>(null);
+const containerRef = ref<HTMLElement | null>(null);
+const tooltipVisible = ref(false);
+const tooltipX = ref(0);
+const tooltipY = ref(0);
+let tooltipTimer: ReturnType<typeof setTimeout> | null = null;
+
+function showTooltipAt(clientX: number, clientY: number) {
+  const el = containerRef.value;
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  // position tooltip slightly above the cursor, constrained inside container
+  const x = Math.min(Math.max(8, clientX - rect.left - 40), rect.width - 120);
+  const y = Math.min(Math.max(8, clientY - rect.top - 40), rect.height - 36);
+  tooltipX.value = x;
+  tooltipY.value = y;
+  tooltipVisible.value = true;
+  if (tooltipTimer) clearTimeout(tooltipTimer);
+  tooltipTimer = setTimeout(() => {
+    tooltipVisible.value = false;
+    tooltipTimer = null;
+  }, 1500);
+}
 const minZoom = 0.05;
 const maxZoom = 1.5;
 const zoom = ref<number>(1);
@@ -102,6 +133,41 @@ onMounted(async () => {
     }
   } catch (err) {
   }
+});
+
+onMounted(async () => {
+  await nextTick();
+  // Attach ctrl+wheel zoom handler to container
+  const el = containerRef.value;
+  if (!el) return;
+
+  const wheelHandler = (ev: WheelEvent) => {
+    if (ev.ctrlKey) {
+      ev.preventDefault();
+      // Use exponential scale for smooth zooming
+      const factor = Math.pow(1.2, -ev.deltaY / 100);
+      const newZoom = Math.max(minZoom, Math.min(maxZoom, zoom.value * factor));
+      zoom.value = newZoom;
+      return;
+    }
+
+    // If user scrolled without Ctrl, show a brief tooltip near the cursor
+    try {
+      showTooltipAt(ev.clientX, ev.clientY);
+    } catch (err) {
+      // ignore positioning errors
+    }
+    // do not prevent default - allow normal scrolling
+  };
+
+  el.addEventListener('wheel', wheelHandler as EventListener, { passive: false });
+
+  onUnmounted(() => {
+    try {
+      el.removeEventListener('wheel', wheelHandler as EventListener);
+    } catch (err) {
+    }
+  });
 });
 
 const getId = (item: FlowItem): string => {
@@ -386,5 +452,18 @@ watch(
   color: #333;
   min-width: 36px;
   text-align: right;
+}
+
+.wheel-tooltip {
+  position: absolute;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  pointer-events: none;
+  transform: translateY(-6px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 </style>

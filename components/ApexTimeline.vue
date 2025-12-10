@@ -219,7 +219,7 @@ const chartOptions = computed(() => {
       height: Math.max(400, props.itemMap.length * 40 + 100),
 
       toolbar: {
-        show: true,
+        show: false,
         tools: {
           download: true,
           selection: false,
@@ -685,5 +685,25 @@ const onDataPointSelection = (
   font-style: italic;
   color: #6b7280;
   font-size: 11px;
+}
+
+/* Disable ApexCharts tooltip animation and any transition effects */
+:deep(.apex-tooltip) {
+  transition: none !important;
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+:deep(.apexcharts-tooltip) {
+  transition: none !important;
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+:deep(.apexcharts-tooltip *) {
+  transition: none !important;
+  animation: none !important;
 }
 </style>
