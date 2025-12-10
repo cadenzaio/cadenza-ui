@@ -10,7 +10,6 @@ async function getClient() {
   return client;
 }
 
-// Type for routine execution time row
 interface RoutineExecutionTimeRow {
   started: string | Date;
   hour: number;
@@ -20,7 +19,6 @@ interface RoutineExecutionTimeRow {
   average_time: number;
 }
 
-// Get RoutineExecutions by routine_name
 async function getRoutineExecutionTimes(
   routineName: string
 ): Promise<RoutineExecutionTimeRow[]> {
@@ -47,7 +45,6 @@ async function getRoutineExecutionTimes(
   }
 }
 
-// Event handler
 export default defineEventHandler(async (event) => {
   const { method } = event.node.req;
   const url = new URL(
@@ -67,13 +64,12 @@ export default defineEventHandler(async (event) => {
         return { series: [] };
       }
 
-      // Map to chart series format with null checks
       const seriesData = rows.map((item: RoutineExecutionTimeRow) => ({
         date: item.started ? new Date(item.started).toISOString() : null,
         fastest: item.fastest_time != null ? parseFloat(item.fastest_time as unknown as string) : null,
         average: item.average_time != null ? parseFloat(item.average_time as unknown as string) : null,
         slowest: item.slowest_time != null ? parseFloat(item.slowest_time as unknown as string) : null,
-      })).filter(item => item.date !== null); // Filter out invalid entries
+      })).filter(item => item.date !== null);
 
       console.log('Mapped series data:', seriesData);
       return {

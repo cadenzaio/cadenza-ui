@@ -29,7 +29,7 @@ interface RoutineRow {
   previous_routine_id: string;
   routine_name: string;
   routine_description: string;
-  service_name: string; // Updated from server_name
+  service_name: string;
 }
 
 interface RoutineMapped {
@@ -39,7 +39,7 @@ interface RoutineMapped {
   label: string;
   description: string;
   routineDescription: string;
-  serviceId: string; // Updated from serverId
+  serviceId: string;
   routineId: string;
   status: string;
   previousRoutineExecution: string;
@@ -48,7 +48,7 @@ interface RoutineMapped {
   ended: string;
   duration: number;
   uuid: string;
-  serviceName: string; // Updated from serverName
+  serviceName: string;
   previousRoutineName: string;
   contract_id: string;
   processingGraph: string;
@@ -117,7 +117,7 @@ async function getRoutines({
       (row: RoutineRow): RoutineMapped => ({
         id: row.uuid,
         name: row.routine_name,
-        type: 'routine', // Removed dependency on `routine_type`
+        type: 'routine',
         label: row.routine_name,
         description: row.routine_description,
         routineDescription: row.routine_description,
@@ -138,25 +138,25 @@ async function getRoutines({
                 ? row.created
                 : row.created.toISOString()
             )
-          : '', // Use empty string as fallback for created
+          : '',
         ended: row.ended
           ? formatDate(
               typeof row.ended === 'string'
                 ? row.ended
                 : row.ended.toISOString()
             )
-          : '', // Use empty string as fallback for ended
+          : '',
         duration: getDuration(
           row.created
             ? typeof row.created === 'string'
               ? new Date(row.created).getTime()
               : row.created.getTime()
-            : 0, // Use 0 as fallback for created
+            : 0,
           row.ended
             ? typeof row.ended === 'string'
               ? new Date(row.ended).getTime()
               : row.ended.getTime()
-            : 0 // Use 0 as fallback for ended
+            : 0
         ),
         uuid: row.uuid,
         serviceName: row.service_name,

@@ -27,7 +27,6 @@
           </template>
           <template #info>
             <div class="row" style="flex-wrap: wrap;">
-              <!-- First Column -->
               <div class="col" style="min-width: 300px;">
                 <div class="q-mx-md q-my-sm">
                   Description: {{ taskExecution.description }}
@@ -42,8 +41,6 @@
                   Is Unique: {{ taskExecution.isUnique }}
                 </div>
               </div>
-
-              <!-- Second Column -->
               <div class="col" style="min-width: 300px;">
                 <div class="row items-center">
                   <div class="col">
@@ -76,8 +73,6 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Third Column -->
               <div class="col" style="min-width: 300px;">
                 <div
                   v-if="taskExecution.previousTaskExecutionId !== null"
@@ -227,24 +222,18 @@ import { useAsyncData, useRoute, useRouter, useHead } from '#app';
 import { useAppStore } from '@/stores/app';
 import { defineAsyncComponent } from 'vue';
 
-// Lazy-load heavier components to improve initial render performance
 const FlowMap = defineAsyncComponent(() => import('~/components/FlowMap.vue'));
 const ProgressRadialBarChart = defineAsyncComponent(() => import('~/components/ProgressRadialBarChart.vue'));
 const InfoCard = defineAsyncComponent(() => import('~/components/InfoCard.vue'));
-
 const route = useRoute();
 const router = useRouter();
-
-// reactive id derived from route params — when it changes, useAsyncData will refetch
 const taskExecutionId = computed(() => route.params.id as string);
-
 const { data: taskExecution, refresh: refreshTask } = useAsyncData<any>(
   () => `taskExecution-${taskExecutionId.value}`,
   () => $fetch<any>(`/api/activity/tasks/activeTask?id=${taskExecutionId.value}`),
   { server: true }
 );
 
-// taskMap depends on the loaded taskExecution; fetch when it becomes available
 const taskMap = ref<any[]>([]);
 watch(
   taskExecution,
@@ -258,7 +247,6 @@ watch(
         `/api/activity/tasks/tasksInRoutines?task_execution_id=${val.uuid}`
       );
 
-      // Normalize possible shapes returned by the API into an array before using map
       let taskArray: any[] = [];
       if (!tasks) {
         taskArray = [];
@@ -269,7 +257,6 @@ watch(
       } else if ((tasks as any).items && Array.isArray((tasks as any).items)) {
         taskArray = (tasks as any).items;
       } else {
-        // fallback: try to find an array on the object
         const maybeArray = Object.values(tasks).find((v: any) => Array.isArray(v));
         taskArray = Array.isArray(maybeArray) ? maybeArray : [];
       }
@@ -312,16 +299,12 @@ const navigateToItem = (path: string) => {
   router.push(path);
 };
 
-// Handle clicks from FlowMap items. If the clicked item is a signal node
-// (ids like `signal::<uuid>` or `item.signal === true`), navigate to the
-// signal details page. Otherwise, navigate to the task execution page.
 async function onItemSelected(item: any) {
   if (!item) return;
 
   const canonicalId = item.uuid || item.id || item.name || '';
   if (!canonicalId) return;
 
-  // If the node is marked as a signal, resolve the emission UUID then navigate
   if (item.signal === true || String(canonicalId).startsWith('signal::')) {
     const raw = String(item.uuid || canonicalId);
     const stripped = raw.replace(/^signal::/, '');
@@ -332,7 +315,6 @@ async function onItemSelected(item: any) {
       return;
     }
 
-    // Try to resolve by signal name to the latest emission uuid.
     try {
       const resp = await fetch(`/api/activity/signals/by-name?name=${encodeURIComponent(stripped)}`);
       if (!resp.ok) {
@@ -352,7 +334,6 @@ async function onItemSelected(item: any) {
     return;
   }
 
-  // Otherwise assume this is a task execution node
   const execId = item.uuid || item.id || canonicalId;
   router.push(`/activity/tasks/${execId}`);
 }

@@ -106,13 +106,11 @@ const error = ref<string | null>(null);
 const selectedItem = ref<Item | null>(null);
 
 const flowItems = computed(() => {
-  // Map nodes/edges to the FlowMap `items` shape, only include tasks and signals
   try {
     const nodeById = new Map(nodes.value.map((n: any) => [n.id ?? n.uuid ?? n.name, n]));
     return (nodes.value || [])
       .filter((n: any) => n.nodeType === 'task' || n.nodeType === 'signal')
       .map((n: any) => {
-        // find incoming sources as previousId
         const incoming = (edges.value || [])
           .filter((e: any) => e.target === (n.id ?? n.uuid ?? n.name))
           .map((e: any) => e.source);
@@ -125,11 +123,9 @@ const flowItems = computed(() => {
           signal: n.nodeType === 'signal' || n.data?.signal === true,
           nodeType: n.nodeType,
           parentNode: n.parentNode,
-          // expose version/service for navigation convenience
           version: n.data?.version ?? n.version ?? (n?.metadata?.version ?? undefined),
           service: n.data?.service_name ?? n.service ?? n.parentNode ?? undefined,
           previousId: incoming.length > 0 ? incoming : undefined,
-          // preserve original node for click handlers in FlowMap
           original: n,
         };
       });
@@ -203,7 +199,6 @@ async function fetchTasksInService() {
   }
 }
 
-// Updated the `fetchServerDetails` function to include all required properties
 async function fetchServerDetails() {
   try {
     error.value = null;
@@ -236,7 +231,6 @@ async function fetchServerDetails() {
   }
 }
 
-// Add a function to fetch active executions
 async function fetchActiveExecutions() {
   try {
     error.value = null;
@@ -292,7 +286,6 @@ watch(
   }
 );
 
-// Define missing types
 interface Service {
   uuid: string;
   graph: string;
@@ -305,7 +298,6 @@ interface Service {
   displayStatus: string;
 }
 
-// Updated the `Item` interface to include `type` and `service_instance`
 interface Item {
   name: string;
   description: string;
@@ -314,19 +306,17 @@ interface Item {
   created: string;
   deletedStatus: string;
   displayName: string;
-  function_string?: string; // Added optional property
-  type?: string; // Added optional property
-  service_instance?: string; // Added optional property
+  function_string?: string; 
+  type?: string; 
+  service_instance?: string; 
 }
 
 function onFlowItemSelected(item: any) {
   try {
     const base = (currentSection.value as string) || 'system';
 
-    // Prefer original node payload if present
     const payload = item?.original ?? item;
 
-    // Task navigation
     if (item.nodeType === 'task' || payload?.nodeType === 'task') {
       const taskName = item.name || item.label || payload?.data?.taskName || payload?.id;
       if (!taskName) return;
@@ -342,15 +332,9 @@ function onFlowItemSelected(item: any) {
       return;
     }
 
-    // Signal navigation
     if (item.nodeType === 'signal' || item.signal || payload?.nodeType === 'signal') {
-      // Prefer human-friendly label, then name, then id
       let rawSignal = item.label ?? item.name ?? payload?.id ?? '';
-      // Normalize and strip 'signal::' prefix
       let signalRawStr = String(rawSignal).replace(/^signal::/, '').trim();
-
-      // If the node label includes a service-to-signal prefix like 'ServiceName-to-signalName',
-      // take the part after the last '-to-'. Also handle '->' separators.
       const toIdx = signalRawStr.lastIndexOf('-to-');
       let signalName = toIdx !== -1 ? signalRawStr.substring(toIdx + 4) : signalRawStr;
       if (signalName.includes('->')) {
@@ -360,7 +344,6 @@ function onFlowItemSelected(item: any) {
       signalName = signalName.trim();
       if (!signalName) return;
 
-      // Determine serviceName from parentNode, original node, or fallback to current service
       const serviceName = item.parentNode || payload?.parentNode || payload?.data?.service_name || service;
 
       router.push({ path: `/${base}/signals/${encodeURIComponent(String(signalName))}`, query: { serviceName } });

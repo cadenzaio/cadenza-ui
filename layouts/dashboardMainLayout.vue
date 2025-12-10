@@ -53,20 +53,36 @@ if (process.client) {
 
 const breadcrumbs = computed(() => {
   const pathArray = route.path.split('/').filter((segment) => segment);
-  return pathArray.map((segment, index) => {
+
+  const items = [];
+  for (let index = 0; index < pathArray.length; index++) {
+    const segment = pathArray[index];
+    const prev = index > 0 ? pathArray[index - 1] : null;
+
+    if (
+      segment === 'services' &&
+      (prev === 'meta' || prev === 'activity' || prev === 'active')
+    ) {
+      continue;
+    }
+
     const cleanSegment = decodeURIComponent(segment.replace('-sub', ''));
-    return {
+    const to =
+      index === pathArray.length - 1
+        ? null
+        : '/' +
+          pathArray
+            .slice(0, index + 1)
+            .join('/')
+            .replace('-sub', '');
+
+    items.push({
       label: formatBreadcrumbLabel(cleanSegment, index, pathArray),
-      to:
-        index === pathArray.length - 1
-          ? null
-          : '/' +
-            pathArray
-              .slice(0, index + 1)
-              .join('/')
-              .replace('-sub', ''),
-    };
-  });
+      to,
+    });
+  }
+
+  return items;
 });
 
 function formatBreadcrumbLabel(segment) {
@@ -76,7 +92,6 @@ function formatBreadcrumbLabel(segment) {
   if (segment === 'tasks') return 'Tasks';
   if (segment === 'routines') return 'Routines';
   if (segment === 'help') return 'Help';
-  if (segment === 'processingGraph') return 'Processing Graph';
   if (segment.startsWith('chapter')) {
     const match = segment.match(/^chapter(\d+)/);
     if (match) return `Chapter ${match[1]}`;
@@ -121,7 +136,6 @@ const breadcrumbActiveColor = computed(() => {
 </script>
 
 <style scoped>
-/* Removed .transparent-background, now handled inline */
 .active-breadcrumb {
   font-weight: bold;
   text-decoration: underline;

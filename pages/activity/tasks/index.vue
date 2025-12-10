@@ -118,9 +118,8 @@ async function loadTasks(isLoadMore = false) {
     );
     if (!response.ok) throw new Error('Network response was not ok');
     const data = await response.json();
-    console.log('Fetched tasks response:', data);
+    
 
-    // Normalize tasks and provide a fallback for missing uuid
     const incomingTasks = Array.isArray(data.tasks) ? data.tasks : [];
     const normalized = incomingTasks.map((t: any, idx: number) => {
       const fallbackUuid = t.uuid || t.id || t.name || `task-${currentPage.value}-${idx}`;
@@ -138,7 +137,7 @@ async function loadTasks(isLoadMore = false) {
     } else {
       tasks.value = normalized;
     }
-    console.log('Tasks count after set:', tasks.value.length);
+    
 
     hasMoreData.value = normalized.length === pageSize;
   } catch (error) {

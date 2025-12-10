@@ -179,13 +179,11 @@ const routineMap = ref<any>([]);
 const nodes = ref<any[]>([]);
 const edges = ref<any[]>([]);
 const timelineItems = computed(() => {
-  // If routineMap has structured data (older flows), prefer that mapping
-  const services = routineMap.value?.servers || [];
-  const routines = routineMap.value?.routines || [];
-  const tasks = routineMap.value?.tasks || [];
+const services = routineMap.value?.servers || [];
+const routines = routineMap.value?.routines || [];
+const tasks = routineMap.value?.tasks || [];
 
   if ((services.length + routines.length + tasks.length) > 0) {
-    // Only include tasks in the timelines (services/routines remain in the flow map)
     const taskItems = tasks.map((task: any) => ({
       label: task.task_name || task.label || task.uuid,
       nodeType: 'task',
@@ -205,7 +203,6 @@ const timelineItems = computed(() => {
     });
   }
 
-  // Fallback: map from `nodes` returned by the trace endpoint so Timeline and ApexTimeline receive expected fields
   const mapped = nodes.value.map((n: any) => {
     const d = n.data || {};
     const common = {
@@ -215,15 +212,12 @@ const timelineItems = computed(() => {
       id: n.id,
       uuid: d.uuid || n.id,
       parentNode: n.parentNode || d.parentNode || null,
-      // expose top-level timestamps for Timeline/ApexTimeline components
       created: d.created || null,
       started: d.started || d.created || null,
       ended: d.ended || null,
-      // preserve original data for downstream usage
       raw: d,
     };
 
-    // timelineType: headings for service/routine, body for tasks/signals
     return {
       ...common,
       timelineType: n.nodeType === 'service' || n.nodeType === 'routine' ? 'heading' : 'body',
@@ -231,7 +225,6 @@ const timelineItems = computed(() => {
     };
   });
 
-  // Only keep tasks and signals for the timeline views (the full `nodes` remain unchanged for the flow map)
   const filtered = mapped.filter((m: any) => {
     const t = (m.nodeType || '').toString().toLowerCase();
     return t === 'task' || t === 'signal';
@@ -244,7 +237,6 @@ const timelineItems = computed(() => {
   });
 });
 
-// Provide rangedTimelineItems for ApexTimeline (same data but flattened to expected shape)
 const rangedTimelineItems = computed(() => {
   return timelineItems.value.map((it: any) => ({
     label: it.label,
@@ -259,7 +251,6 @@ const rangedTimelineItems = computed(() => {
     isComplete: it.isComplete || false,
     layer_index: it.layer_index || 0,
     description: it.description || it.raw?.description || null,
-    // keep original node markers for signal detection
     signal: it.raw?.signal || it.signal || false,
     type: it.raw?.type || it.type || null,
   }));
@@ -277,7 +268,6 @@ async function fetchTraceData(traceId: string) {
     const data = await response.json();
     nodes.value = data.nodes;
     edges.value = data.edges;
-    // populate traceContext from endpoint's returned context
     traceContext.value = data.context ?? null;
   } catch (error) {
     console.error('Error fetching trace data:', error);
@@ -312,14 +302,12 @@ watch(
 onMounted(() => {
 });
 
-// Handle node selection emitted by NestedFlowMap
 const appStore = useAppStore();
 function handleNodeSelected(node: any) {
   const clickedNode = node?.node || node;
   const base = appStore.currentSection || 'system';
 
   if (clickedNode.nodeType === 'task') {
-    // Use the node id (UUID) for task links so they point to /activity/tasks/<uuid>
     const taskId = clickedNode.id || clickedNode.data?.uuid || clickedNode.data?.id;
     if (taskId) {
       router.push(`/activity/tasks/${encodeURIComponent(taskId)}`);
@@ -330,7 +318,6 @@ function handleNodeSelected(node: any) {
       router.push(`/activity/signals/${encodeURIComponent(signalId)}`);
     }
   } else if (clickedNode.nodeType === 'service') {
-    // Optionally navigate to service page; default behavior is handled inside NestedFlowMap (filtering view)
     const serviceId = clickedNode.id || clickedNode.data?.uuid || clickedNode.data?.id;
     if (serviceId) {
       router.push(`/activity/services/${encodeURIComponent(serviceId)}`);

@@ -32,7 +32,6 @@ import { storeToRefs } from 'pinia';
 import { useRoute } from 'vue-router';
 import { useFetch } from '#app';
 
-// Set current section to 'services' for correct node coloring
 const appStore = useAppStore();
 onMounted(() => {
   appStore.setCurrentSection('serviceActivity');
@@ -41,29 +40,20 @@ onMounted(() => {
 const route = useRoute();
 const router = useRouter();
 const { openLinkInNewTab } = useOpenLinkInNewTab();
-
-// Navigate to the given path in the current tab
 const navigateToItem = (path: string) => {
   if (!path) return;
   router.push(path);
 };
 
-// Handler for FlowMap node clicks. If the clicked item represents a task
-// execution, navigate to the activity task execution page. Ignore signal nodes.
 function onItemSelected(item: any) {
   if (!item) return;
-  // Resolve canonical id (FlowMap nodes set id/name/uuid to same value)
   const id = item.uuid || item.id || item.name;
   if (!id) return;
 
-  // Ignore clicks on signal nodes (they use id like `signal::<uuid>`)
   if (String(id).startsWith('signal::')) {
-    // Optionally, open the signal details in a new tab instead
-    // openLinkInNewTab(`/activity/signals/${String(id).replace('signal::', '')}`);
     return;
   }
 
-  // Prefer task execution UUID when present
   const execId = item.uuid || item.id || item.executionId || item.task_execution_id || item.taskExecutionId || id;
   navigateToItem(`/activity/tasks/${execId}`);
 }
@@ -100,7 +90,6 @@ async function loadSignalFlow() {
   const id = route.params.id as string | undefined;
   if (!id) return;
 
-  // Fetch from server endpoint we created earlier
   const { data, error } = await useFetch(`/api/activity/signals/${id}`);
   if (error.value) {
     console.error('Failed to fetch signal data', error.value);
@@ -111,25 +100,17 @@ async function loadSignalFlow() {
   signalPayload.value = payload;
   const items: any[] = [];
 
-  // Helper to push unique node by id
   const pushed = new Set<string>();
   const pushNode = (node: any) => {
-    // Normalize the node id/name/uuid to a single consistent identifier so
-    // the FlowMap component's `getId` (which prefers `name` then `uuid` then `id`)
-    // resolves the same value for all nodes and edges. Keep `label` for display.
     const nid = node.id || node.uuid || node.name;
     if (!nid) return;
     if (pushed.has(String(nid))) return;
     pushed.add(String(nid));
-    // Ensure the pushed item contains `id`, `name`, and `uuid` with the
-    // same canonical identifier. `label` remains the human-friendly text.
     items.push({ ...node, id: nid, name: nid, uuid: nid });
   };
 
-  // Add previousTasks (emitter and its predecessors)
   const emission = payload.emission;
   const previousTasks = payload.previousTasks ?? [];
-  // Add emitter predecessors (these are task executions)
   for (const pt of previousTasks) {
     const idField = (pt.task_execution?.uuid ?? pt.task_execution?.id ?? pt.task_execution) || pt.task_name;
     pushNode({
@@ -141,20 +122,16 @@ async function loadSignalFlow() {
     });
   }
 
-  // Add signal node representing this emission
   if (emission) {
     const sigId = `signal::${emission.uuid}`;
     pushNode({ id: sigId, label: emission.signal_name || 'signal', description: emission.data || '', signal: true, previousId: previousTasks.length > 0 ? (previousTasks[0].task_execution?.uuid ?? previousTasks[0].task_execution ?? previousTasks[0].task_name) : undefined });
 
-    // Add consumers from consumptions (these reference specific executions)
     const consumptions = payload.consumptions ?? [];
     for (const c of consumptions) {
       const consumerExecId = c.task_execution_id || c.task_execution || c.taskExecutionId || `${c.task_name}-${c.task_execution_id}`;
       pushNode({ id: consumerExecId, label: c.task_name || consumerExecId, name: c.task_name, description: '', previousId: sigId });
 
-      // If consumerDetails available, add successors
       const consumerDetails = (payload.consumerDetails || []).find((cd: any) => cd.consumption && String(cd.consumption.uuid || cd.consumption.id || cd.consumption.signal_emission_id || '') === String(c.uuid || c.id || c.signal_emission_id || '')) || null;
-      // If consumerDetails doesn't match by uuid, fallback by task_execution id
       const cdMatch = consumerDetails || (payload.consumerDetails || []).find((cd: any) => cd.consumer_execution && String(cd.consumer_execution.uuid) === String(consumerExecId));
       if (cdMatch && Array.isArray(cdMatch.successors)) {
         for (const s of cdMatch.successors) {

@@ -11,7 +11,6 @@ async function ensureClient() {
 }
 
 async function getTaskDetailsByExecutionId(executionId: string) {
-	// Fetch the task execution row by its UUID. 
 	const q = `
 		SELECT
 			task_name AS name,
@@ -85,8 +84,6 @@ async function getSignalsEmittedByExecutionIds(taskExecutionIds: string[]) {
 	return map;
 }
 
-// Fetch emissions for a set of task execution ids and group by signal_name.
-// Signal emission rows include the emission UUID which is used by signal_consumption.signal_emission_id.
 async function getEmittersForExecutionIds(taskExecutionIds: string[]) {
 	if (!taskExecutionIds || taskExecutionIds.length === 0) return {};
 	const q = `
@@ -180,7 +177,6 @@ async function getSuccessorsByExecutionId(executionId: string) {
 	return r.rows || [];
 }
 
-// Batch predecessors/successors helpers
 async function getPredecessorsByExecutionIds(executionIds: string[]) {
 	if (!executionIds || executionIds.length === 0) return {};
 	const q = `
@@ -197,7 +193,7 @@ async function getPredecessorsByExecutionIds(executionIds: string[]) {
 		map[id] = map[id] || [];
 		if (row.previous_task_execution_id) map[id].push(row.previous_task_execution_id);
 	}
-	// ensure uniqueness
+
 	for (const k of Object.keys(map)) map[k] = Array.from(new Set(map[k]));
 	return map;
 }
@@ -253,7 +249,6 @@ export default defineEventHandler(async (event) => {
 		throw new Error('Missing required parameter: task_execution_id (or routine_execution_id)');
 	}
 
-	// If caller provided a routine_execution_id, get all task executions for that routine
 	let initialExecutionIds: string[] | null = null;
 	if (routineExecutionId) {
 		initialExecutionIds = await getTaskExecutionIdsForRoutineExecutionId(routineExecutionId as string);
@@ -280,16 +275,13 @@ export default defineEventHandler(async (event) => {
 	const predecessorsMap: Record<string, string[]> = {};
 	const successorsMap: Record<string, string[]> = {};
 
-	// Process nodes in batches to reduce DB round-trips when fetching predecessors/successors
 	const batchSize = 50;
 	while (toVisit.length > 0 && visited.size < maxNodes) {
 		const batch = toVisit.splice(0, batchSize).filter((id) => !!id && !visited.has(id)) as string[];
 		if (batch.length === 0) continue;
 
-		// mark visited
 		batch.forEach((id) => visited.add(id));
 
-		// fetch predecessors and successors for the whole batch
 		let predsMap: Record<string, string[]> = {};
 		let succsMap: Record<string, string[]> = {};
 		try {
@@ -322,7 +314,6 @@ export default defineEventHandler(async (event) => {
 
 	const items = Object.keys(itemsMap).filter((k) => visited.has(k)).map((k) => ({ id: k, name: itemsMap[k].name ?? null, version: itemsMap[k].version ?? null, service: itemsMap[k].service }));
 
-	// Build predecessorIdsMap from traversal results and batch-fetch consumed/emitted signals and their emitter/consumer relationships
 	const predecessorIdsMap: Record<string, string[]> = {};
 	items.forEach((it) => {
 		predecessorIdsMap[it.id] = Array.from(new Set((predecessorsMap[it.id] || []).filter(Boolean)));
@@ -331,20 +322,12 @@ export default defineEventHandler(async (event) => {
 	const itemIds = items.map((it) => it.id);
 	const consumedSignalsMap: Record<string, string[]> = await getSignalsConsumedByExecutionIds(itemIds);
 	const emittedSignalsMap: Record<string, string[]> = await getSignalsEmittedByExecutionIds(itemIds);
-
-	// Build list of signals we need emission records for (both consumed and emitted signals)
 	const allConsumedSignals = Array.from(new Set(Object.values(consumedSignalsMap).flat()));
 	const allEmittedSignals = Array.from(new Set(Object.values(emittedSignalsMap).flat()));
 	const signalsToFetchEmitters = Array.from(new Set([...allConsumedSignals, ...allEmittedSignals]));
-
-	// Fetch emissions for the task execution ids we're displaying (includes emission uuid as emission_id)
 	const emittersMap = await getEmittersForExecutionIds(itemIds);
-
-	// Collect all emission ids, then fetch consumers by emission id to get exact consumptions
 	const allEmissionIds = Array.from(new Set(Object.values(emittersMap).flat().map((e: any) => e.emission_id).filter(Boolean)));
 	const consumersByEmissionId = await getConsumersForEmissionIds(allEmissionIds);
-
-	// Build consumersMap keyed by signal name by mapping emissions -> their consumers
 	const consumersMap: Record<string, Array<any>> = {};
 	for (const sig of Object.keys(emittersMap)) {
 		consumersMap[sig] = [];
@@ -356,8 +339,6 @@ export default defineEventHandler(async (event) => {
 			}
 		}
 	}
-
-	// Build helper maps: emissionId -> signalName, and taskExecutionId -> emissionIds it consumes
 	const emissionToSignal: Record<string, string> = {};
 	const emissionEntryById: Record<string, any> = {};
 	for (const sig of Object.keys(emittersMap)) {
@@ -432,10 +413,8 @@ export default defineEventHandler(async (event) => {
 
 				const emitted = emittedSignalsMap[it.id] ?? [];
 				for (const sig of emitted) {
-					// find emissions for this signal that were emitted by this task execution
 					const emissionsForSig = (emittersMap[sig] || []).filter((e: any) => String(e.task_execution_id) === String(it.id));
 					if (emissionsForSig.length === 0) {
-						// fallback to signal-name node if no emission rows exist for this task
 						const signalId = `signal::${sig}`;
 						if (!pushedSignalIds.has(signalId)) {
 							pushedSignalIds.add(signalId);
@@ -481,7 +460,6 @@ export default defineEventHandler(async (event) => {
 							});
 						}
 					} else {
-						// create a signal node per emission
 						for (const emission of emissionsForSig) {
 							const eid = String(emission.emission_id || '');
 							if (!eid) continue;
@@ -506,7 +484,6 @@ export default defineEventHandler(async (event) => {
 								});
 							}
 
-							// consumers specific to this emission
 							const consumers = (consumersByEmissionId && consumersByEmissionId[eid]) ? consumersByEmissionId[eid].filter((c: any) => visited.has(String(c.task_execution_id))) : [];
 							for (const c of consumers) {
 								let detC = null;
@@ -641,15 +618,12 @@ export default defineEventHandler(async (event) => {
 
 	}
 
-	// Ensure compatibility with FlowMap: provide `previousTaskExecutionId`
-	// by copying whatever is in `previousTaskExecutionName` (could be null, task uuid or signal id)
 	for (const n of outputNodes) {
 		if (n.previousTaskExecutionId === undefined) {
 			n.previousTaskExecutionId = n.previousTaskExecutionName ?? null;
 		}
 	}
 
-	// Sort output nodes by `created` timestamp (newest first). Nodes without `created` go last.
 	outputNodes.sort((a: any, b: any) => {
 		const ta = a && a.created ? new Date(a.created).getTime() : -Infinity;
 		const tb = b && b.created ? new Date(b.created).getTime() : -Infinity;

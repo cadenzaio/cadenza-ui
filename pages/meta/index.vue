@@ -65,7 +65,6 @@ import ELK from 'elkjs/lib/elk.bundled.js';
 import ServerMap from '~/components/serverMap.vue';
 import type { Node, Edge, Position } from '@vue-flow/core';
 
-// Table and dialog state
 const router = useRouter();
 const dialogVisible = ref(false);
 const selectedServer = ref<Server | any>(undefined);
@@ -87,8 +86,6 @@ interface TableColumn {
 
 const columns: TableColumn[] = [
   {
-    // server/api/meta/metaServices.ts returns objects with `label` (display name)
-    // and `name` (canonical name). Use `label` for the visible service name.
     name: 'label',
     label: 'Service',
     field: 'label',
@@ -98,13 +95,11 @@ const columns: TableColumn[] = [
 ];
 
 interface Server {
-  // Fields returned by `server/api/meta/metaServices.ts`
   uuid: string;
-  label: string; // display name
-  name: string; // canonical name
+  label: string;
+  name: string;
   description?: string;
   displayName?: string;
-  // legacy/optional fields kept for compatibility
   address?: string;
   port?: string;
   graph?: string;
@@ -146,9 +141,6 @@ const fetchServerStats = async (isLoadMore = false) => {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
 
-    // Support two possible response shapes:
-    // - An array of services (returned by this endpoint currently)
-    // - An object with a `servers` array (older/alternate shape)
     let items: Server[] = [];
     if (Array.isArray(data)) {
       items = data;
@@ -180,7 +172,6 @@ async function loadMoreServers() {
   await fetchServerStats(true);
 }
 
-// ServerMap data
 const mapNodes = ref<Node[]>([]);
 const mapEdges = ref<Edge[]>([]);
 const mapLoading = ref(false);
@@ -265,7 +256,6 @@ async function fetchServerMap() {
   } catch (error) {
     mapNodes.value = [];
     mapEdges.value = [];
-    // Optionally log error
   } finally {
     mapLoading.value = false;
   }
@@ -273,7 +263,6 @@ async function fetchServerMap() {
 
 onMounted(() => {
   fetchServerMap();
-  // Also fetch table data
   const appStore = useAppStore();
   appStore.setCurrentSection('meta');
   currentPage.value = 1;

@@ -37,7 +37,6 @@ import { ref, watch, nextTick, onMounted } from 'vue';
 import { VueFlow, type Node, type Edge, type Position } from '@vue-flow/core';
 import ELK from 'elkjs/lib/elk.bundled.js';
 
-// Define props - generic flow item interface
 interface FlowItem {
   id?: string;
   label?: string;
@@ -63,7 +62,6 @@ const props = defineProps<{
   fullWidth?: boolean;
 }>();
 
-// Define emits
 const emit = defineEmits<{
   'item-selected': [item: FlowItem];
 }>();
@@ -73,12 +71,10 @@ const router = useRouter();
 const nodes = ref<Node[]>([]);
 const edges = ref<Edge[]>([]);
 const vueFlowInstance = ref<InstanceType<typeof VueFlow> | null>(null);
-// Zoom slider state and bounds
 const minZoom = 0.05;
 const maxZoom = 1.5;
 const zoom = ref<number>(1);
 
-// Keep Vue Flow viewport in sync with the slider
 watch(zoom, async (val) => {
   if (!vueFlowInstance.value) return;
   const api = vueFlowInstance.value as any;
@@ -86,19 +82,16 @@ watch(zoom, async (val) => {
     try {
       await api.zoomTo(val);
     } catch (err) {
-      // ignore zoom errors
     }
   } else if (typeof api.setViewport === 'function') {
     try {
       await api.setViewport({ x: 0, y: 0, zoom: val });
     } catch (err) {
-      // ignore
     }
   }
 });
 
 onMounted(async () => {
-  // Initialize slider from current viewport if available
   await nextTick();
   if (!vueFlowInstance.value) return;
   const api = vueFlowInstance.value as any;
@@ -108,13 +101,10 @@ onMounted(async () => {
       zoom.value = vp.zoom;
     }
   } catch (err) {
-    // ignore
   }
 });
 
-// Helper functions to get field values with fallbacks
 const getId = (item: FlowItem): string => {
-  // Prefer `name` as the primary identifier (DB now uses name)
   const idField = props.idField || 'name';
   return (
     ((item as any)[idField] as string) || (item['uuid'] as string) || item.id || ''
@@ -136,14 +126,12 @@ const getLabel = (item: FlowItem): string => {
 const getPreviousIds = (item: FlowItem): string[] => {
   const previousField = props.previousField || 'previousId';
 
-  // First check for the proper previousExecutions array (from tasksInRoutines endpoint)
   if (item.previousExecutions && Array.isArray(item.previousExecutions)) {
     return item.previousExecutions
       .map((exec) => (exec.previousTaskExecutionId ?? exec.previousTaskName) as string)
       .filter((id) => id != null);
   }
 
-  // Check for array fields from the individual task execution endpoint
   const possibleArrayFields = [
     item.previousTaskExecutionId,
     (item as any).previousTaskExecutionIds,
@@ -156,13 +144,11 @@ const getPreviousIds = (item: FlowItem): string[] => {
     }
   }
 
-  // Fallback to single value for backward compatibility
   const singleValue =
     item[previousField] || item.previousTaskExecutionId || item.previousId || null;
   return singleValue ? [singleValue as string] : [];
 };
 
-// Function to create layout using ELK
 const elk = new ELK();
 async function createLayout(nodes: Node[], edges: Edge[]) {
   const elkGraph = {
@@ -188,7 +174,6 @@ async function createLayout(nodes: Node[], edges: Edge[]) {
 
   const layouted = await elk.layout(elkGraph);
 
-  // Increase spacing for isolated nodes (nodes with no incoming/outgoing edges)
   try {
     const isolatedIds = new Set(nodes.map((n) => n.id));
     for (const e of edges) {
@@ -197,9 +182,8 @@ async function createLayout(nodes: Node[], edges: Edge[]) {
     }
     const layoutChildren = layouted.children ?? [];
 
-    // 1) Spread isolated nodes so they don't cluster
     if (isolatedIds.size > 1) {
-      const extraSpacing = 120; // pixels to add between successive isolated nodes
+      const extraSpacing = 120;
       const isolatedLayoutNodes = layoutChildren
         .filter((n: any) => isolatedIds.has(n.id))
         .sort((a: any, b: any) => (a.x ?? 0) - (b.x ?? 0));
@@ -209,11 +193,8 @@ async function createLayout(nodes: Node[], edges: Edge[]) {
       });
     }
 
-    // 2) Enforce a minimum horizontal gap for nodes that share the same row (y)
-    // Group nodes by rounded y to detect rows. This prevents nodes aligned on the
-    // same y from being placed too close together horizontally.
-    const rowTolerance = 12; // px tolerance to consider nodes on same row
-    const minHorizontalGap = 80; // minimum gap in px between node bounds
+    const rowTolerance = 12; 
+    const minHorizontalGap = 80;
 
     const byRow = new Map<number, any[]>();
     for (const n of layoutChildren) {
@@ -225,7 +206,6 @@ async function createLayout(nodes: Node[], edges: Edge[]) {
 
     for (const [, rowNodes] of byRow) {
       if (rowNodes.length <= 1) continue;
-      // sort by x coordinate
       rowNodes.sort((a: any, b: any) => (a.x ?? 0) - (b.x ?? 0));
       for (let i = 1; i < rowNodes.length; i++) {
         const prev = rowNodes[i - 1];
@@ -234,9 +214,7 @@ async function createLayout(nodes: Node[], edges: Edge[]) {
         const desiredX = prevRight + minHorizontalGap;
         if ((cur.x ?? 0) < desiredX) {
           const shift = desiredX - (cur.x ?? 0);
-          // shift current node to desired position
           cur.x = (cur.x ?? 0) + shift;
-          // also shift any subsequent nodes in this row to avoid overlap cascading
           for (let j = i + 1; j < rowNodes.length; j++) {
             rowNodes[j].x = (rowNodes[j].x ?? 0) + shift;
           }
@@ -244,8 +222,6 @@ async function createLayout(nodes: Node[], edges: Edge[]) {
       }
     }
   } catch (err) {
-    // Don't block layout if spacing adjustment fails
-    // eslint-disable-next-line no-console
     console.warn('Failed to adjust isolated node spacing:', err);
   }
 
@@ -259,9 +235,6 @@ async function createLayout(nodes: Node[], edges: Edge[]) {
     };
   });
 }
-//------------------------------------------------------------------------------
-// Function to convert items to nodes and edges
-// Modify processFlowItems to handle duplicate nodes
 async function processFlowItems(items: FlowItem[]) {
   if (!items || items.length === 0) {
     nodes.value = [];
@@ -272,7 +245,7 @@ async function processFlowItems(items: FlowItem[]) {
   const nodeMap = new Map<string, Node>();
   const newEdges: Edge[] = [];
 
-  // Step 1: Process all nodes first
+
   items.forEach((item: FlowItem) => {
     const nodeId = getId(item);
     const nodeData = {
@@ -286,7 +259,6 @@ async function processFlowItems(items: FlowItem[]) {
       failed: item.failed ?? false,
       isRunning: item.is_running ?? false,
       isScheduled: item.is_scheduled ?? false,
-      // Detect signal nodes from several possible shapes returned by APIs
       signal:
         item.signal === true ||
         (item as any).nodeType === 'signal' ||
@@ -305,7 +277,6 @@ async function processFlowItems(items: FlowItem[]) {
     }
   });
 
-  // Step 2: Process edges after all nodes are added
   items.forEach((item: FlowItem) => {
     const nodeId = getId(item);
     const previousIds = getPreviousIds(item);
@@ -316,7 +287,6 @@ async function processFlowItems(items: FlowItem[]) {
       }
       const sourceId = previousId;
       const targetId = nodeId;
-      // mark edge as a signal edge if either endpoint node data indicates a signal
       const sourceNode = nodeMap.get(sourceId);
       const targetNode = nodeMap.get(targetId);
       const isSignal = Boolean(
@@ -338,26 +308,20 @@ async function processFlowItems(items: FlowItem[]) {
   nodes.value = layoutedNodes;
   edges.value = newEdges;
 
-  // wait for DOM to update, then fit the view so the whole graph is visible
   try {
     await nextTick();
-    // slight delay to ensure SVG/canvas rendered
     await new Promise((r) => setTimeout(r, 30));
     if (vueFlowInstance.value && typeof (vueFlowInstance.value as any).fitView === 'function') {
       try {
         (vueFlowInstance.value as any).fitView({ padding: 0.05 });
       } catch (err) {
-        // don't block if fitView fails
-        // eslint-disable-next-line no-console
         console.warn('fitView failed:', err);
       }
     }
   } catch (err) {
-    // ignore fitView errors
   }
 }
 
-// Handle node click
 import type { NodeMouseEvent } from '@vue-flow/core';
 function onNodeClick(event: NodeMouseEvent) {
   const clickedNode = event.node;
@@ -366,7 +330,6 @@ function onNodeClick(event: NodeMouseEvent) {
   }
 }
 
-// Watch for changes in items
 watch(
   () => props.items,
   (newItems) => {
@@ -398,7 +361,6 @@ watch(
   max-width: none;
   width: 100%;
 }
-/* Zoom slider overlay */
 .zoom-slider {
   position: absolute;
   top: 10px;

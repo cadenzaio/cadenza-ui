@@ -136,7 +136,6 @@ WHERE predecessor_task_name = $1
 export default defineEventHandler(async (event) => {
 	await ensureClient();
 
-	// Accept query params or POST body
 	const query = getQuery(event) as Record<string, any>;
 	let taskName = query.task_name || query.taskName || query.name || null;
 	let version = query.version || query.task_version || null;
@@ -150,14 +149,12 @@ export default defineEventHandler(async (event) => {
 			version = version || body.version || body.task_version || null;
 			service = service || body.service || body.serviceName || body.service_name || null;
 		} catch (e) {
-			/* ignore parse errors */
 		}
 	}
 
 	if (!taskName) throw new Error('Missing required parameter: task_name (or taskName / name)');
 	try { taskName = decodeURIComponent((taskName as string).replace(/\+/g, ' ')); } catch (e) { /* ignore */ }
 
-	// BFS: collect reachable tasks (predecessors + successors)
 	const maxNodes = 1000;
 	const toVisit: string[] = [taskName as string];
 	const visited = new Set<string>();
@@ -199,7 +196,6 @@ export default defineEventHandler(async (event) => {
 
 	const items = Object.keys(itemsMap).filter((k) => visited.has(k)).map((k) => ({ name: k, version: itemsMap[k].version ?? null, service: itemsMap[k].service }));
 
-	// Gather predecessor lists and consumed signals
 	const predecessorNamesMap: Record<string, string[]> = {};
 	const consumedSignalsMap: Record<string, string[]> = {};
 	await Promise.all(items.map(async (it) => {
@@ -250,7 +246,6 @@ export default defineEventHandler(async (event) => {
 		}
 	}));
 
-	// Enrich items with details
 	const enriched = await Promise.all(items.map(async (it) => {
 		const prevList = predecessorNamesMap[it.name] ?? [];
 		const previousExecution = prevList.length > 0 ? prevList[0] : null;
@@ -276,7 +271,6 @@ export default defineEventHandler(async (event) => {
 		}
 	}));
 
-	// Build output nodes for FlowMap
 	const outputNodes: any[] = [];
 	const pushedSignalIds = new Set<string>();
 
@@ -298,7 +292,6 @@ export default defineEventHandler(async (event) => {
 				previousTaskExecutionName: null,
 			});
 
-			// Signals emitted by this task
 			const emitted = emittedSignalsMap[it.name] ?? [];
 			for (const sig of emitted) {
 				const signalId = `signal::${sig}`;
@@ -343,7 +336,6 @@ export default defineEventHandler(async (event) => {
 				}
 			}
 
-			// Signals consumed by this task (no emitter recorded)
 			const consumedByThis = consumedSignalsMap[it.name] ?? [];
 			for (const csig of consumedByThis) {
 				const signalId2 = `signal::${csig}`;

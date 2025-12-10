@@ -1,6 +1,6 @@
 <template>
   <InfoCard>
-    <template #title> Execution Times </template>
+    <template #title> Service Statistics </template>
     <template #info>
       <div v-if="hasData">
         <apexchart
@@ -51,7 +51,7 @@ const chartOptions = computed(() => ({
       selection: function () {},
     },
   },
-  colors: ['#008FFB', '#00E396', '#CED4DC'],
+  colors: ['#008FFB', '#00E396', '#EDF101', '#F30F0F', '#0814B1', '#4A09BB', '#26A69A'],
   dataLabels: {
     enabled: false,
   },
@@ -62,12 +62,11 @@ const chartOptions = computed(() => ({
     type: 'gradient',
     gradient: {
       opacityFrom: 0.6,
-      opacityTo: 0.8,
+      opacityTo: 0.2,
     },
   },
   legend: {
-    position: 'top',
-    horizontalAlign: 'left',
+    position: 'right',
   },
   xaxis: {
     type: 'datetime',
@@ -75,15 +74,28 @@ const chartOptions = computed(() => ({
       text: 'Date',
     },
   },
-  yaxis: {
-    title: {
-      text: 'Execution Time (seconds)',
-    },
-    labels: {
-      formatter: function (value: number) {
-        return value.toFixed(2);
+  yaxis: [
+    {
+      title: {
+        text: '# of Executions',
+      },
+      labels: {
+        formatter: function (value: number) {
+          return Math.round(value).toString();
+        },
       },
     },
-  },
+    {
+      opposite: true,
+      title: {
+        text: 'Server Metrics',
+      },
+      labels: {
+        formatter: function (value: number) {
+          return Math.round(value).toString();
+        },
+      },
+    },
+  ],
 }));
 </script>

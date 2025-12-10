@@ -62,7 +62,6 @@
               </q-select>
             </div>
 
-            <!-- Date Range Filter -->
             <div
               v-if="hasStartedColumn"
               class="row q-gutter-xs items-center date-range-filter"
@@ -135,7 +134,6 @@
               />
             </q-td>
 
-            <!-- Apply the marquee effect only to the 'name' column -->
             <q-td
               v-for="col in props.cols"
               :key="col.name"
@@ -217,7 +215,6 @@
         </template>
       </q-table>
 
-      <!-- Infinite scroll loading indicator -->
       <div
         v-if="infiniteScrollEnabled && loadingMoreData"
         class="infinite-scroll-loading"
@@ -226,7 +223,6 @@
         <div class="loading-text">Loading more data...</div>
       </div>
 
-      <!-- Row Details Dialog -->
       <q-dialog v-model="showDetailsDialog">
         <q-card style="min-width: 400px">
           <q-card-section>
@@ -318,7 +314,6 @@
         </q-card>
       </q-dialog>
 
-      <!-- Dialogs -->
       <q-dialog v-model="showStopDialog">
         <q-card>
           <q-card-section>
@@ -360,7 +355,6 @@
         </q-card>
       </q-dialog>
 
-      <!-- Date Range Dialog -->
       <q-dialog v-model="showDateRangeDialog">
         <q-card style="min-width: 500px">
           <q-card-section>
@@ -422,7 +416,7 @@ const inspectButtonColor = computed(() =>
     : 'secondary'
 );
 
-// Generic type for table rows
+
 type TableRow = Record<string, unknown>;
 
 interface TableColumn {
@@ -496,13 +490,10 @@ const props = defineProps({
 });
 
 const filter = ref(props.externalFilter);
-
-// Date range filter setup
 const startDate = ref<string>('');
 const endDate = ref<string>('');
 const showDateRangeDialog = ref(false);
 
-// Computed property for date range label
 const dateRangeLabel = computed(() => {
   if (startDate.value && endDate.value) {
     return `${startDate.value} - ${endDate.value}`;
@@ -514,7 +505,6 @@ const dateRangeLabel = computed(() => {
   return 'Select Date Range';
 });
 
-// Computed properties to check if columns exist
 const hasStatusColumn = computed(() => {
   return props.columns?.some((col) => col.name === 'status') || false;
 });
@@ -523,7 +513,6 @@ const hasStartedColumn = computed(() => {
   return props.columns?.some((col) => col.name === 'started') || false;
 });
 
-// Status filter setup
 const statusOptions = ref([
   { label: 'Completed', value: 'check', icon: 'check', color: 'green' },
   { label: 'Running', value: 'play_arrow', icon: 'play_arrow', color: 'blue' },
@@ -543,8 +532,6 @@ function updateStatusFilter(newValue: string[]) {
 }
 
 function updateDateFilter() {
-  // This function will be called when date changes
-  // The filtering logic is in the computed property
 }
 
 function clearDateFilter() {
@@ -553,7 +540,6 @@ function clearDateFilter() {
   showDateRangeDialog.value = false;
 }
 
-// Helper function to parse date strings and compare them
 function isDateInRange(
   dateString: string,
   startDateStr: string,
@@ -571,7 +557,6 @@ function isDateInRange(
   return true;
 }
 
-// Fuzzy match helper for partial matches
 function fuzzyMatch(str: string, pattern: string) {
   str = str.toLowerCase();
   pattern = pattern.toLowerCase();
@@ -589,13 +574,11 @@ function fuzzyMatch(str: string, pattern: string) {
 const filteredRows = computed(() => {
   let rows = props.rows;
 
-  // Apply status filter only if status column exists
+
   if (hasStatusColumn.value) {
-    // If no statuses are selected, show nothing
     if (selectedStatuses.value.length === 0) {
       rows = [];
     } else {
-      // If all statuses are selected, show all rows
       const allStatusValues = statusOptions.value.map((opt) => opt.value);
       const shouldFilter =
         selectedStatuses.value.length < allStatusValues.length;
@@ -622,12 +605,10 @@ const filteredRows = computed(() => {
     }
   }
 
-  // Apply text filter: if filter is more than 5 characters, search by uuid, else by name
   if (filter.value) {
     rows = rows.filter((row: TableRow) => {
       if (typeof row !== 'object' || row === null) return false;
       if (filter.value.length > 5) {
-        // Search by uuid if filter is more than 5 characters
         const uuidValue = row.uuid;
         return (
           uuidValue &&
@@ -637,14 +618,12 @@ const filteredRows = computed(() => {
             .includes(filter.value.toLowerCase())
         );
       } else {
-        // Otherwise, search by name (fuzzy)
         const nameValue = row.name;
         return nameValue && fuzzyMatch(nameValue.toString(), filter.value);
       }
     });
   }
 
-  // Apply date range filter on started field only if started column exists
   if (hasStartedColumn.value && (startDate.value || endDate.value)) {
     rows = rows.filter((row: TableRow) => {
       const startedValue = row.started as string;
@@ -662,7 +641,6 @@ const emit = defineEmits([
   'loadMoreData',
 ]);
 
-// Auto-load more data if filteredRows is less than page size and hasMoreData
 const PAGE_SIZE = 50;
 watch(
   () => [filteredRows.value.length, props.hasMoreData, props.loadingMoreData],
@@ -706,7 +684,6 @@ const formattedColumns = computed(() => {
   return columns;
 });
 
-// Virtual scroll computed properties
 const virtualScrollEnabled = computed(() => {
   return props.enableVirtualScroll && filteredRows.value.length > 20;
 });
@@ -719,7 +696,6 @@ const virtualScrollItemSize = computed(() => props.virtualScrollItemSize);
 const virtualScrollStickyStart = computed(() => props.virtualScrollStickyStart);
 const virtualScrollStickyEnd = computed(() => props.virtualScrollStickyEnd);
 
-// Virtual scroll event handler
 function onVirtualScroll(details: any) {
   emit('virtualScroll', details);
   if (
@@ -816,7 +792,6 @@ defineExpose({
   background-color: #848485;
 }
 
-/* Virtual scroll optimizations */
 .my-sticky-last-column-table :deep(.q-virtual-scroll__content) {
   contain: layout style paint;
 }
@@ -825,7 +800,6 @@ defineExpose({
   will-change: transform;
 }
 
-/* Infinite scroll loading indicator */
 .infinite-scroll-loading {
   display: flex;
   flex-direction: column;
@@ -842,7 +816,6 @@ defineExpose({
   color: #a8a9aa;
 }
 
-/* Details dialog styles */
 .details-content {
   max-height: 400px;
   overflow-y: auto;
@@ -868,7 +841,6 @@ defineExpose({
   opacity: 0.7;
 }
 
-/* Date range filter outline */
 .date-range-filter {
   outline: 1px solid #a8a9aa;
   outline-offset: -1px;
@@ -896,9 +868,8 @@ defineExpose({
   padding-bottom: 0;
 }
 
-/* Adjust marquee effect to be slower and confined to the column */
 .max-column-width {
-  max-width: 200px; /* Adjust the width as needed */
+  max-width: 200px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

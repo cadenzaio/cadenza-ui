@@ -18,7 +18,6 @@
       }"
       @click="onTaskSelected(entry)"
     >
-      <!-- Show type if present (blue badge). Fall back to heading label for services/routines. -->
       <q-badge v-if="entry.type" color="blue-8" class="q-mb-sm">
         {{ String(entry.type).charAt(0).toUpperCase() + String(entry.type).slice(1) }}
       </q-badge>
@@ -53,7 +52,6 @@ interface TimelineEntry {
 
 const props = defineProps<{ itemMap: TimelineEntry[] }>();
 
-// Dedupe incoming items by `uuid`, preserving original order
 const dedupedItems = computed(() => {
   const items = props.itemMap || [];
   const seen = new Set<string>();
@@ -66,7 +64,6 @@ const dedupedItems = computed(() => {
       out.push(it as TimelineEntry);
     }
   }
-  // Sort by started (fallback to created). Items without a parseable timestamp go last.
   const parseTs = (it: TimelineEntry) => {
     const s = (it && ((it.started as unknown) || (it.created as unknown))) as string | undefined | null;
     if (!s) return Number.POSITIVE_INFINITY;

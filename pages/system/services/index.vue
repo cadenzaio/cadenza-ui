@@ -93,7 +93,6 @@ async function loadGraphs(isLoadMore = false): Promise<void> {
       graphs.value = mappedData;
     }
 
-    // Check if we have more data
     hasMoreData.value = data.length === pageSize;
   } catch (error) {
     console.error('Error loading graphs:', error);
@@ -123,11 +122,10 @@ const navigateToItem = (route: string) => {
   router.push(route);
 };
 
-// Fetch server stats and set the current section on component mount
 onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('system');
-  currentPage.value = 1; // Always start at page 1 on mount
+  currentPage.value = 1;
   await loadGraphs(false);
 });
 </script>

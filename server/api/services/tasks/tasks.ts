@@ -3,7 +3,6 @@ import { initializeClient } from '~/server/api/utils';
 
 let client: pg.Client | null = null;
 
-// Get all Tasks with pagination support
 async function getTasks(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
   const query = `
@@ -14,7 +13,6 @@ async function getTasks(page: number = 1, limit: number = 100) {
   `;
   const res = await client!.query(query, [limit, offset]);
 
-  // Map the results to match the component's expected format
   return res.rows.map((row) => ({
     type: 'task',
     label: row.name,
@@ -28,7 +26,6 @@ async function getTasks(page: number = 1, limit: number = 100) {
   }));
 }
 
-// Event handler
 export default defineEventHandler(async (event) => {
   if (!client) {
     client = await initializeClient();

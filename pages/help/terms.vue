@@ -167,22 +167,21 @@ import { useRoute } from '#app';
 const appStore = useAppStore();
 const route = useRoute();
 
-// Gradient color cycling for Inspect item button
+
 const inspectColors = [
-  '#1976d2', // blue
-  '#f2c037', // orange
-  '#8e24aa', // purple
+  '#1976d2',
+  '#f2c037',
+  '#8e24aa',
 ];
 const currentIdx = ref(0);
 const nextIdx = ref(1);
 
-let progress = ref(0); // 0 to 1
+let progress = ref(0);
 let isPaused = ref(true);
 let pauseTimeout = null;
 let animationFrame = null;
 
 function lerpColor(a, b, t) {
-  // a, b: hex color strings; t: 0-1
   const ah = a.replace('#', '');
   const bh = b.replace('#', '');
   const ar = parseInt(ah.substring(0, 2), 16);
@@ -222,12 +221,12 @@ function startPause() {
   pauseTimeout = setTimeout(() => {
     isPaused.value = false;
     animationFrame = requestAnimationFrame(animateGradient);
-  }, 2000); // 2s pause
+  }, 1000);
 }
 
 function animateGradient() {
   if (isPaused.value) return;
-  progress.value += 0.02; // adjust for smoothness/speed
+  progress.value += 0.02;
   if (progress.value >= 1) {
     progress.value = 0;
     currentIdx.value = nextIdx.value;

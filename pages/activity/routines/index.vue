@@ -141,7 +141,6 @@ async function loadMoreRoutines() {
   await loadRoutines(true);
 }
 
-// Fetch server stats and set the current section on component mount
 onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('serviceActivity');

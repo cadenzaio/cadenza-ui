@@ -18,7 +18,6 @@ function isValidUuid(id: string) {
 export default defineEventHandler(async (event) => {
 	await ensureClient();
 
-	// Only allow GET
 	if (event.node.req.method !== 'GET') {
 		throw createError({ statusCode: 405, statusMessage: 'Method not allowed' });
 	}
@@ -73,8 +72,6 @@ export default defineEventHandler(async (event) => {
 		`;
 
 		const res = await client!.query(q, [routineExecutionId]);
-
-		// collect ids and fetch predecessors in a single batch
 		const ids = res.rows.map((r: any) => r.uuid).filter(Boolean);
 		let predecessorsMap: Record<string, string[]> = {};
 		if (ids.length > 0) {
@@ -91,15 +88,11 @@ export default defineEventHandler(async (event) => {
 				predecessorsMap[tid] = predecessorsMap[tid] || [];
 				if (row.previous_task_execution_id) predecessorsMap[tid].push(row.previous_task_execution_id);
 			}
-			// dedupe
 			for (const k of Object.keys(predecessorsMap)) {
 				predecessorsMap[k] = Array.from(new Set(predecessorsMap[k]));
 			}
 		}
 
-		// Transform DB rows into nodes like the example format.
-		// First, fetch signals consumed by these task executions so we can create
-		// duplicated task nodes that indicate `previousTaskExecutionName: signal::<emission_uuid>`.
 		let consumedMap: Record<string, string[]> = {};
 		const emissionNameMap: Record<string, string> = {};
 		if (ids.length > 0) {
@@ -120,7 +113,6 @@ export default defineEventHandler(async (event) => {
 					if (eid) {
 						if (!consumedMap[tid].includes(eid)) consumedMap[tid].push(eid);
 						if (row.signal_name) emissionNameMap[eid] = row.signal_name;
-							// track consumed_at per emission (use earliest consumed_at)
 							if (row.consumed_at) {
 								const ts = new Date(row.consumed_at).toISOString();
 								if (!emissionNameMap.__consumedAt) emissionNameMap.__consumedAt = {} as any;
@@ -135,7 +127,6 @@ export default defineEventHandler(async (event) => {
 			}
 		}
 
-		// Build task nodes, duplicating when the task consumed signals.
 		const taskNodes: any[] = [];
 		for (const row of res.rows) {
 			const base = {
@@ -150,7 +141,6 @@ export default defineEventHandler(async (event) => {
 				execution_trace_id: row.execution_trace_id || null,
 				executionTraceId: row.execution_trace_id || row.executionTraceId || null,
 				created: row.created ? new Date(row.created).toISOString() : null,
-				// include started so frontends can order and render tasks correctly
 				started: row.started ? new Date(row.started).toISOString() : null,
 				ended: row.ended ? new Date(row.ended).toISOString() : null,
 				previousTaskExecutionName: (predecessorsMap[row.uuid] && predecessorsMap[row.uuid].length > 0) ? predecessorsMap[row.uuid][0] : null,
@@ -167,7 +157,6 @@ export default defineEventHandler(async (event) => {
 			}
 		}
 
-		// Fetch signal emissions for this routine and build unique signal nodes keyed by emission uuid.
 		let emissionRows: any[] = [];
 		try {
 			const q3 = `
@@ -199,13 +188,9 @@ export default defineEventHandler(async (event) => {
 			emissionRows = [];
 		}
 
-		// Build unique signal nodes keyed by emission uuid
 		const signalMap: Record<string, any> = {};
 		const consumedEmissionSet = new Set<string>(Object.values(consumedMap).flat());
-
-		// invert consumedMap (taskExecutionId -> [emissionIds]) to emissionId -> [consumerTaskExecutionIds]
 		const consumersByEmission: Record<string, string[]> = {};
-		// map of emissionId -> earliest consumed_at ISO string (if available)
 		const consumedAtByEmission: Record<string, string> = {};
 		for (const [tid, emissions] of Object.entries(consumedMap)) {
 			for (const eid of emissions) {
@@ -214,7 +199,6 @@ export default defineEventHandler(async (event) => {
 			}
 		}
 
-		// if we recorded consumed_at values on emissionNameMap.__consumedAt, move them to consumedAtByEmission
 		if ((emissionNameMap as any).__consumedAt) {
 			const caMap: Record<string, string> = (emissionNameMap as any).__consumedAt;
 			for (const [k, v] of Object.entries(caMap)) consumedAtByEmission[k] = v;
@@ -227,7 +211,6 @@ export default defineEventHandler(async (event) => {
 			if (!emissionId || !sig) continue;
 			if (!signalMap[emissionId]) {
 				const emitterTaskExecutionId = row.task_execution_id || null;
-				// prefer emitted_at for start, fallback to consumed_at; ended will be start + 500ms
 				const consumedAt = consumedAtByEmission[emissionId] || null;
 				const emittedAtTs = row.emitted_at ? new Date(row.emitted_at).getTime() : null;
 				const consumedAtTs = consumedAt ? new Date(consumedAt).getTime() : null;
@@ -236,7 +219,6 @@ export default defineEventHandler(async (event) => {
 				const endedIso = baseTs ? new Date(baseTs + 500).toISOString() : null;
 
 				signalMap[emissionId] = {
-					// Use the raw emission UUID as the node uuid (no prefix)
 					uuid: emissionId,
 					type: 'signal',
 					name: sig,
@@ -245,23 +227,19 @@ export default defineEventHandler(async (event) => {
 					layer_index: null,
 					is_unique: false,
 					concurrency: null,
-					// link to the emitter task execution
 					previousTaskExecutionName: emitterTaskExecutionId || null,
 					previousTaskExecutionId: emitterTaskExecutionId || null,
 					signal: true,
 					service_name: row.service_name || null,
 					created: row.emitted_at ? new Date(row.emitted_at).toISOString() : (row.created ? new Date(row.created).toISOString() : null),
-					// set started to emitted_at (if present) or consumed_at; ended = started + 500ms
 					started: startedIso,
 					ended: endedIso,
 					relation: consumedEmissionSet.has(emissionId) ? 'consumed_by' : 'emitted_by',
-					// list of task_execution_ids that consumed this emission
 					consumedBy: consumersByEmission[emissionId] || [],
 				};
 			}
 		}
 
-		// Add synthetic signal nodes for any consumed emissions that weren't present in `signal_emission`.
 		for (const eid of consumedEmissionSet) {
 			if (!signalMap[eid]) {
 				signalMap[eid] = {
@@ -277,7 +255,6 @@ export default defineEventHandler(async (event) => {
 					previousTaskExecutionId: null,
 					signal: true,
 					service_name: null,
-					// for synthetic nodes, prefer consumedAt for start/ended when available
 					created: null,
 					started: consumedAtByEmission[eid] ? new Date(consumedAtByEmission[eid]).toISOString() : null,
 					ended: consumedAtByEmission[eid] ? new Date(new Date(consumedAtByEmission[eid]).getTime() + 500).toISOString() : null,
@@ -289,7 +266,6 @@ export default defineEventHandler(async (event) => {
 
 		const signalNodes = Object.values(signalMap);
 
-		// Return tasks first, then signals
 		return [...taskNodes, ...signalNodes];
 	} catch (err) {
 		console.error('Error fetching task executions for routine:', err);

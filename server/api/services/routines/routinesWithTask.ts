@@ -4,7 +4,6 @@ import { getQuery } from 'h3';
 
 let client: pg.Client | null = null;
 
-// Get all routines
 async function getRoutineMap(
   taskName: string,
   page: number = 1,
@@ -24,14 +23,12 @@ async function getRoutineMap(
   `;
   const result = await client!.query(query, [taskName, limit, offset]);
 
-  // Map the results to match the expected frontend format
   return result.rows.map((routine) => ({
     name: routine.name,
     description: routine.description,
   }));
 }
 
-// Event handler
 export default defineEventHandler(async (event) => {
   if (!client) {
     client = await initializeClient();

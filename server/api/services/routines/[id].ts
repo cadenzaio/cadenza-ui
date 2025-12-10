@@ -4,13 +4,6 @@ import { getQuery } from 'h3';
 
 let client: pg.Client | null = null;
 
-/**
- * Get routine optionally filtered by existence of tasks matching service/version.
- * If `service` or `version` are provided we only return the routine when
- * there exists at least one task in `task_to_routine_map` for this routine
- * that matches the provided filters. This mirrors the way the task endpoint
- * filters by `service`/`version`.
- */
 async function getRoutine(routineName: string, version?: string | null, service?: string | null) {
   const params: any[] = [routineName];
   let q = `
@@ -39,7 +32,6 @@ async function getRoutine(routineName: string, version?: string | null, service?
 
   const result = await client!.query(q, params);
 
-  // Format the routine data
   return result.rows.map((routine: any) => ({
     type: routine.type,
     name: routine.name,

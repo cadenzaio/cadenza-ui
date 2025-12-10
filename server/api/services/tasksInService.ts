@@ -10,7 +10,6 @@ async function ensureClient() {
   }
 }
 
-// Define types for nodes and edges
 type Node = {
   id: string;
   type: string;
@@ -62,7 +61,7 @@ WHERE t.service_name = $1 AND t.is_meta = false
 
   const nodes: Node[] = [];
   const edges: Edge[] = [];
-  const signalNodes: Record<string, string> = {}; // To track signal nodes
+  const signalNodes: Record<string, string> = {};
 
   const serviceNode: Node = {
     id: serviceName,
@@ -75,11 +74,11 @@ WHERE t.service_name = $1 AND t.is_meta = false
   const routineMap: Record<string, Node> = {};
 
   result.rows.forEach((row) => {
-    const routineName = row.routine_name || 'UnknownRoutine'; // Assign default value if routine_name is null
+    const routineName = row.routine_name || 'UnknownRoutine';
 
     if (!routineMap[routineName]) {
       if (!row.routine_name) {
-        console.warn(`Routine name is null for task: ${row.task_name}`); // Log missing routine names
+        console.warn(`Routine name is null for task: ${row.task_name}`);
       }
 
       const routineNode: Node = {
@@ -97,7 +96,7 @@ WHERE t.service_name = $1 AND t.is_meta = false
       id: row.task_name,
       type: 'custom',
       nodeType: 'task',
-      parentNode: routineName, // Use the validated routineName
+      parentNode: routineName,
       data: { label: row.task_description || row.task_name },
     };
     nodes.push(taskNode);

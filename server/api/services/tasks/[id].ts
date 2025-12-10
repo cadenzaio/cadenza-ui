@@ -21,15 +21,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const { method } = event.node.req;
-  // route params may contain encoded characters (e.g. %20 for spaces)
-  // and some clients may send '+' for spaces. Normalize by replacing '+'
-  // with ' ' and then running decodeURIComponent.
   const rawId = event.context.params?.id ?? '';
   let taskName = rawId.replace(/\+/g, ' ');
   try {
     taskName = decodeURIComponent(taskName);
   } catch (e) {
-    // if decode fails, fall back to the raw value (with pluses converted)
     console.warn('Failed to decode task id:', rawId, e);
   }
 

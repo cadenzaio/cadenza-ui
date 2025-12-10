@@ -3,9 +3,6 @@ import { initializeClient } from '~/server/api/utils';
 
 let client: pg.Client | null = null;
 
-// Removed static registry & map lookups (signal_registry, task_to_signal_map, signal_to_task_map)
-// Dynamic mapping will be derived from `signal_emission` and `signal_consumption` tables.
-
 async function getConsumerTasksForSignal(signalName: string) {
   const query = `
     SELECT DISTINCT sc.task_name, sc.task_version, t.description AS task_description
@@ -73,17 +70,13 @@ export default defineEventHandler(async (event) => {
 
       const emissions = await getEmissionByUuid(uuid);
       if (!emissions || emissions.length === 0) {
-        // Not found
         return { error: 'Signal emission not found', uuid };
       }
 
-      // Usually uuid is unique and returns a single emission; handle list defensively
       const emission = emissions[0];
 
-      // Get consumptions for this specific signal emission (use signal_emission_id)
       const consumptions = await getConsumptionsForEmissionId(emission.uuid);
 
-      // Build list of task execution ids to fetch related executions
       const execIds = new Set<string>();
       if (emission.task_execution_id) execIds.add(emission.task_execution_id);
       for (const c of consumptions) {
@@ -92,8 +85,6 @@ export default defineEventHandler(async (event) => {
 
       const taskExecutionIds = Array.from(execIds);
       const taskExecutions = await getTaskExecutionsByIds(taskExecutionIds);
-
-      // Build previousTasks (the emitter) and nextTasks (consumers derived from signal_consumption)
       const previousTasks: any[] = [];
       if (emission.task_name) {
         const taskMeta = await getTaskByName(emission.task_name);

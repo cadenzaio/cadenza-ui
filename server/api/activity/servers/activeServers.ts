@@ -29,7 +29,6 @@ async function getAllServersWithStats(
   const values: (string | number)[] = [];
 
   if (serviceInstance) {
-    // Accept either a UUID (filter by si.uuid) or a service name (filter by si.service_name)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       serviceInstance
     );
@@ -72,7 +71,6 @@ export default defineEventHandler(async (event) => {
   if (method === 'GET') {
     try {
       const q = getQuery(event);
-      // frontend sends `serviceInstance` (uuid) when filtering by a single instance
       const serviceInstance = q.serviceInstance as string | undefined;
       const page = parseInt((q.page as string) || '1', 10) || 1;
       const limit = parseInt((q.limit as string) || '100', 10) || 100;

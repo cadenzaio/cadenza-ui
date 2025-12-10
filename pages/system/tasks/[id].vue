@@ -131,7 +131,6 @@ import InfoCard from '~/components/InfoCard.vue';
 import FlowMap from '~/components/FlowMap.vue';
 import HeatMap from '~/components/HeatMap.vue';
 
-// Define the Item interface
 interface Item {
   taskId?: string;
   type?: string;
@@ -177,17 +176,14 @@ interface HeatmapData {
 }
 const heatmapData = ref<HeatmapData | null>(null);
 
-// Fetch the Items data
 const { data: Items, error } = await useFetch(
   `/api/services/tasks/${route.params.id}`
 );
 
-// Error handling
 if (error.value) {
   console.error('Error fetching Items:', error.value);
 }
 
-// Fetch the execution times chart series data
 const { data: executionData, error: executionError } = await useFetch(
   `/api/activity/tasks/taskExecutionTimes?taskName=${route.params.id}`
 );
@@ -198,7 +194,6 @@ if (executionError.value) {
   !('error' in executionData.value) &&
   executionData.value.series
 ) {
-  // Convert each series' data to the correct format
   executionTimeSeries.value = executionData.value.series.map(
     (series: { name: string; data: (string | number)[][] }) => ({
       name: series.name,
@@ -275,8 +270,6 @@ const columns2 = [
 
 const tasks = ref<any[]>([]);
 const routines = ref<any[]>([]);
-
-// Task map for FlowMap - shows static task flow within a routine (service view)
 const taskMap = ref<any[]>([]);
 
 async function updateTaskMap() {
@@ -297,12 +290,10 @@ async function updateTaskMap() {
       ? response
       : (response && Array.isArray((response as any).chain) ? (response as any).chain : []);
 
-    // Ensure nodes include service/version and set isSelected on the correct node
     const serviceFromSelected = selectedItem.value?.service ?? selectedItem.value?.serviceDbName ?? null;
     const versionFromSelected = (selectedItem.value as any)?.version ?? null;
     taskMap.value = itemsArray.map((item: any) => ({
       ...item,
-      // normalize service/version onto the nodes so FlowMap emits them
       service: item.service ?? item.service_name ?? item.serviceName ?? serviceFromSelected,
       version: item.version ?? item.task_version ?? (item as any).taskVersion ?? versionFromSelected,
       isSelected:
@@ -404,17 +395,15 @@ onMounted(() => {
   const appStore = useAppStore();
   appStore.setCurrentSection('system');
 
-  tasksCurrentPage.value = 1; // Always start at page 1 for tasks
-  routinesCurrentPage.value = 1; // Always start at page 1 for routines
+  tasksCurrentPage.value = 1;
+  routinesCurrentPage.value = 1;
 
   const itemName: string = Array.isArray(route.params.id)
     ? route.params.id[0]
     : route.params.id;
   if (Array.isArray(Items.value)) {
-    // DB now uses `name` as primary identifier
     const found = Items.value.find((item: Item) => item.name === itemName);
     selectedItem.value = normalizeItem(found);
-    // Apply query overrides (version/service) when present in the URL
     const qVersion = route.query.version ?? route.query.v ?? null;
     const qService = route.query.service ?? route.query.s ?? null;
     if (selectedItem.value) {
@@ -533,7 +522,6 @@ async function fetchHeatmapData(taskName: string) {
       `/api/services/tasks/heatmapData?taskName=${taskName}`
     );
     const rawData = await response.json();
-    // Build yearOptions and monthNames from rawData
     const dates = rawData.map((r: any) => new Date(r.date));
     const years = Array.from(
       new Set<number>(dates.map((d: any) => d.getFullYear()))
@@ -552,7 +540,6 @@ async function fetchHeatmapData(taskName: string) {
       'November',
       'December',
     ];
-    // Default ranges
     const editableRanges = [
       { from: 1, to: 10 },
       { from: 11, to: 20 },
@@ -560,7 +547,7 @@ async function fetchHeatmapData(taskName: string) {
       { from: 31, to: 40 },
     ];
     heatmapData.value = {
-      chartSeries: [], // Let HeatMap build this from rawData
+      chartSeries: [],
       yearOptions: years,
       monthNames,
       editableRanges,
@@ -592,7 +579,6 @@ watch(
     selectedItem.value = Array.isArray(Items.value)
       ? normalizeItem(Items.value.find((item: Item) => item.name === itemName))
       : null;
-    // Respect query params for version/service when route changes
     const qVersion = route.query.version ?? route.query.v ?? null;
     const qService = route.query.service ?? route.query.s ?? null;
     if (selectedItem.value) {

@@ -31,7 +31,7 @@ interface Signal {
   ended: string;
   duration: number;
   uuid: string;
-  service: string; // Added service field
+  service: string;
 }
 
 const columns = [
@@ -95,16 +95,15 @@ async function loadSignals(isLoadMore = false) {
     const response = await $fetch(`/api/services/signals/signals?page=${currentPage.value}&limit=${pageSize}`);
     const rows = response || [];
 
-    // Map DB rows to the table's expected Signal interface
     const data = rows.map((r: any) => ({
       name: r.name,
       status: r.is_meta ? 'meta' : 'signal',
-      service: r.service_name || '', // Ensure no duplicate property
+      service: r.service_name || '',
       started: r.created || '',
       ended: '',
       duration: 0,
       uuid: r.name,
-      value: r.value || '', // Include the value field
+      value: r.value || '',
     }));
 
     if (isLoadMore) {

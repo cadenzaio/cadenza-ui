@@ -3,9 +3,6 @@ import pg from 'pg';
 
 let client: pg.Client | null = null;
 
-/**
- * Fetch all records from the signal_emission table where is_meta is false.
- */
 async function getAllSignalEmissions() {
   if (!client) {
     client = await initializeClient();

@@ -10,7 +10,6 @@ import { useAppStore } from '../stores/app';
 const $q = useQuasar();
 const appStore = useAppStore();
 
-// Initialize Quasar dark mode based on the store value
 $q.dark.set(appStore.isDarkMode);
 
 function toggleDarkMode(): void {

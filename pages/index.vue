@@ -55,20 +55,14 @@ import { useAppStore } from '~/stores/app';
 const appStore = useAppStore();
 const activeProcesses = ref<Server[]>([]);
 const heatmapData = ref<any>(null);
-
-// Loading states
 const isLoadingServerStats = ref(false);
 const isLoadingHeatmap = ref(false);
-
-// Default heatmap ranges
 const defaultHeatmapRanges = [
   { from: 1, to: 10 },
   { from: 11, to: 50 },
   { from: 51, to: 100 },
   { from: 101, to: Infinity },
 ];
-
-// Computed property to check if heatmap has meaningful data
 const hasHeatmapData = computed(() => {
   return !!(heatmapData.value && 
     heatmapData.value.chartSeries && 
@@ -105,13 +99,11 @@ const fetchServerStats = async () => {
       is_blocked: server.is_blocked,
     }));
 
-    // Reset totals before calculating
     totalCpuUsage.value = 0;
     totalMemoryUsage.value = 0;
     totalGpuUsage.value = 0;
     serverCount.value = activeProcesses.value.length;
 
-    // Sum the values across all servers, converting strings to numbers
     activeProcesses.value.forEach((server: Server) => {
       totalCpuUsage.value += parseFloat(server.cpu) || 0;
       totalMemoryUsage.value += parseFloat(server.ram) || 0;
@@ -119,7 +111,6 @@ const fetchServerStats = async () => {
     });
   } catch (error) {
     console.error('Error fetching server stats:', error);
-    // Reset to empty state on error
     activeProcesses.value = [];
     totalCpuUsage.value = 0;
     totalMemoryUsage.value = 0;
@@ -134,7 +125,6 @@ async function fetchHeatmapData() {
   isLoadingHeatmap.value = true;
   try {
     const data = await $fetch('/api/heatmap/routineMap');
-    // Validate that we received meaningful data
     if (data && typeof data === 'object' && 'chartSeries' in data && Array.isArray(data.chartSeries)) {
       heatmapData.value = data;
     } else {

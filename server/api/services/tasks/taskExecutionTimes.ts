@@ -10,7 +10,6 @@ async function getClient() {
   return client;
 }
 
-// Get TaskExecutions by task_id
 async function getTaskMap(taskId: string) {
   const query = `
  SELECT
@@ -35,7 +34,6 @@ async function getTaskMap(taskId: string) {
   }
 }
 
-// Event handler
 export default defineEventHandler(async (event) => {
   const { method } = event.node.req;
   const url = new URL(

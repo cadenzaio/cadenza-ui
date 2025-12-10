@@ -10,7 +10,6 @@ async function getClient() {
   return client;
 }
 
-// Get RoutineExecutions by routine_Name
 async function getRoutineMap(routineName: string) {
   const query = `
     SELECT

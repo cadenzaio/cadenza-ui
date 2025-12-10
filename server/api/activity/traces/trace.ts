@@ -101,7 +101,6 @@ async function generateNodesAndEdges(traceUuid: string) {
         parentNode: row.routine_uuid, 
         data: {
           label: row.task_name || row.task_uuid,
-          // include timestamps as ISO strings when available (use aliased fields)
           created: row.task_created ? new Date(row.task_created).toISOString() : null,
           started: row.task_started ? new Date(row.task_started).toISOString() : null,
           ended: row.task_ended ? new Date(row.task_ended).toISOString() : null,
@@ -120,12 +119,10 @@ async function generateNodesAndEdges(traceUuid: string) {
     }
     if (row.signal_emission_name) {
       let signalEmissionNodeId;
-      // keep signalNodes keyed by signal name to combine same-named signals, but include the emission UUID in node data when available
       const key = row.signal_emission_name;
       if (!signalNodes[key]) {
         signalEmissionNodeId = `${row.task_uuid}-emission-${row.signal_emission_name}`;
         signalNodes[key] = signalEmissionNodeId;
-        // use emitted_at or fallback to consumed_at for created/started, ended = started + 500ms
         const startTs = row.signal_emitted_at
           ? new Date(row.signal_emitted_at).getTime()
           : row.signal_consumed_at
@@ -146,7 +143,7 @@ async function generateNodesAndEdges(traceUuid: string) {
             started: startedIso,
             ended: endedIso,
             type: 'signal',
-          }, // include uuid when available
+          },
         };
         nodes.push(signalEmissionNode);
       } else {
@@ -159,7 +156,6 @@ async function generateNodesAndEdges(traceUuid: string) {
         target: signalEmissionNodeId,
       });
 
-      // Create edge to parent routine with custom edge type
       if (row.routine_uuid) {
         edges.push({
           id: `e${signalEmissionNodeId}-${row.routine_uuid}`,
@@ -176,7 +172,6 @@ async function generateNodesAndEdges(traceUuid: string) {
       if (!signalNodes[key]) {
         signalConsumptionNodeId = `${row.task_uuid}-consumption-${row.signal_consumption_name}`;
         signalNodes[key] = signalConsumptionNodeId;
-        // use consumed_at or fallback to emitted_at for created/started, ended = started + 500ms
         const startTs = row.signal_consumed_at
           ? new Date(row.signal_consumed_at).getTime()
           : row.signal_emitted_at
@@ -197,7 +192,7 @@ async function generateNodesAndEdges(traceUuid: string) {
             started: startedIso,
             ended: endedIso,
             type: 'signal',
-          }, // include uuid when available
+          },
         };
         nodes.push(signalConsumptionNode);
       } else {
@@ -210,7 +205,6 @@ async function generateNodesAndEdges(traceUuid: string) {
         target: row.task_uuid,
       });
 
-      // Create edge to parent routine with custom edge type
       if (row.routine_uuid) {
         edges.push({
           id: `e${signalConsumptionNodeId}-${row.routine_uuid}`,
@@ -222,7 +216,6 @@ async function generateNodesAndEdges(traceUuid: string) {
     }
   });
 
-  // capture trace context from the first row (if available)
   const traceContext = res.rows[0].trace_context ?? null;
 
   return { nodes, edges, context: traceContext };

@@ -82,7 +82,6 @@ const pageSize = 50;
 const router = useRouter();
 
 function inspectTasks(tasks: tasks) {
-  // Navigate to task detail including version and service as query params
   const path = `/system/tasks/${encodeURIComponent(String(tasks.name))}`;
   const qs = [];
   if ((tasks as any).version) qs.push(`version=${encodeURIComponent(String((tasks as any).version))}`);
@@ -138,11 +137,10 @@ async function loadMoreTasks() {
   await loadTasks(true);
 }
 
-// Fetch server stats and set the current section on component mount
 onMounted(async () => {
   const appStore = useAppStore();
   appStore.setCurrentSection('system');
-  currentPage.value = 1; // Always start at page 1 on mount
+  currentPage.value = 1;
   await loadTasks(false);
 });
 </script>

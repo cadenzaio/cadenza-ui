@@ -17,7 +17,7 @@ async function getService(serviceId: string) {
       si.modified as service_instance_modified
     FROM routine_execution re
     RIGHT JOIN service_instance si ON re.service_instance_id = si.uuid
-    WHERE si.service_name = $1;
+    WHERE si.uuid = $1;
   `;
   const result = await client!.query(query, [serviceId]);
   return result.rows;

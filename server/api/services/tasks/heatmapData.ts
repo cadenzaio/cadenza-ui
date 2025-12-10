@@ -10,7 +10,6 @@ async function getClient() {
   return client;
 }
 
-// Get TaskExecutions by task_id
 async function getTaskMap(taskName: string) {
   const query = `
     SELECT

@@ -62,7 +62,6 @@ export default defineEventHandler(async (event) => {
       if (!rows || rows.length === 0) {
         return { series: [] };
       }
-      // Map to chart series format — convert dates to epoch milliseconds (number)
       const seriesData = rows.map((item: RoutineExecutionTimeRow) => {
         const started = item.started ? new Date(item.started).getTime() : 0;
         return {

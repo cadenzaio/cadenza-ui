@@ -142,7 +142,7 @@ const flowItems = computed<any[]>(() => {
         .map((e: any) => e.source);
       const previous = incoming.length === 0 ? undefined : incoming.length === 1 ? incoming[0] : incoming;
       return {
-        name: n.id,
+        name: n.data?.name || n.id,
         label: n.data?.label || n.id,
         description: n.data?.description || '',
         signal: n.nodeType === 'signal' || n.data?.signal === true,
@@ -158,13 +158,10 @@ function extractUuid(s: string | null | undefined) {
   return m ? m[0] : null;
 }
 
-// Handle clicks from the FlowMap nodes
 function handleFlowItemSelected(item: any) {
   if (!item) return;
-  // Follow the same linking behavior as `pages/meta/routines/[id].vue`
   const canonicalId = item.signalUuid || item.name || item.id || '';
 
-  // If the node is a signal, navigate to the meta signal page and include serviceName when available
   if (item.signal === true || String(canonicalId).startsWith('signal::')) {
     const raw = String(item.name || canonicalId);
     const stripped = raw.replace(/^signal::/, '');
@@ -174,7 +171,6 @@ function handleFlowItemSelected(item: any) {
     return;
   }
 
-  // Otherwise treat as a task node and navigate to the meta task page (include service/version if available)
   if (item && item.name) {
     const path = `/meta/tasks/${encodeURIComponent(String(item.name))}`;
     const qs: string[] = [];
@@ -204,7 +200,6 @@ function navigateToItem(route: string) {
 async function fetchTasksInService(page = 1) {
   try {
     error.value = null;
-    // indicate a load is in progress
     loadingMoreData.value = true;
     const response = await fetch(
       `/api/meta/metaService?serviceName=${encodeURIComponent(service)}&page=${page}&pageSize=${pageSize}`
@@ -214,8 +209,6 @@ async function fetchTasksInService(page = 1) {
 
     const incomingNodes: any[] = data.nodes || [];
     const incomingEdges: any[] = data.edges || [];
-
-    // Determine how many NEW task nodes this page contains (to avoid being tricked by totalCount)
     const existingTaskIds = new Set(nodes.value.filter((n: any) => n.nodeType === 'task').map((n: any) => n.id));
     const incomingTaskNodes = incomingNodes.filter((n: any) => n.nodeType === 'task');
     const newTaskNodes = incomingTaskNodes.filter((n: any) => !existingTaskIds.has(n.id));
@@ -225,7 +218,6 @@ async function fetchTasksInService(page = 1) {
       nodes.value = incomingNodes;
       edges.value = incomingEdges;
     } else {
-      // append nodes but avoid duplicates
       const existingNodeIds = new Set(nodes.value.map((n: any) => n.id));
       incomingNodes.forEach((n) => {
         if (!existingNodeIds.has(n.id)) {
@@ -234,7 +226,6 @@ async function fetchTasksInService(page = 1) {
         }
       });
 
-      // append edges but avoid duplicates
       const existingEdgeIds = new Set(edges.value.map((e: any) => e.id));
       incomingEdges.forEach((e) => {
         if (!existingEdgeIds.has(e.id)) {
@@ -244,7 +235,6 @@ async function fetchTasksInService(page = 1) {
       });
     }
 
-    // update pagination state
     const totalCount = typeof data.totalCount === 'number' ? data.totalCount : null;
     const loadedTasks = nodes.value.filter((n: any) => n.nodeType === 'task').length;
     if (!incomingNodes || incomingNodes.length === 0) {
@@ -266,7 +256,6 @@ async function fetchTasksInService(page = 1) {
   }
 }
 
-// Updated the `fetchServerDetails` function to include all required properties
 async function fetchServerDetails() {
   try {
     error.value = null;
@@ -299,7 +288,6 @@ async function fetchServerDetails() {
   }
 }
 
-// Add a function to fetch active executions
 async function fetchActiveExecutions() {
   try {
     error.value = null;
@@ -328,7 +316,6 @@ onMounted(async () => {
 
   try {
     isLoading.value = true;
-    // reset pagination state
     currentPage.value = 1;
     nodes.value = [];
     edges.value = [];
@@ -338,7 +325,6 @@ onMounted(async () => {
       fetchServerDetails(),
       fetchActiveExecutions(),
     ]);
-    // after initial fetch, auto-load remaining pages until done
     if (hasMoreData.value) {
       await loadAllPages();
     }
@@ -380,12 +366,10 @@ function loadMoreNodes() {
   });
 }
 
-// Sequentially load pages until there is no more data
 async function loadAllPages() {
   try {
     while (hasMoreData.value) {
       if (loadingMoreData.value) {
-        // if another load is in progress, wait a bit
         await new Promise((r) => setTimeout(r, 50));
         continue;
       }
@@ -404,7 +388,6 @@ async function loadAllPages() {
 }
 
 function setupAutoPager() {
-  // create observer if not present
   if (observer) return;
   observer = new IntersectionObserver((entries) => {
     for (const entry of entries) {
@@ -419,13 +402,11 @@ function setupAutoPager() {
   });
 
   watch(hasMoreData, async (val) => {
-    // when more data becomes available, ensure sentinel is observed
     await nextTick();
     if (val && loadMoreSentinel.value) observer!.observe(loadMoreSentinel.value);
     if (!val && loadMoreSentinel.value) observer!.unobserve(loadMoreSentinel.value);
   }, { immediate: true });
 
-  // observe after initial render
   onMounted(async () => {
     await nextTick();
     if (hasMoreData.value && loadMoreSentinel.value) observer!.observe(loadMoreSentinel.value);
@@ -439,10 +420,8 @@ function setupAutoPager() {
   });
 }
 
-// initialize the auto pager
 setupAutoPager();
 
-// Define missing types
 interface Service {
   uuid: string;
   graph: string;
@@ -455,7 +434,6 @@ interface Service {
   displayStatus: string;
 }
 
-// Updated the `Item` interface to include `type` and `service_instance`
 interface Item {
   name: string;
   description: string;
@@ -464,9 +442,9 @@ interface Item {
   created: string;
   deletedStatus: string;
   displayName: string;
-  function_string?: string; // Added optional property
-  type?: string; // Added optional property
-  service_instance?: string; // Added optional property
+  function_string?: string;
+  type?: string;
+  service_instance?: string;
 }
 </script>
 

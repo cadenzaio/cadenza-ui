@@ -72,7 +72,6 @@ async function getRoutines({
     client = await initializeClient();
   }
 
-  // Re-added the WHERE clause for re.is_meta and set it to false directly
   let query = `
   SELECT
       re.uuid,
@@ -187,13 +186,11 @@ export default defineEventHandler(async (event) => {
     const page = parseInt(urlParams.get('page') || '1', 10);
     const limit = parseInt(urlParams.get('limit') || '50', 10);
     const contractId = urlParams.get('contractId') || undefined;
-    const isMeta = urlParams.get('isMeta') === 'true'; // Read isMeta from query params
+    const isMeta = urlParams.get('isMeta') === 'true';
 
     try {
       const uuid = urlParams.get('uuid') || undefined;
       const data = await getRoutines({ uuid, page, limit });
-
-      // If contractId is provided, filter and return mapped data for contract page
       if (contractId) {
         const filteredData = data.filter(
           (r: RoutineMapped) => r.contract_id === contractId
@@ -238,13 +235,9 @@ export default defineEventHandler(async (event) => {
           routineMap,
         };
       }
-
-      // If uuid is provided, return the single routine (or null)
       if (uuid) {
         return data.length > 0 ? data[0] : null;
       }
-
-      // Default response for other uses
       return data;
     } catch (error) {
       console.error('Error fetching routines:', error);

@@ -10,13 +10,14 @@ async function ensureClient() {
   }
 }
 
-// Define types for nodes and edges
 type Node = {
   id: string;
+  name?: string;
   type: string;
   nodeType: string;
   parentNode?: string;
   data: Record<string, any>;
+  description?: string;
 };
 
 type Edge = {
@@ -60,7 +61,7 @@ WHERE t.service_name = $1 AND t.is_meta = true
 
   const nodes: Node[] = [];
   const edges: Edge[] = [];
-  const signalNodes: Record<string, string> = {}; // To track unique signal node ids by signal name
+  const signalNodes: Record<string, string> = {};
   const addedTasks = new Set<string>();
   const addedEdges = new Set<string>();
 
@@ -68,20 +69,20 @@ WHERE t.service_name = $1 AND t.is_meta = true
   const taskNames = new Set(result.rows.map((r: any) => r.task_name));
 
   result.rows.forEach((row) => {
-    // add task node only once per task name
     if (!addedTasks.has(row.task_name)) {
       const taskNode: Node = {
         id: row.task_name,
+        name: row.task_name,
         type: 'custom',
         nodeType: 'task',
-        data: { label: row.task_description || row.task_name },
+        data: { label: row.task_name},
+        description: row.task_description,
       };
       nodes.push(taskNode);
       addedTasks.add(row.task_name);
     }
 
     if (row.previous_task_execution_name) {
-      // only add edge if predecessor is present in this page's tasks
       if (taskNames.has(row.previous_task_execution_name)) {
         const edgeId = `e${row.previous_task_execution_name}-${row.task_name}`;
         if (!addedEdges.has(edgeId)) {
@@ -97,7 +98,6 @@ WHERE t.service_name = $1 AND t.is_meta = true
 
     if (row.signal_to_task_signal_name) {
       const sig = row.signal_to_task_signal_name;
-      // use a normalized signal node id so the same signal across tasks is one node
       let signalNodeId = signalNodes[sig];
       if (!signalNodeId) {
         signalNodeId = `signal::${sig}`;
@@ -163,7 +163,6 @@ export default defineEventHandler(async (event) => {
 
   if (event.node.req.method === 'GET') {
     try {
-      // get total count for pagination
       const countQuery = `
 SELECT COUNT(*)::int AS cnt
 FROM task t

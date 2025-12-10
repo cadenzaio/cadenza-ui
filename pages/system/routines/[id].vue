@@ -113,7 +113,7 @@ import { useFetch, useRoute, useRouter } from '#app';
 import { useAppStore } from '~/stores/app';
 import InfoCard from '~/components/InfoCard.vue';
 import FlowMap from '~/components/FlowMap.vue';
-// import HeatMap from '~/components/HeatMap.vue';
+import HeatMap from '~/components/HeatMap.vue';
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
@@ -165,7 +165,6 @@ if (error.value) {
   console.error('Error fetching Items:', error.value);
 }
 
-// Fetch the execution times chart series data
 const { data: executionData, error: executionError } = await useFetch(
   `/api/activity/routines/routineExecutionTimes?routineName=${route.params.id}`
 );
@@ -282,8 +281,6 @@ function onTaskSelected(task: any) {
   console.log('Task selected:', task);
   if (!task) return;
 
-  // If this node represents a signal, route to the system signals page
-  // using the signal name and include serviceName when available.
   const canonicalId = task.uuid || task.id || task.name || '';
   if (task.signal === true || String(canonicalId).startsWith('signal::')) {
     const signalName = task.name || String(canonicalId).replace(/^signal::/, '');
@@ -362,7 +359,6 @@ onMounted(async () => {
       (Items.value.find((item) => item.name === itemName) as Item) ?? null;
   }
 
-  // Apply query overrides (version/service) when present in the URL
   const qVersion = route.query.version ?? route.query.v ?? null;
   const qService = route.query.service ?? route.query.s ?? null;
   if (selectedItem.value) {
@@ -372,7 +368,6 @@ onMounted(async () => {
 
   fetchActiveRoutines(itemName, false);
 
-  // Fetch routine map data
   if (selectedItem.value) {
     try {
       const tasks = await $fetch<any>(
@@ -381,7 +376,7 @@ onMounted(async () => {
       routineMap.value = Array.isArray(tasks)
         ? tasks.map((task: any) => ({
             ...task,
-            name: task.name, // Add 'name' property required by FlowItem
+            name: task.name,
           }))
         : [];
     } catch (error) {
@@ -403,7 +398,6 @@ watch(
     if (Items.value && Array.isArray(Items.value)) {
       selectedItem.value =
         (Items.value.find((item) => item.name === itemName) as Item) ?? null;
-      // Apply query overrides (version/service) when present in the URL
       const qVersion = route.query.version ?? route.query.v ?? null;
       const qService = route.query.service ?? route.query.s ?? null;
       if (selectedItem.value) {
@@ -416,7 +410,6 @@ watch(
 
     fetchActiveRoutines(itemName, false);
 
-    // Re-fetch routine map for the newly-selected routine
     if (selectedItem.value) {
       try {
         const tasks = await $fetch<any>(
@@ -451,9 +444,6 @@ async function fetchActiveRoutines(itemName: string, isLoadMore = false) {
       `/api/activity/routines/routineActivity?name=${itemName}&page=${currentPage.value}&limit=${pageSize}`
     );
 
-    // The API may return either an array of routines or a single routine object
-    // when queried with `name`. Normalize to an array so the table code can
-    // always operate on `routines.value` as an array.
     const normalized: Routine[] = Array.isArray(data) ? data : data ? [data] : [];
 
     if (isLoadMore) {

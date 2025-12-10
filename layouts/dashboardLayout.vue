@@ -506,7 +506,6 @@ import { storeToRefs } from 'pinia';
 import { useAppStore } from '~/stores/app';
 import ThemeToggleButton from '~/components/ThemeToggleButton.vue';
 
-// State
 const showsystem = ref(true);
 const showserviceActivity = ref(true);
 const showMeta = ref(true);
@@ -516,13 +515,11 @@ const miniState = ref(false);
 const appStore = useAppStore();
 const { currentSection } = storeToRefs(appStore);
 
-// Initialize Quasar safely
 let $q;
 if (process.client) {
   $q = useQuasar();
 }
 
-// Methods
 const setSection = (section, disableMini = false) => {
   appStore.setCurrentSection(section);
   // showTraces.value = section === 'Traces';
@@ -545,7 +542,6 @@ const handleResize = () => {
   }
 };
 
-// dynamic toolbar color
 const toolbarClass = computed(() => {
   switch (currentSection.value) {
     case 'system':
@@ -580,7 +576,6 @@ const toolbarClassLight = computed(() => {
   }
 });
 
-// dynamic polka class
 const polkaClass = computed(() => {
   return $q && $q.dark.isActive ? 'polka-dark' : 'polka-light';
 });
@@ -685,7 +680,6 @@ onBeforeUnmount(() => {
   z-index: 1;
 }
 
-/* Toolbar gradient overlay */
 .navContainer::before {
   content: '';
   position: absolute;
@@ -702,7 +696,6 @@ onBeforeUnmount(() => {
   z-index: 1;
 }
 
-/* Logo responsive styling */
 .logo {
   max-height: 60px;
   max-width: 300px;

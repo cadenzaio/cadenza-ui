@@ -178,14 +178,12 @@ interface RangeSection {
   from: number;
   to: number;
 }
-// Heatmap data row from API
 interface HeatmapRow {
-  date: string; // ISO date string
+  date: string;
   hour: number;
   executions: number;
   [key: string]: unknown;
 }
-// ApexCharts heatmap series data
 interface HeatmapSeriesData {
   x: string;
   y: number;
@@ -237,22 +235,13 @@ const showMonthView = ref(false);
 const selectedMonthIndex = ref(0);
 const monthChartSeries = ref<HeatmapSeries[]>([]);
 const chartSeries = ref<HeatmapSeries[]>([]);
-
-// Pinia store for heatmap settings
 const heatmapSettingsStore = useHeatmapSettingsStore();
-
-// Local state for settings
 const localEditableRanges = ref<RangeSection[]>([]);
 const localScaleToData = ref(false);
-const settingsKey = 'default'; // You can make this dynamic if needed
-
-// Month heatmap data and options
-
-// Use prop for monthChartSeries
+const settingsKey = 'default'; 
 
 function getMonthColorScaleRanges() {
   const ranges = props.editableRanges as RangeSection[];
-  // Always ensure 'Low' starts at 1
   const lowFrom = 1;
   const lowTo = Math.max(ranges[0].to, 1);
   return [
@@ -338,8 +327,6 @@ const monthChartOptions = computed(() => {
   };
 });
 
-// Remove generateMonthData, use prop
-
 interface ApexDataPointSelectionConfig {
   seriesIndex: number;
   dataPointIndex: number;
@@ -350,7 +337,6 @@ function onCellClick(
   chartContext: unknown,
   config: ApexDataPointSelectionConfig
 ) {
-  // config contains seriesIndex (month), dataPointIndex (day-1)
   if (
     config &&
     typeof config.seriesIndex === 'number' &&
@@ -360,9 +346,8 @@ function onCellClick(
     const month = props.monthNames[monthIdx];
     selectedMonth.value = month;
     selectedMonthIndex.value = monthIdx;
-    selectedYear.value = currentYear; // Default to current year on click
+    selectedYear.value = currentYear;
     buildMonthChartSeries(monthIdx, selectedYear.value);
-    // Save scroll position and restore after DOM updates (with delay)
     const scrollY = window.scrollY;
     showMonthView.value = true;
     nextTick(() => {
@@ -392,12 +377,9 @@ function generateData(
   return data;
 }
 
-// Handle max value change for a section, update min for next section, and enforce non-overlapping
 function handleMaxChange(val: number, idx: number) {
   if (scaleToData.value) scaleToData.value = false;
-  // Work on a copy to avoid mutating prop directly
   const newRanges = props.editableRanges.map((r) => ({ ...r }));
-  // Always clamp the first range's from to 1
   if (idx === 0) {
     newRanges[0].from = 1;
     const newVal = typeof val === 'number' ? val : Number(val) || 1;
@@ -419,9 +401,7 @@ function handleMaxChange(val: number, idx: number) {
   }
   emit('update:editableRanges', newRanges);
 }
-// Use prop for chartSeries
 
-// Use app store for dark mode
 const appStore = useAppStore();
 const { isDarkMode } = storeToRefs(appStore);
 
@@ -433,7 +413,6 @@ const labelStyle = {
 
 const showDialog = qRef(false);
 
-// Use Pinia store for editableRanges and scaleToData
 const editableRanges = computed({
   get: () => localEditableRanges.value,
   set: (val) => {
@@ -457,19 +436,16 @@ const scaleToData = computed({
 });
 
 function applyRanges() {
-  // Safety check: Don't apply ranges if there's no data or ranges are not initialized
   if (!editableRanges.value || !Array.isArray(editableRanges.value) || editableRanges.value.length === 0) {
     console.warn('Cannot apply ranges: editableRanges is not properly initialized');
     return;
   }
-  
-  // Additional safety check for chartSeries
+
   if (!chartSeries.value || !Array.isArray(chartSeries.value)) {
     console.warn('Cannot apply ranges: chartSeries is not properly initialized');
     return;
   }
-  
-  // Copy to avoid mutating prop directly
+
   const newRanges: RangeSection[] = JSON.parse(
     JSON.stringify(editableRanges.value)
   );
@@ -477,24 +453,21 @@ function applyRanges() {
     const allData = chartSeries.value.flatMap((s: HeatmapSeries) =>
       s.data.map((d: HeatmapSeriesData) => d.y)
     );
-    
-    // Safety check: ensure we have data to work with
+
     if (allData.length === 0) {
       console.warn('Cannot apply ranges: no chart data available');
       return;
     }
-    
-    // Safety check: ensure newRanges has the expected structure
+
     if (newRanges.length < 4) {
       console.warn('Cannot apply ranges: editableRanges must have at least 4 elements');
       return;
     }
     
     let min = Math.min(...allData.filter((v: number) => v > 0));
-    min = Math.max(min, 1); // Clamp min to at least 1
+    min = Math.max(min, 1);
     const max = Math.max(...allData);
     if (max < 4) {
-      // Set ranges as: low 1-1, medium 2-2, high 3-3, extreme 4-infinity
       newRanges[0].from = 1;
       newRanges[0].to = 1;
       newRanges[1].from = 2;
@@ -514,7 +487,6 @@ function applyRanges() {
           newRanges[idx].to = min + (idx + 1) * sectionSize - 1;
         }
       }
-      // Ensure first range starts at 1
       newRanges[0].from = 1;
       if (newRanges[0].to < 1) newRanges[0].to = 1;
     }
@@ -531,7 +503,6 @@ function applyRanges() {
   localEditableRanges.value = newRanges;
   editableRanges.value = newRanges;
   emit('update:editableRanges', newRanges);
-  // Save to Pinia store on OK
   heatmapSettingsStore.setSettings(settingsKey, {
     ranges: newRanges,
     scaleToData: scaleToData.value,
@@ -551,7 +522,7 @@ const chartOptions = computed(() => ({
       enableShades: true,
       colorScale: {
         ranges: [
-          { from: 0, to: 0, name: 'no data', color: '#B0B0B0' }, // grey for no data
+          { from: 0, to: 0, name: 'no data', color: '#B0B0B0' },
           {
             from: 1,
             to: Math.max(props.editableRanges[0].to, 1),
@@ -627,15 +598,13 @@ const chartOptions = computed(() => ({
 
 watch(scaleToData, (val) => {
   if (val) {
-    // When toggled on, update editableRanges to scale to data
     applyRanges();
   }
 });
 
 const currentYear = new Date().getFullYear();
-const currentMonth = new Date().getMonth(); // 0-based
+const currentMonth = new Date().getMonth();
 
-// Ensure we always have the current year available in the options shown to the user
 const effectiveYearOptions = computed(() => {
   if (!Array.isArray(props.yearOptions)) return [currentYear];
   return props.yearOptions.includes(currentYear)
@@ -643,8 +612,6 @@ const effectiveYearOptions = computed(() => {
     : [currentYear, ...props.yearOptions];
 });
 
-// Prefer current year when it's in options or when we actually have data for it;
-// otherwise fall back to the first provided option (or currentYear as a final fallback).
 const hasDataForCurrentYear = computed(() => {
   try {
     return (
@@ -669,14 +636,12 @@ const selectedYear = ref(
     : currentYear
 );
 
-// Default selected month should be the current month name when available
 const selectedMonth = ref(
   Array.isArray(props.monthNames) && props.monthNames[currentMonth]
     ? props.monthNames[currentMonth]
     : props.monthNames[0]
 );
 
-// On mount, load settings from store or use scale-to-data
 import { onMounted } from 'vue';
 onMounted(() => {
   const saved = heatmapSettingsStore.getSettings(settingsKey);
@@ -685,22 +650,17 @@ onMounted(() => {
     if (typeof saved.scaleToData !== 'undefined') {
       localScaleToData.value = !!saved.scaleToData;
     }
-    // Emit to parent so prop is updated and chart reflects store
     emit('update:editableRanges', localEditableRanges.value);
   } else {
-    // No settings: enable scaleToData, apply scaling, and save
-    // But only if we have valid data to work with
     if (props.editableRanges && Array.isArray(props.editableRanges) && props.editableRanges.length >= 4) {
       localEditableRanges.value = JSON.parse(
         JSON.stringify(props.editableRanges)
       );
       localScaleToData.value = true;
-      // Apply scaling and save as initial settings only if we have data
       if (props.hasData && !props.loading) {
         applyRanges();
       }
     } else {
-      // Initialize with empty array if no valid ranges provided
       localEditableRanges.value = [];
       localScaleToData.value = false;
     }
@@ -708,14 +668,12 @@ onMounted(() => {
 });
 
 function buildMonthChartSeries(monthIdx: number, year: number) {
-  // Filter rawHeatmapData for this month and year
   const monthRows: HeatmapRow[] = (props.rawHeatmapData || []).filter(
     (row: HeatmapRow) => {
       const dateObj = new Date(row.date);
       return dateObj.getMonth() === monthIdx && dateObj.getFullYear() === year;
     }
   );
-  // Build: [{ name: day, data: [{ x: hour, y }] }]
   const dayMap: Record<number, Record<number, number>> = {};
   monthRows.forEach((row: HeatmapRow) => {
     const dateObj = new Date(row.date);
@@ -725,9 +683,8 @@ function buildMonthChartSeries(monthIdx: number, year: number) {
     if (!dayMap[day]) dayMap[day] = {};
     dayMap[day][hour] = executions;
   });
-  // 31 days, 24 hours
   const series: HeatmapSeries[] = Array.from({ length: 31 }, (_, dayIdx) => {
-    const day = 31 - dayIdx; // y-axis: Day 31 at top
+    const day = 31 - dayIdx;
     return {
       name: `${day}`,
       data: Array.from({ length: 24 }, (_, hour) => {
@@ -739,10 +696,8 @@ function buildMonthChartSeries(monthIdx: number, year: number) {
   monthChartSeries.value = series;
 }
 
-// Build chartSeries for the selected year
 function buildYearChartSeries(year: number) {
   const monthNames = props.monthNames;
-  // Build a lookup: month -> day (1-31) -> executions sum for that day
   const byMonth: Record<string, Record<number, number>> = {};
   for (const m of monthNames) byMonth[m] = {};
   (props.rawHeatmapData || []).forEach((row: HeatmapRow) => {
@@ -754,7 +709,6 @@ function buildYearChartSeries(year: number) {
     if (!byMonth[month][day]) byMonth[month][day] = 0;
     byMonth[month][day] += executions;
   });
-  // For each month, build 31 days
   const series: HeatmapSeries[] = monthNames.map((month) => ({
     name: month,
     data: Array.from({ length: 31 }, (_, dayIdx) => {
@@ -766,7 +720,6 @@ function buildYearChartSeries(year: number) {
   chartSeries.value = series;
 }
 
-// On mount, build initial year chart
 buildYearChartSeries(selectedYear.value);
 
 watch(
@@ -785,10 +738,8 @@ watch(selectedYear, (newYear) => {
   }
 });
 
-// Watch for hasData changes to initialize ranges when data becomes available
 watch(() => props.hasData, (newHasData) => {
   if (newHasData && !props.loading) {
-    // First: rebuild the charts so chartSeries is populated for scaling
     try {
       buildYearChartSeries(selectedYear.value);
       if (showMonthView.value) {
@@ -799,16 +750,13 @@ watch(() => props.hasData, (newHasData) => {
       console.warn('Error rebuilding heatmap series after data arrived', e);
     }
 
-    // Then initialize ranges if needed and apply scaling now that data exists
     if (localEditableRanges.value.length === 0) {
       if (props.editableRanges && Array.isArray(props.editableRanges) && props.editableRanges.length >= 4) {
         localEditableRanges.value = JSON.parse(JSON.stringify(props.editableRanges));
         localScaleToData.value = true;
-        // applyRanges relies on chartSeries being populated, so call it after rebuild
         applyRanges();
       }
     } else if (scaleToData.value) {
-      // If scale-to-data was already enabled, re-apply to reflect the newly-arrived data
       applyRanges();
     }
   }
@@ -817,7 +765,6 @@ watch(() => props.hasData, (newHasData) => {
 function decrementMonth() {
   let monthIdx = props.monthNames.indexOf(selectedMonth.value);
   if (monthIdx === 0) {
-    // Go to December of previous year
     const yearIdx = effectiveYearOptions.value.indexOf(selectedYear.value);
       if (yearIdx < effectiveYearOptions.value.length - 1) {
         selectedYear.value = effectiveYearOptions.value[yearIdx + 1];
@@ -831,7 +778,6 @@ function decrementMonth() {
 function incrementMonth() {
   let monthIdx = props.monthNames.indexOf(selectedMonth.value);
   if (monthIdx === 11) {
-    // Go to January of next year
     const yearIdx = effectiveYearOptions.value.indexOf(selectedYear.value);
       if (yearIdx > 0) {
         selectedYear.value = effectiveYearOptions.value[yearIdx - 1];
@@ -854,12 +800,11 @@ function incrementYear() {
   }
 }
 
-// Color bar logic for dialog
 const colorBarColors = [
-  '#4FC3F7', // Low
-  '#43A047', // Medium
-  '#FFA500', // High
-  '#FF0000', // Extreme
+  '#4FC3F7',
+  '#43A047', 
+  '#FFA500',
+  '#FF0000',
 ];
 
 const colorBarWidths = computed(() => {
@@ -878,7 +823,6 @@ const colorBarWidths = computed(() => {
   }
   const total = max - min + 1;
   if (!isFinite(total) || total <= 0) return [25, 25, 25, 25];
-  // Calculate widths for first 3 sections
   let widths = [];
   let sum = 0;
   for (let idx = 0; idx < ranges.length - 1; idx++) {
@@ -888,7 +832,6 @@ const colorBarWidths = computed(() => {
     widths.push(isFinite(width) && width > 0 ? width : 0);
     sum += widths[idx];
   }
-  // Last section fills the rest
   widths.push(Math.max(0, 100 - sum));
   return widths;
 });

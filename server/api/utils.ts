@@ -26,7 +26,6 @@ export async function sleep(number: number) {
   await new Promise((resolve) => setTimeout(resolve, number));
 }
 
-// Date formatting utilities
 export function formatDate(date: string) {
   const datetime = new Date(date);
   return `${datetime.toDateString()} ${datetime.toLocaleTimeString()}`;

@@ -3,8 +3,6 @@ import pg from 'pg';
 
 let client: pg.Client | null = null;
 
-// The frontend passes a service instance id (name). Query the service_instance
-// table and join to service to get display name/description if available.
 async function getGraph(serviceInstanceId: string) {
   const query = `
     SELECT *

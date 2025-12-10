@@ -33,7 +33,6 @@ export default {
   },
   props: {
     type: String,
-    // Accept both name/id variants to match how pages pass props
     taskName: String,
     taskName: String,
     routineId: String,
@@ -111,7 +110,6 @@ export default {
       ) {
         const statsObj = data.value[0];
 
-        // Normalize keys from possible server response shapes. Server returns snake_case like `is_complete` and `executions`.
         const rawErrored = statsObj.errored ?? statsObj.errored_count ?? statsObj.error ?? Object.values(statsObj)[1];
         const rawFailed = statsObj.failed ?? statsObj.failed_count ?? Object.values(statsObj)[2];
         const rawIsComplete =
@@ -124,7 +122,6 @@ export default {
         if (rawIsComplete !== null && rawIsComplete !== undefined) {
           isComplete = Number(rawIsComplete || 0);
         } else if (rawExecutions !== undefined && rawExecutions !== null) {
-          // If the backend returned a total executions number but not completed count, derive successes
           const executionsNum = Number(rawExecutions || 0);
           isComplete = Math.max(0, executionsNum - errored - failed);
         } else {

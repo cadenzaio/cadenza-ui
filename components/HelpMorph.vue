@@ -562,8 +562,6 @@ const tipsByRoute: Record<string, Tip> = {
       },
     ],
   },
-  // Meta
-  // ...existing code...
   // Help
   '/help': {
     title: 'Help',
@@ -630,7 +628,6 @@ const tipsByRoute: Record<string, Tip> = {
       { text: '.' },
     ],
   },
-  // ...existing code...
   '/help/processingGraph/chapter1': {
     title: 'Processing Graph - Chapter 1',
     body: [

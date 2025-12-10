@@ -69,7 +69,6 @@ const columns = [
 function inspectRoutines(routines: routines) {
   const path = `/meta/routines/${encodeURIComponent(String(routines.label))}`;
   const qs: string[] = [];
-  // If the routine row contains service/version (from server) pass them through
   if ((routines as any).service) qs.push(`service=${encodeURIComponent(String((routines as any).service))}`);
   if ((routines as any).version) qs.push(`version=${encodeURIComponent(String((routines as any).version))}`);
   navigateToItem(qs.length > 0 ? `${path}?${qs.join('&')}` : path);

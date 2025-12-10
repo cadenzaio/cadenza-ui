@@ -103,7 +103,6 @@
             </template>
             <template #info>
               <div class="row" style="flex-wrap: wrap;">
-                <!-- First Column -->
                 <div class="col" style="min-width: 300px;">
                   <div class="q-mx-md q-my-sm">
                     Description: {{ selectedItem?.routineDescription }}
@@ -115,8 +114,6 @@
                     Executed tasks: {{ routineMap?.length ?? 0 }}
                   </div>
                 </div>
-
-                <!-- Second Column -->
                 <div class="col" style="min-width: 300px;">
                   <div class="row items-center">
                     <div class="col">
@@ -147,8 +144,6 @@
                     </div>
                   </div>
                 </div>
-
-                <!-- Third Column -->
                 <div class="col" style="min-width: 300px;">
                   <div
                     v-if="selectedItem?.previousRoutineExecution"
@@ -357,11 +352,6 @@ import { ref, onMounted, watchEffect, defineAsyncComponent } from 'vue';
 import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
 
-// Lazy-load heavier components similar to `pages/activity/tasks/[id].vue`
-const FlowMap = defineAsyncComponent(() => import('~/components/FlowMap.vue'));
-const ProgressRadialBarChart = defineAsyncComponent(() => import('~/components/ProgressRadialBarChart.vue'));
-const InfoCard = defineAsyncComponent(() => import('~/components/InfoCard.vue'));
-
 interface SelectedItem {
   name: string;
   label: string;
@@ -402,7 +392,6 @@ interface SelectedTask {
   layer_index: number;
 }
 
-const layout = 'dashboard-layout';
 const selectedItem = ref<SelectedItem | null>(null);
 const route = useRoute();
 const selectedTask = ref<SelectedTask | null>(null);
@@ -497,7 +486,6 @@ async function onItemSelected(item: any) {
     return;
   }
 
-  // Otherwise assume it's a task execution node and navigate there
   const execId = item.uuid || item.id || canonicalId;
   router.push(`/activity/tasks/${execId}`);
 }
@@ -508,7 +496,6 @@ onMounted(async () => {
 
   const itemId = route.params.id as string;
   try {
-    // Fetch the specific routine by uuid using the new query param
     const response = await fetch(
       `/api/activity/routines/activeRoutine?uuid=${itemId}`
     );
@@ -520,7 +507,6 @@ onMounted(async () => {
     selectedItem.value = null;
   }
 
-  // Fetch the routine map for this routine using routine_execution_id endpoint
   if (selectedItem.value) {
     try {
       routineMapLoading.value = true;
@@ -547,13 +533,11 @@ const showGenerateDialog = ref(false);
 
 function confirmStop() {
   showStopDialog.value = false;
-  // Add logic to handle stopping the process
 }
 
 function confirmGenerate() {
   showGenerateDialog.value = false;
 }
-// Flash animation for InfoCard when selectedTask updates
 import { nextTick } from 'vue';
 const flashActive = ref(false);
 const flashCard = ref(null);

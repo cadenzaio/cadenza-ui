@@ -10,7 +10,6 @@ async function getClient() {
   return client;
 }
 
-// Get routineExecutions by routine_id
 async function getRoutineMap() {
   const query = `
 SELECT
@@ -27,7 +26,6 @@ FROM
   return result.rows;
 }
 
-// Event handler
 export default defineEventHandler(async (event) => {
   const { method } = event.node.req;
   const url = new URL(

@@ -11,7 +11,6 @@ async function ensureClient() {
 }
 
 async function getTaskDetailsByExecutionId(executionId: string) {
-	// Fetch the task execution row by its UUID. 
 	const q = `
 		SELECT
 			task_name AS name,

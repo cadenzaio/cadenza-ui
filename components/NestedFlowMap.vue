@@ -67,11 +67,9 @@
 
 <script setup>
 const resetFilter = () => {
-  // Hide filtered map immediately
   loading.value = true;
   displayedNodes.value = [];
   displayedEdges.value = [];
-  // Reload the original map layout
   updateLayout(props.nodes, props.edges);
   filtered.value = false;
 };
@@ -81,7 +79,6 @@ import { MiniMap } from '@vue-flow/minimap';
 import ELK from 'elkjs/lib/elk.bundled.js';
 import CustomNode from '~/components/CustomNode.vue';
 
-// Helper: get chain after a node (service, routine, task)
 const getChainAfterNode = (nodeId) => {
   const chain = [];
   let currentId = nodeId;
@@ -100,8 +97,6 @@ const getChainAfterNode = (nodeId) => {
 const emit = defineEmits(['item-selected']);
 
 const onNodeClick = (...args) => {
-  // Normalize Vue Flow's node-click arguments. Vue Flow may call the handler
-  // with either `(event, node)` or a single `node` payload. Accept both.
   const maybeEvent = args[0];
   const maybeNode = args[1];
   const payload = maybeNode || (maybeEvent && maybeEvent.node) || maybeEvent;
@@ -109,7 +104,6 @@ const onNodeClick = (...args) => {
   if (!clickedNode) return;
 
   if (clickedNode.nodeType === 'service') {
-    // BFS to find all downstream services
     const serviceChain = [];
     const visited = new Set();
     const queue = [clickedNode.id];
@@ -122,7 +116,6 @@ const onNodeClick = (...args) => {
       );
       if (serviceNode) {
         serviceChain.push(serviceNode);
-        // Find all outgoing edges to other services
         const nextEdges = fullEdges.filter(
           (e) =>
             e.source === currentId &&
@@ -135,18 +128,16 @@ const onNodeClick = (...args) => {
         }
       }
     }
-    // For each service, include its direct tasks (service -> tasks)
+
     const idsToShow = new Set();
     for (const service of serviceChain) {
       idsToShow.add(service.id);
-      // Tasks whose parentNode is this service
       const tasks = fullNodes.filter(
         (n) => n.nodeType === 'task' && n.parentNode === service.id
       );
       for (const task of tasks) {
         idsToShow.add(task.id);
       }
-      // Also include any signals that are parented to this service
       const signals = fullNodes.filter(
         (n) => n.nodeType === 'signal' && n.parentNode === service.id
       );
@@ -158,27 +149,21 @@ const onNodeClick = (...args) => {
     );
     filtered.value = true;
     console.log('[NestedFlowMap] Filtered node IDs:', Array.from(idsToShow));
-    // notify parent about selection
     emit('item-selected', clickedNode);
   }
-  // Navigate to task or signal pages when clicked
   else if (clickedNode.nodeType === 'task') {
-    // emit selection so parent can decide how to handle navigation
     emit('item-selected', clickedNode);
   } else if (clickedNode.nodeType === 'signal') {
-    // emit selection so parent can decide how to handle navigation
     emit('item-selected', clickedNode);
   }
 };
 
 const vueFlowInstance = ref(null);
 
-// Zoom slider state and bounds
 const minZoom = 0.05;
 const maxZoom = 5;
 const zoom = ref(1);
 
-// Keep Vue Flow viewport in sync with the slider
 watch(zoom, async (val) => {
   if (!vueFlowInstance.value) return;
   const api = vueFlowInstance.value;
@@ -186,21 +171,17 @@ watch(zoom, async (val) => {
     try {
       await api.zoomTo(val);
     } catch (err) {
-      // ignore
     }
   } else if (api && typeof api.setViewport === 'function') {
     try {
       await api.setViewport({ x: 0, y: 0, zoom: val });
     } catch (err) {
-      // ignore
     }
   }
 });
 
 onMounted(async () => {
-  // existing no-op preserved
   typeof onNodeClick;
-  // initialize slider from current viewport if available
   await nextTick();
   if (!vueFlowInstance.value) return;
   try {
@@ -209,7 +190,6 @@ onMounted(async () => {
       zoom.value = vp.zoom;
     }
   } catch (err) {
-    // ignore
   }
 });
 
@@ -231,18 +211,14 @@ const props = defineProps({
   },
 });
 
-// ELK layout function
 const elk = new ELK();
 async function layoutNodes(nodesArr, edgesArr) {
-  // Group nodes by type and parent
   const services = nodesArr.filter((n) => n.nodeType === 'service');
   const routines = nodesArr.filter((n) => n.nodeType === 'routine');
   const tasks = nodesArr.filter((n) => n.nodeType === 'task');
   const signals = nodesArr.filter((n) => n.nodeType === 'signal');
 
-  // Build nested children: service > routine > task
   const elkServices = services.map((service) => {
-    // Include tasks that are direct children of the service, then routines (if any), then signals
     const serviceDirectTasks = tasks
       .filter((t) => t.parentNode === service.id)
       .map((task) => ({ id: task.id, width: 70, height: 40, ...task }));
@@ -317,7 +293,6 @@ async function layoutNodes(nodesArr, edgesArr) {
     };
   });
 
-  // Define elkEdges
   const elkEdges = edgesArr
     .map((edge) => {
       const sourceNode = nodesArr.find((n) => n.id === edge.source);
@@ -332,7 +307,6 @@ async function layoutNodes(nodesArr, edgesArr) {
         return null;
       }
 
-      // mark edge data.signal true when either endpoint is a signal node
       const isSignalEdge = Boolean(
         (sourceNode.nodeType === 'signal') ||
         (targetNode.nodeType === 'signal') ||
@@ -373,7 +347,6 @@ async function layoutNodes(nodesArr, edgesArr) {
 
   console.log('[ELK Layout Result]:', layouted);
 
-  // Flatten all nodes for VueFlow, preserving positions
   function flattenNodes(elkNode) {
     let flat = [];
     if (elkNode.children) {
@@ -397,8 +370,6 @@ async function layoutNodes(nodesArr, edgesArr) {
 const laidOutNodes = ref([]);
 const laidOutEdges = ref([]);
 const loading = ref(false);
-
-// Filtering state
 const filtered = ref(false);
 const displayedNodes = ref([]);
 const displayedEdges = ref([]);
@@ -422,7 +393,6 @@ async function updateLayout(newNodes, newEdges) {
         return null;
       }
 
-      // determine if this edge should be treated as a signal edge (animated)
       const sourceNode = nodes.find((n) => n.id === edge.source);
       const targetNode = nodes.find((n) => n.id === edge.target);
       const isSignal = Boolean(
@@ -449,7 +419,6 @@ async function updateLayout(newNodes, newEdges) {
     displayedNodes.value = nodes;
     displayedEdges.value = edges;
 
-    // Zoom to fit width of map
     await nextTick();
     if (
       vueFlowInstance.value &&
@@ -514,15 +483,12 @@ const sectionNodeBg = computed(() => {
 const showMiniMap = ref(false);
 
 function checkShowMiniMap() {
-  // Get bounding box of all nodes
   const minX = Math.min(...displayedNodes.value.map((n) => n.position.x));
   const maxX = Math.max(...displayedNodes.value.map((n) => n.position.x));
   const minY = Math.min(...displayedNodes.value.map((n) => n.position.y));
   const maxY = Math.max(...displayedNodes.value.map((n) => n.position.y));
   const mapWidth = maxX - minX;
   const mapHeight = maxY - minY;
-
-  // Get container size
   const container = document.querySelector('.vue-flow-container');
   if (!container) return;
   const viewportWidth = container.offsetWidth;
@@ -597,8 +563,6 @@ onMounted(() => {
 .back-btn {
   min-width: 80px;
 }
-
-/* Zoom slider overlay */
 .zoom-slider {
   position: absolute;
   top: 10px;

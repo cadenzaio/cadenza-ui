@@ -63,8 +63,6 @@ export default defineEventHandler(async (event) => {
 
   try {
     const services = await getNonMetaServices();
-
-    // Fetch tasks for each service and attach them directly to the service
     const servicesWithTasks = await Promise.all(
       services.map(async (svc: any) => {
         const tasks = await getTasksForService(svc.name);
@@ -100,7 +98,6 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // Signals for tasks in this service
       try {
         const taskNames = tasks.map((t: any) => t.name).filter(Boolean);
         if (taskNames.length > 0) {
@@ -185,7 +182,6 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // directional task mapping
     try {
       const taskNodes = nodes.filter((n) => n.nodeType === 'task');
       const taskIndex: Record<string, string[]> = {};
@@ -264,7 +260,6 @@ export default defineEventHandler(async (event) => {
       console.error('Error fetching directional task graph map:', dtmErr);
     }
 
-    // deputy task mapping: create edges between deputy and triggered tasks across routines/services
     try {
       const depQ = `SELECT deputy_task_name, triggered_task_name FROM deputy_task_map WHERE deleted = false`;
       const depRes = await client!.query(depQ);
@@ -272,8 +267,6 @@ export default defineEventHandler(async (event) => {
         const deputyName = row.deputy_task_name;
         const triggeredName = row.triggered_task_name;
         if (!deputyName || !triggeredName) continue;
-
-        // find all task nodes matching these task names across the graph (independent of routine/service)
         const deputyNodes = nodes.filter((n) => n.nodeType === 'task' && n.data?.taskName === deputyName);
         const triggeredNodes = nodes.filter((n) => n.nodeType === 'task' && n.data?.taskName === triggeredName);
 
@@ -292,7 +285,6 @@ export default defineEventHandler(async (event) => {
       console.error('Error fetching deputy_task_map:', depErr);
     }
 
-    // Post-process edges: show task->task, task->signal, and signal->task edges; hide all others
     for (const edge of edges) {
       if (edge.style && edge.style.display === 'none') continue;
       const srcNode = nodes.find((n) => n.id === edge.source);
@@ -319,4 +311,3 @@ export default defineEventHandler(async (event) => {
     throw error;
   }
 });
-	    // Post-process edges: only show task->task and task->signal edges; hide all others

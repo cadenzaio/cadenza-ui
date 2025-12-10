@@ -5,7 +5,7 @@
     style="max-width: 50dvw; max-height: 70dvh; overflow-y: auto"
   >
   <div>
-    <span class="text-h6 q-ml-lg" style="color: red;">  RANDOM DATA  </span> <!-- remove when live data is connected -->
+    <span class="text-h6 q-ml-lg" style="color: red;">  RANDOM DATA  </span>
   </div>
     <div v-if="loading" class="col q-pa-md flex column items-center justify-center" style="min-height: 200px;">
       <q-spinner-dots size="40px" color="primary" class="q-mb-md" />
@@ -68,9 +68,9 @@
 import { defineProps } from 'vue';
 
 interface ServerStats {
-  cpu: number; // 0-1
-  gpu: number; // 0-1
-  ram: number; // in MB
+  cpu: number;
+  gpu: number; 
+  ram: number; 
 }
 
 const props = defineProps<{ 

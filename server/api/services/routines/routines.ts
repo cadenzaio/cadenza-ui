@@ -4,7 +4,6 @@ import { initializeClient } from '~/server/api/utils';
 
 let client: pg.Client | null = null;
 
-// Get all routines with pagination support
 async function getRoutines(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
   const query = `
@@ -15,7 +14,6 @@ async function getRoutines(page: number = 1, limit: number = 100) {
   `;
   const res = await client!.query(query, [limit, offset]);
 
-  // Map the results to match the expected interface - all data manipulation happens here
   return res.rows.map((row) => ({
     type: 'routine',
     label: row.name,
@@ -26,7 +24,6 @@ async function getRoutines(page: number = 1, limit: number = 100) {
   }));
 }
 
-// Event handler
 export default defineEventHandler(async (event) => {
   if (!client) {
     client = await initializeClient();

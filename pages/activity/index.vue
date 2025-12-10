@@ -113,7 +113,7 @@ interface Server {
   uuid: string;
   address: string;
   port: string;
-  service_name: string; // Renamed from 'service' to 'service_name'
+  service_name: string;
   status: string;
   isPrimary: boolean;
   processPid: number;
@@ -121,10 +121,10 @@ interface Server {
 }
 
 function inspectServer(server: Server): void {
-  navigateToItem(`/activity/services/${server.service_name}`); // Updated to use 'service_name'
+  navigateToItem(`/activity/services/${server.uuid}`);
 }
 function inspectInNewTab(server: Server): void {
-  const url = `/activity/services/${server.service_name}`; // Updated to use 'service_name'
+  const url = `/activity/services/${server.uuid}`;
   window.open(url, '_blank');
 }
 const navigateToItem = (route: string) => {
@@ -159,13 +159,13 @@ const fetchServerStats = async (isLoadMore = false) => {
         ...servers.value,
         ...(data.servers || []).map((server: any) => ({
           ...server,
-          service_name: server.service, // Map 'service' to 'service_name'
+          service_name: server.service,
         })),
       ];
     } else {
       servers.value = (data.servers || []).map((server: any) => ({
         ...server,
-        service_name: server.service, // Map 'service' to 'service_name'
+        service_name: server.service,
       }));
     }
 
@@ -187,12 +187,11 @@ async function loadMoreServers() {
   await fetchServerStats(true);
 }
 
-// ServerMap data
 const mapNodes = ref<Node[]>([]);
 const mapEdges = ref<Edge[]>([]);
 const mapLoading = ref(false);
-
 const elk = new ELK();
+
 async function layoutGraph(nodes: Node[], edges: Edge[]) {
   const elkGraph = {
     id: 'root',
@@ -271,7 +270,6 @@ async function fetchServerMap() {
   } catch (error) {
     mapNodes.value = [];
     mapEdges.value = [];
-    // Optionally log error
   } finally {
     mapLoading.value = false;
   }
@@ -279,7 +277,6 @@ async function fetchServerMap() {
 
 onMounted(() => {
   fetchServerMap();
-  // Also fetch table data
   const appStore = useAppStore();
   appStore.setCurrentSection('serviceActivity');
   currentPage.value = 1;

@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { Handle, Position } from '@vue-flow/core';
 
-// Define the interface for the node data
-
 interface NodeData {
   label: string;
   uuid: string;
@@ -180,7 +178,6 @@ const nodeSelectedBorder = computed(() =>
   box-shadow: 2px 6px 6px rgba(189 188 188 / 0.66) !important;
 }
 .signal-node {
-  /* Keep background fully transparent to let the scan band show clearly */
   background: rgba(169 170 169 / 0.88) !important;
   box-shadow: 2px 6px 6px rgba(189, 188, 188, 0.66) !important;
   align-content: center !important;
@@ -188,7 +185,6 @@ const nodeSelectedBorder = computed(() =>
   color: v-bind('nodeSelectedBg') !important;
 }
 
-/* Updated animation for signal-node */
 .signal-node {
   position: relative;
   overflow: hidden;
@@ -208,7 +204,7 @@ const nodeSelectedBorder = computed(() =>
   animation: expand-ring 1.5s ease-out infinite;
 }
 .signal-node::after {
-  animation-delay: 0.15s; /* Delay the second ring to overtake the first */
+  animation-delay: 0.15s;
 }
 
 @keyframes expand-ring {
@@ -224,7 +220,6 @@ const nodeSelectedBorder = computed(() =>
   }
 }
 
-/* Burn / glow effect so text remains visible over the gradient */
 .signal-node span {
   position: relative;
   z-index: 2;
@@ -238,7 +233,6 @@ const nodeSelectedBorder = computed(() =>
   margin: 0;
 }
 
-/* Redesigned meta-node styling with chamfered corners */
 .meta-node {
   background: #ab0ac0 !important;
   display: flex;
@@ -250,10 +244,10 @@ const nodeSelectedBorder = computed(() =>
   padding: 10px; 
   box-shadow: 2px 6px 6px rgba(189, 188, 188, 0.66) !important;
   clip-path: polygon(
-    10% 0%, 90% 0%, /* Top chamfers */
-    100% 20%, 100% 80%, /* Right chamfers */
-    90% 100%, 10% 100%, /* Bottom chamfers */
-    0% 80%, 0% 20% /* Left chamfers */
+    10% 0%, 90% 0%, 
+    100% 20%, 100% 80%,
+    90% 100%, 10% 100%, 
+    0% 80%, 0% 20% 
   );
 }
 
@@ -261,9 +255,9 @@ const nodeSelectedBorder = computed(() =>
   display: inline-block;
   text-align: center;
   color: #fff;
-  font-size: 0.8em; /* Slightly larger font for better readability */
+  font-size: 0.8em; 
   pointer-events: none;
-  white-space: nowrap; /* Prevent text wrapping */
+  white-space: nowrap; 
 }
 
 .node-label {

@@ -31,14 +31,12 @@ async function fetchSystemMap() {
     const res = await fetch('/api/system/system');
     const data = await res.json();
 
-    // If the API already returns nodes/edges, use them directly
     if (data && Array.isArray(data.nodes) && Array.isArray(data.edges)) {
       nodes.value = data.nodes;
       edges.value = data.edges;
       return;
     }
 
-    // Fallback: Flatten servers, routines, and tasks into nodes and edges for NestedFlowMap
     const nodeList: any[] = [];
     const edgeList: any[] = [];
     if (data.servers) {
@@ -81,7 +79,6 @@ async function fetchSystemMap() {
                   expandParent: true,
                   style: { margin: '50px', padding: '10px' },
                 });
-                // Edges from previousTaskExecutionId
                 if (task.previousTaskExecutionId) {
                   edgeList.push({
                     id: `e${task.previousTaskExecutionId}-${task.uuid}`,
@@ -95,7 +92,6 @@ async function fetchSystemMap() {
         }
       });
     }
-    // Add server-to-server edges
     if (data.serverEdges) {
       data.serverEdges.forEach((edge: any, idx: number) => {
         edgeList.push({
@@ -109,7 +105,6 @@ async function fetchSystemMap() {
     nodes.value = nodeList;
     edges.value = edgeList;
   } catch (e) {
-    // fallback: clear nodes/edges
     nodes.value = [];
     edges.value = [];
   }
@@ -120,7 +115,6 @@ onMounted(() => {
   fetchSystemMap();
 });
 
-// Handle node selection emitted by NestedFlowMap
 function handleNodeSelected(node: any) {
   const clickedNode = node?.node || node;
   const base = appStore.currentSection || 'system';

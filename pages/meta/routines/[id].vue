@@ -113,7 +113,6 @@ import { useFetch, useRoute, useRouter } from '#app';
 import { useAppStore } from '~/stores/app';
 import InfoCard from '~/components/InfoCard.vue';
 import FlowMap from '~/components/FlowMap.vue';
-// import HeatMap from '~/components/HeatMap.vue';
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 
@@ -158,13 +157,11 @@ interface HeatmapData {
 
 const heatmapData = ref<HeatmapData | null>(null);
 
-// Fetch meta routine definitions (returns list). We'll normalize lookup by name/label/uuid later.
 const { data: Items, error } = await useFetch<Item[]>(`/api/meta/routines/metaRoutines`);
 if (error.value) {
   console.error('Error fetching Items:', error.value);
 }
 
-// Fetch the execution times chart series data
 const { data: executionData, error: executionError } = await useFetch(
   `/api/activity/routines/routineExecutionTimes?routineName=${route.params.id}`
 );
@@ -283,12 +280,10 @@ function onTaskSelected(task: any) {
 
   const canonicalId = task.uuid || task.id || task.name || '';
 
-  // If the node is a signal, navigate to the meta signal page (requires serviceName)
   if (task.signal === true || String(canonicalId).startsWith('signal::')) {
     const raw = String(task.name || canonicalId);
     const stripped = raw.replace(/^signal::/, '');
 
-    // Prefer a service coming from the selected routine, fall back to the task's service
     const serviceName =
       (selectedItem as any)?.service || (task as any).service || (task as any).service_name || null;
 
@@ -297,7 +292,6 @@ function onTaskSelected(task: any) {
     return;
   }
 
-  // Otherwise treat as a task node
   if (task && task.name) {
     const path = `/meta/tasks/${encodeURIComponent(String(task.name))}`;
     const qs: string[] = [];
@@ -366,7 +360,6 @@ onMounted(async () => {
         item.name === itemName || item.label === itemName || item.uuid === itemName
     ) as any;
     if (found) {
-      // Ensure `name` property exists for compatibility with other codepaths
       if (!found.name && found.label) found.name = found.label;
       selectedItem.value = found;
     } else {
@@ -374,7 +367,6 @@ onMounted(async () => {
     }
   }
 
-  // Apply query overrides (version/service) when present in the URL
   const qVersion = route.query.version ?? route.query.v ?? null;
   const qService = route.query.service ?? route.query.s ?? null;
   if (selectedItem.value) {
@@ -384,7 +376,6 @@ onMounted(async () => {
 
   fetchActiveRoutines(itemName, false);
 
-  // Fetch routine map data
   if (selectedItem.value) {
     try {
       const tasks = await $fetch<any>(
@@ -393,7 +384,7 @@ onMounted(async () => {
       routineMap.value = Array.isArray(tasks)
         ? tasks.map((task: any) => ({
             ...task,
-            name: task.name, // Add 'name' property required by FlowItem
+            name: task.name,
           }))
         : [];
     } catch (error) {
@@ -423,7 +414,6 @@ watch(
         selectedItem.value = null;
       }
 
-      // Apply query overrides (version/service) when present in the URL
       const qVersion = route.query.version ?? route.query.v ?? null;
       const qService = route.query.service ?? route.query.s ?? null;
       if (selectedItem.value) {
@@ -436,7 +426,6 @@ watch(
 
     fetchActiveRoutines(itemName, false);
 
-    // Re-fetch routine map for the newly-selected routine
     if (selectedItem.value) {
       try {
         const tasks = await $fetch<any>(

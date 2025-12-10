@@ -27,7 +27,7 @@ import { ref, computed, watch } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 import { storeToRefs } from 'pinia';
 import { useAppStore } from '../stores/app';
-// Access dark mode from app store
+
 const appStore = useAppStore();
 const { isDarkMode } = storeToRefs(appStore);
 
@@ -56,7 +56,6 @@ const emit = defineEmits<{
   'task-selected': [item: TimelineItem];
 }>();
 
-// Generate colors for different tasks
 const generateColors = (index: number) => {
   const colors = [
     '#3742fa',
@@ -91,9 +90,7 @@ const generateColors = (index: number) => {
   return colors[index % colors.length];
 };
 
-// Limit rendered rows to avoid freezing the browser with huge datasets
 const MAX_ROWS = 200;
-// Fallback length for unknown durations (200 milliseconds)
 const FALLBACK_LENGTH_MS = 200;
 const displayedItems = computed(() => {
   const items = props.itemMap || [];
@@ -107,7 +104,7 @@ const displayedItems = computed(() => {
       out.push(it as TimelineItem);
     }
   }
-  // Sort by started (fallback to created). Items with no parseable timestamp go last.
+
   const parseTs = (it: TimelineItem) => {
     const s = (it && ((it.started as unknown) || (it.created as unknown))) as string | undefined | null;
     if (!s) return Number.POSITIVE_INFINITY;
@@ -119,7 +116,7 @@ const displayedItems = computed(() => {
   return out.slice(0, MAX_ROWS);
 });
 
-// Minimal debug: log only counts and a sample to avoid heavy console storms
+
 watch(
   () => props.itemMap,
   (val) => {
@@ -136,12 +133,8 @@ const chartSeries = computed(() => {
     return [];
   }
 
-  // Minimum bar length
   const MIN_BAR_LENGTH = 60;
-
-  // Create a single series with each task as a separate data point (use displayedItems)
   const data = displayedItems.value.map((item, index) => {
-    // Determine timestamps, with fallbacks for missing values
     const parsedStart = (item.started || item.created) ? Date.parse(String(item.started || item.created)) : NaN;
     const hasStart = Number.isFinite(parsedStart);
     const parsedEnd = item.ended ? Date.parse(String(item.ended)) : NaN;
@@ -150,27 +143,19 @@ const chartSeries = computed(() => {
     let startTime = hasStart ? parsedStart : Date.now();
     let endTime = hasEnd ? parsedEnd : (hasStart ? parsedStart + FALLBACK_LENGTH_MS : Date.now() + FALLBACK_LENGTH_MS);
 
-    // If either start or end is missing, enforce a fallback 1 second length
     const missingTs = !hasStart || !hasEnd;
     if (missingTs) {
-      // ensure a short, visible bar of exactly 1 second
       startTime = startTime;
       endTime = startTime + FALLBACK_LENGTH_MS;
     }
-
-    // Enforce minimum bar length for fully-known timestamps as well
     if (!missingTs && endTime - startTime < MIN_BAR_LENGTH) {
       endTime = startTime + MIN_BAR_LENGTH;
     }
 
-    // Create a unique row name by combining task name with index or UUID
     const uniqueRowName = `${index + 1}: ${item.name || item.label}`;
-    // Prepare fill. For missing timestamps, use an SVG gradient id we will inject
     const baseColor = generateColors(index);
     const safeId = `grad-${String(item.uuid || item.id || index).replace(/[^a-z0-9-_]/gi, '-')}`;
     const fill = missingTs ? `url(#${safeId})` : baseColor;
-
-    // Attach meta flags so we can inject/update gradients in chart events
     const meta = { ...item, _shortDuration: !!missingTs, _baseColor: baseColor, _gradId: safeId } as any;
 
     return {
@@ -181,7 +166,6 @@ const chartSeries = computed(() => {
     };
   });
 
-  // Debug: log chartSeries and min/max times
   const allTimes = data.flatMap((d) => d.y);
   const minTime = Math.min(...allTimes);
   const maxTime = Math.max(...allTimes);
@@ -202,7 +186,6 @@ const chartSeries = computed(() => {
 });
 
 const chartOptions = computed(() => {
-  // Colors for labels
   const labelColor = isDarkMode.value ? '#e0e0e0' : '#20242c';
   const xLabelColor = isDarkMode.value ? '#e0e0e0' : '#20242c';
   return {
@@ -230,7 +213,6 @@ const chartOptions = computed(() => {
       zoom: {
         enabled: false,
       },
-      // inject gradients for short/missing-duration bars after mount/update
       events: {
         mounted: function (chartContext: any, config: any) {
           try {
@@ -279,7 +261,6 @@ const chartOptions = computed(() => {
       },
     },
     xaxis: (() => {
-      // Calculate min and max for x-axis to always show the full second (use displayedItems)
       let minX, maxX;
       if (displayedItems.value && displayedItems.value.length > 0) {
         const starts = displayedItems.value
@@ -318,7 +299,6 @@ const chartOptions = computed(() => {
         },
       };
     })(),
-    // Add vertical markers at every 0.5 second between minX and maxX
     annotations: (() => {
       let minX, maxX;
       if (displayedItems.value && displayedItems.value.length > 0) {
@@ -338,7 +318,6 @@ const chartOptions = computed(() => {
           maxX = minX + 1000;
         }
         const markers = [];
-        // limit number of markers to avoid performance issues
         const maxMarkers = 1000;
         let markerCount = Math.floor((maxX - minX) / 1000);
         if (markerCount > maxMarkers) markerCount = maxMarkers;
@@ -433,7 +412,6 @@ const chartOptions = computed(() => {
           html += `<div><strong>UUID:</strong> ${String(item.uuid).slice(0, 8)}...</div>`;
         }
 
-        // Show Type if available (prefer `type`, fall back to `signal` flag)
         const typeVal = item.type || (item.signal ? 'signal' : null);
         if (typeVal) {
           const prettyType = String(typeVal).charAt(0).toUpperCase() + String(typeVal).slice(1);
@@ -448,7 +426,6 @@ const chartOptions = computed(() => {
           html += `<div><strong>Ended:</strong> ${end.toLocaleString()}</div>`;
         }
 
-        // Do not show duration for signal nodes
         if (durationSeconds !== null && !item.signal) {
           html += `<div><strong>Duration:</strong> ${formatDuration(durationSeconds)}</div>`;
         }
@@ -486,7 +463,6 @@ const chartOptions = computed(() => {
   };
 });
 
-// Inject per-item SVG linearGradients for items that were marked as short/missing timestamps
 function injectGradients(chartContext: any) {
   if (!chartContext || !chartContext.el) return;
   const root = chartContext.el;
@@ -507,8 +483,6 @@ function injectGradients(chartContext: any) {
     if (!m._shortDuration) continue;
     const id = m._gradId;
     if (!id) continue;
-
-    // If gradient already exists, skip
     if (defs.querySelector(`#${id}`)) continue;
 
     const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
