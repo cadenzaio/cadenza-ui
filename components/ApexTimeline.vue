@@ -132,9 +132,12 @@ const chartSeries = computed(() => {
   if (!props.itemMap || props.itemMap.length === 0) {
     return [];
   }
-
   const MIN_BAR_LENGTH = 60;
-  const data = displayedItems.value.map((item, index) => {
+
+  const barItems = displayedItems.value.filter((it) => !(it as any).signal && (it as any).type !== 'signal');
+  const signalItems = displayedItems.value.filter((it) => (it as any).signal || (it as any).type === 'signal');
+
+  const data = barItems.map((item, index) => {
     const parsedStart = (item.started || item.created) ? Date.parse(String(item.started || item.created)) : NaN;
     const hasStart = Number.isFinite(parsedStart);
     const parsedEnd = item.ended ? Date.parse(String(item.ended)) : NaN;
@@ -165,10 +168,19 @@ const chartSeries = computed(() => {
       meta,
     };
   });
+  // include signal timestamps when calculating min/max so annotations are visible
+  const signalTimes = signalItems
+    .map((s) => {
+      const t = (s.started || s.created || s.ended) as string | undefined | null;
+      if (!t) return NaN;
+      const v = Date.parse(String(t));
+      return Number.isFinite(v) ? v : NaN;
+    })
+    .filter(Number.isFinite);
 
-  const allTimes = data.flatMap((d) => d.y);
-  const minTime = Math.min(...allTimes);
-  const maxTime = Math.max(...allTimes);
+  const allTimes = data.flatMap((d) => d.y).concat(signalTimes as number[]);
+  const minTime = allTimes.length > 0 ? Math.min(...allTimes) : Date.now();
+  const maxTime = allTimes.length > 0 ? Math.max(...allTimes) : Date.now();
   console.log('[ApexTimeline] chartSeries', data);
   console.log(
     '[ApexTimeline] minTime',
@@ -317,7 +329,7 @@ const chartOptions = computed(() => {
         if (maxX - minX < 1000) {
           maxX = minX + 1000;
         }
-        const markers = [];
+        const markers: any[] = [];
         const maxMarkers = 1000;
         let markerCount = Math.floor((maxX - minX) / 1000);
         if (markerCount > maxMarkers) markerCount = maxMarkers;
@@ -338,6 +350,29 @@ const chartOptions = computed(() => {
             },
           });
         }
+
+        // Add point annotations for signal items (they are single timestamps)
+        const signalItems = displayedItems.value.filter((it) => (it as any).signal || (it as any).type === 'signal');
+        for (let i = 0; i < signalItems.length; i++) {
+          const it: any = signalItems[i];
+          const tsStr = it.started || it.created || it.ended || null;
+          if (!tsStr) continue;
+          const t = Date.parse(String(tsStr));
+          if (!Number.isFinite(t)) continue;
+          const borderColor = '#29F70E';
+          markers.push({
+            x: t,
+            borderColor,
+            label: {
+              style: {
+                color: '#fff',
+                background: borderColor,
+              },
+              text: String(it.label || it.name || it.uuid || '').slice(0, 40),
+            },
+          });
+        }
+
         return { xaxis: markers };
       }
       return { xaxis: [] };
@@ -546,7 +581,7 @@ const onDataPointSelection = (
   max-width: 85dvw;
   min-height: 400px;
   max-height: 800px;
-  overflow-y: auto;
+  overflow-y: 100%;
   padding: 60px 20px 20px 20px;
   position: relative;
 }

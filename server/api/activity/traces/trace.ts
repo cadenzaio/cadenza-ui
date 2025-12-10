@@ -98,7 +98,10 @@ async function generateNodesAndEdges(traceUuid: string) {
         id: row.task_uuid,
         type: 'custom',
         nodeType: 'task',
-        parentNode: row.routine_uuid, 
+        parentNode: row.routine_uuid,
+        errored: row.errored || false,
+				failed: row.failed || false,
+				isComplete: row.is_complete || true, 
         data: {
           label: row.task_name || row.task_uuid,
           created: row.task_created ? new Date(row.task_created).toISOString() : null,
