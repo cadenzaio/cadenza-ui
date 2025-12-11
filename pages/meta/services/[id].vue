@@ -93,7 +93,7 @@ const service = route.params.id as string;
 const hasMoreData = ref(true);
 const loadingMoreData = ref(false);
 const currentPage = ref(1);
-const pageSize = 100;
+const pageSize = 50;
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const selectedItem = ref<Item | null>(null);
@@ -197,12 +197,13 @@ function navigateToItem(route: string) {
   router.push(route);
 }
 
-async function fetchTasksInService(page = 1) {
+async function fetchTasksInService(page = 1, serviceNameParam: string | null = null) {
   try {
     error.value = null;
     loadingMoreData.value = true;
+    const svc = serviceNameParam ?? service;
     const response = await fetch(
-      `/api/meta/metaService?serviceName=${encodeURIComponent(service)}&page=${page}&pageSize=${pageSize}`
+      `/api/meta/metaService?serviceName=${encodeURIComponent(svc)}&page=${page}&pageSize=${pageSize}`
     );
     if (!response.ok) throw new Error('Failed to fetch tasks in service');
     const data = await response.json();
@@ -320,11 +321,24 @@ onMounted(async () => {
     nodes.value = [];
     edges.value = [];
 
-    await Promise.all([
-      fetchTasksInService(currentPage.value),
-      fetchServerDetails(),
-      fetchActiveExecutions(),
-    ]);
+    const routeUuid = extractUuid(service);
+    if (routeUuid) {
+      // If the route param is a service instance UUID, fetch its details first
+      // to obtain the canonical service name, then fetch tasks by service name.
+      await fetchServerDetails();
+      const svcName = (selectedItem.value && (selectedItem.value as any).name) || service;
+      await Promise.all([
+        fetchTasksInService(currentPage.value, svcName),
+        fetchActiveExecutions(),
+      ]);
+    } else {
+      // Route param is a service name — use it for tasks and server lookups.
+      await Promise.all([
+        fetchTasksInService(currentPage.value, service),
+        fetchServerDetails(),
+        fetchActiveExecutions(),
+      ]);
+    }
     if (hasMoreData.value) {
       await loadAllPages();
     }
@@ -345,14 +359,25 @@ watch(
       currentPage.value = 1;
       nodes.value = [];
       edges.value = [];
-      await Promise.all([
-        fetchTasksInService(currentPage.value),
-        fetchServerDetails(),
-        fetchActiveExecutions(),
-      ]);
-        if (hasMoreData.value) {
-          await loadAllPages();
-        }
+      const newService = String(newId || '');
+      const routeUuid = extractUuid(newService);
+      if (routeUuid) {
+        await fetchServerDetails();
+        const svcName = (selectedItem.value && (selectedItem.value as any).name) || newService;
+        await Promise.all([
+          fetchTasksInService(currentPage.value, svcName),
+          fetchActiveExecutions(),
+        ]);
+      } else {
+        await Promise.all([
+          fetchTasksInService(currentPage.value, newService),
+          fetchServerDetails(),
+          fetchActiveExecutions(),
+        ]);
+      }
+      if (hasMoreData.value) {
+        await loadAllPages();
+      }
     }
   }
 );
