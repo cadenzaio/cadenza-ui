@@ -31,7 +31,7 @@
       :zoom-on-scroll="false"
       fit-view-on-init
       contenteditable="false"
-      :nodes-draggable="true"
+      :nodes-draggable="false"
     >
       <template #node-custom="props">
         <CustomNode :data="props.data" />

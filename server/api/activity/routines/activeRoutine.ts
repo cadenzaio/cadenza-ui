@@ -7,6 +7,7 @@ let client: pg.Client | null = null;
 // Types for routine row and mapped object
 interface RoutineRow {
   uuid: string;
+  execution_trace_id?: string;
   description: string;
   service_id: string;
   routine_id: string;
@@ -56,6 +57,7 @@ interface RoutineMapped {
   outputContext: Record<string, unknown>;
   isRunning: boolean;
   referer: string | null;
+  executionTraceId?: string | null;
 }
 
 // Get all routines or a single routine by uuid
@@ -75,6 +77,7 @@ async function getRoutines({
   let query = `
   SELECT
       re.uuid,
+      re.execution_trace_id,
       re.name AS routine_name,
       re.service_instance_id AS service_id,
       re.is_running,
@@ -161,6 +164,7 @@ async function getRoutines({
         uuid: row.uuid,
         serviceName: row.service_name,
         previousRoutineName: row.routine_name,
+        executionTraceId: row.execution_trace_id || null,
         contract_id: row.contract_id,
         processingGraph: row.processing_graph,
         inputContext: removeMetaData(row.input_context),

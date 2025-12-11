@@ -11,12 +11,12 @@
           :items="flowItems"
           @item-selected="handleFlowItemSelected"
         />
-        <div class="q-pa-sm text-center">
+        <!-- <div class="q-pa-sm text-center">
           <div v-if="hasMoreData" ref="loadMoreSentinel">
             <span v-if="loadingMoreData">Loading page {{ currentPage }}...</span>
           </div>
         </div>
-        <div v-if="isLoading && flowItems.length === 0" class="text-center q-pa-md">Loading page {{ currentPage }}...</div>
+        <div v-if="isLoading && flowItems.length === 0" class="text-center q-pa-md">Loading page {{ currentPage }}...</div> -->
         <InfoCard v-if="selectedItem">
           <template #title>
             {{ selectedItem?.name }}

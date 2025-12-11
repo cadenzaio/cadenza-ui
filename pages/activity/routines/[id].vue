@@ -156,13 +156,14 @@
 
                   <div
                     class="q-mx-md q-my-sm cursor-pointer text-primary"
-                    @click="navigateToItem(`/activity/services/${selectedItem?.serviceName}`)"
-                    @contextmenu.prevent="openLinkInNewTab(`/activity/services/${selectedItem?.serviceName}`)"
+                    @click="navigateToItem(`/system/services/${selectedItem?.serviceName}`)"
+                    @contextmenu.prevent="openLinkInNewTab(`/system/services/${selectedItem?.serviceName}`)"
                   >
                     Service: {{ selectedItem?.serviceName }}
                   </div>
 
-                  <div
+                  <div 
+                    v-if="selectedItem?.executionTraceId"
                     class="q-mx-md q-my-sm cursor-pointer text-warning"
                     @click="navigateToItem(`/activity/traces/${selectedItem?.executionTraceId}`)"
                     @contextmenu.prevent="openLinkInNewTab(`/activity/traces/${selectedItem?.executionTraceId}`)"

@@ -70,38 +70,15 @@
               <template #info>
                 <div class="flex-column full-width">
                   <div class="q-mx-md q-my-sm">
-                    Issued at:
-                    {{
-                      traceContext?.issued
-                        ? formatDate(traceContext.issued)
-                        : ''
-                    }}
+                    Created at:
+                    {{ traceContext?.created ? formatDate(traceContext.created) : (traceContext?.trace_created ? formatDate(traceContext.trace_created) : '') }}
                   </div>
                   <div class="q-mx-md q-my-sm">
-                    Fulfilled:
-                    <span
-                      :class="
-                        traceContext?.fulfilled
-                          ? 'text-positive'
-                          : 'text-negative'
-                      "
-                    >
-                      {{ traceContext?.fulfilled ? 'Yes' : 'No' }}
-                    </span>
+                    Issued:
+                    {{ traceContext?.issued ? formatDate(traceContext.issued) : (traceContext?.issued === null ? '' : traceContext?.issued) }}
                   </div>
                   <div class="q-mx-md q-my-sm">
-                    Fulfilled at:
-                    {{
-                      traceContext?.fulfilled_at
-                        ? formatDate(traceContext.fulfilled_at)
-                        : ''
-                    }}
-                  </div>
-                  <div class="q-mx-md q-my-sm">
-                    Description: {{ traceContext?.description }}
-                  </div>
-                  <div class="q-mx-md q-my-sm">
-                    Trace UUID: {{ traceContext?.uuid }}
+                    Service Name: {{ traceContext?.service_name || traceContext?.serviceName || '' }}
                   </div>
                 </div>
               </template>

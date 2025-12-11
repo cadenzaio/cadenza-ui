@@ -23,8 +23,8 @@
           :loadingMoreData="loadingMoreData"
         />
       </div>
-      <q-dialog v-model="dialogVisible">
-        <q-card class="my-card">
+      <q-dialog v-model="dialogVisible" >
+        <q-card class="my-card" style="min-width: 45dvw; max-width: 65dvw">
           <q-card-section>
             <div class="row no-wrap items-center">
               <div class="col text-h6 ellipsis">Service Status</div>

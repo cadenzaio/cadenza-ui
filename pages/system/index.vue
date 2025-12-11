@@ -120,9 +120,23 @@ function handleNodeSelected(node: any) {
   const base = appStore.currentSection || 'system';
 
   if (clickedNode.nodeType === 'task') {
-    const taskName = clickedNode.data?.label || clickedNode.data?.id;
+    const taskName = clickedNode.data?.label || clickedNode.data?.id || clickedNode.id;
     if (taskName) {
-      router.push(`/system/tasks/${encodeURIComponent(taskName)}`);
+      // Determine version (prefer explicit data.version, fall back to '1')
+      const version = clickedNode.data?.version ?? clickedNode.version ?? '1';
+
+      // Determine service name: prefer data.service_name, otherwise find parent routine -> parent server
+      let serviceName = clickedNode.data?.service_name;
+      if (!serviceName) {
+        const routineNode = nodes.value.find((n: any) => n.id === clickedNode.parentNode);
+        const serverNode = routineNode ? nodes.value.find((n: any) => n.id === routineNode.parentNode) : undefined;
+        serviceName = serverNode?.data?.label || serverNode?.id || base;
+      }
+
+      router.push({
+        path: `/system/tasks/${encodeURIComponent(taskName)}`,
+        query: { version: String(version), service: String(serviceName) },
+      });
     }
   } else if (clickedNode.nodeType === 'signal') {
     const signalName = clickedNode.data?.label || clickedNode.data?.id;

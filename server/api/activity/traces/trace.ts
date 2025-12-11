@@ -27,6 +27,8 @@ async function generateNodesAndEdges(traceUuid: string) {
     SELECT 
       et.uuid AS trace_uuid,
       et.context_id,
+      et.created AS trace_created,
+      et.issued_at AS issued_at,
       ctx.context AS trace_context,
       et.service_name,
       re.name AS routine_name,
@@ -219,7 +221,27 @@ async function generateNodesAndEdges(traceUuid: string) {
     }
   });
 
-  const traceContext = res.rows[0].trace_context ?? null;
+  const rawTraceContext = res.rows[0].trace_context ?? null;
+  let parsedTraceContext: any = null;
+  if (rawTraceContext) {
+    try {
+      parsedTraceContext = typeof rawTraceContext === 'string' ? JSON.parse(rawTraceContext) : rawTraceContext;
+    } catch (e) {
+      parsedTraceContext = rawTraceContext;
+    }
+  }
+
+  const traceCreatedIso = res.rows[0].trace_created ? new Date(res.rows[0].trace_created).toISOString() : null;
+  const serviceName = res.rows[0].service_name ?? null;
+  const issuedFromDb = res.rows[0].issued_at ? new Date(res.rows[0].issued_at).toISOString() : null;
+  const issuedVal = issuedFromDb ?? parsedTraceContext?.issued ?? parsedTraceContext?.issued_at ?? null;
+
+  const traceContext = {
+    ...(parsedTraceContext && typeof parsedTraceContext === 'object' ? parsedTraceContext : {}),
+    created: traceCreatedIso,
+    issued: issuedVal,
+    service_name: serviceName,
+  };
 
   const timelineItems = nodes
     .map((n: any) => {

@@ -97,7 +97,12 @@ WHERE t.service_name = $1 AND t.is_meta = false
       type: 'custom',
       nodeType: 'task',
       parentNode: routineName,
-      data: { label: row.task_description || row.task_name },
+      data: {
+        label: row.task_description || row.task_name,
+        id: row.task_name,
+        service_name: row.service_name,
+        version: row.version,
+      },
     };
     nodes.push(taskNode);
 

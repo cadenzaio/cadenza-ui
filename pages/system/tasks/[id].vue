@@ -40,15 +40,10 @@
                 }}</span>
               </div>
               <div
+              v-if="selectedItem?.routineName"
                 class="q-mx-md q-my-sm"
-                @click="
-                  navigateToItem(`/system/routines/${selectedItem?.routineName}`)
-                "
-                @contextmenu.prevent="
-                  openLinkInNewTab(
-                    `/routines/${selectedItem?.routineName}`
-                  )
-                "
+                @click="navigateToRoutine"
+                @contextmenu.prevent="openRoutineInNewTab"
               >
               Routine:
                 <span class="text-primary cursor-pointer">{{ selectedItem?.routineName }}</span>
@@ -364,6 +359,26 @@ function inspectRoutineInNewTab(routine: Routine) {
 
 const navigateToItem = (route: string) => {
   router.push(route);
+};
+function buildRoutineRoute(item: Item | null): string {
+  if (!item || !item.routineName) return `/system/routines/${encodeURIComponent(String(item?.routineName ?? ''))}`;
+  const base = `/system/routines/${encodeURIComponent(String(item.routineName))}`;
+  const params: string[] = [];
+  const svc = item.service ?? item.serviceDbName ?? (item as any).serviceName ?? null;
+  if (svc) params.push(`service=${encodeURIComponent(String(svc))}`);
+  const ver = (item as any).version ?? (item as any).task_version ?? null;
+  if (ver !== null && ver !== undefined && ver !== '') params.push(`version=${encodeURIComponent(String(ver))}`);
+  return params.length ? `${base}?${params.join('&')}` : base;
+}
+
+const navigateToRoutine = () => {
+  const route = buildRoutineRoute(selectedItem.value);
+  if (route) navigateToItem(route);
+};
+
+const openRoutineInNewTab = () => {
+  const route = buildRoutineRoute(selectedItem.value);
+  if (route) openLinkInNewTab(route);
 };
 function normalizeItem(item: any): Item | null {
   if (!item) return null;

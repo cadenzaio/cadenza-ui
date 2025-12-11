@@ -1,14 +1,18 @@
 <template>
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
-      <template #title>Signal Details</template>
+      <template #title>{{ signalDetails?.name ?? '—' }}</template>
       <div>
         <FlowMap :items="flowItems" @item-selected="onItemSelected" />
         <InfoCard>
           <template #title> Signal Data </template>
           <template #info>
             <div>
-              <div>This section displays metadata and details about the selected signal.</div>
+              <div><strong>Name:</strong> {{ signalDetails?.name ?? '—' }}</div>
+              <div><strong>Domain:</strong> {{ signalDetails?.domain ?? 'N/A' }}</div>
+              <div><strong>Service:</strong> {{ signalDetails?.service_name ?? '—' }}</div>
+              <div><strong>Created At:</strong> {{ formattedCreatedAt || '—' }}</div>
+
               <div v-if="signalPayload && signalPayload.emission" style="margin-top:8px;">
                 <strong>Emission Data</strong>
                 <pre :style="jsonPreStyle">{{ JSON.stringify(signalPayload.emission.data ?? signalPayload.emission, null, 2) }}</pre>
@@ -59,6 +63,7 @@ function onItemSelected(item: any) {
 }
 const flowItems = ref<any[]>([]);
 const signalPayload = ref<any | null>(null);
+const signalMeta = ref<any | null>(null);
 const { isDarkMode } = storeToRefs(useAppStore());
 
 const jsonPreStyle = computed(() => {
@@ -86,6 +91,31 @@ const jsonPreStyle = computed(() => {
   } as Record<string, string>;
 });
 
+const signalDetails = computed(() => {
+  const p = signalPayload.value;
+  if (!p) return null as any;
+  const emission = p.emission ?? p;
+  const meta = signalMeta.value;
+  return {
+    name: emission.signal_name ?? emission.name ?? p.name ?? '',
+    domain: meta?.domain ?? emission.domain ?? emission.signal_domain ?? p.domain ?? '',
+    action: meta?.action ?? emission.action ?? p.action ?? '',
+    service_name: meta?.service_name ?? emission.service_name ?? p.service_name ?? p.service ?? '',
+    created: emission.created ?? emission.created_at ?? p.created ?? p.timestamp ?? '',
+  } as any;
+});
+
+const formattedCreatedAt = computed(() => {
+  const s: any = signalDetails.value;
+  if (!s || !s.created) return '';
+  try {
+    const d = new Date(s.created);
+    return isNaN(d.getTime()) ? String(s.created) : d.toLocaleString();
+  } catch (e) {
+    return String(s.created);
+  }
+});
+
 async function loadSignalFlow() {
   const id = route.params.id as string | undefined;
   if (!id) return;
@@ -98,6 +128,25 @@ async function loadSignalFlow() {
 
   const payload: any = data.value ?? {};
   signalPayload.value = payload;
+  // Try to load signal metadata (domain/action) from services registry
+  try {
+    const emissionLocal = payload.emission || {};
+    const sigName = emissionLocal.signal_name || emissionLocal.name || null;
+    const svcName = emissionLocal.service_name || emissionLocal.service || null;
+    if (sigName && svcName) {
+      const metaResp = await useFetch(`/api/services/signals/${encodeURIComponent(String(sigName))}`, {
+        params: { serviceName: svcName }
+      });
+      // api returns array of signals for that name+service; pick first
+      const m = metaResp.data?.value ?? metaResp.data ?? null;
+      if (m) {
+        signalMeta.value = Array.isArray(m) ? (m[0] || null) : m;
+      }
+    }
+  } catch (e) {
+    // non-fatal
+    console.debug('Could not load signal metadata:', e);
+  }
   const items: any[] = [];
 
   const pushed = new Set<string>();

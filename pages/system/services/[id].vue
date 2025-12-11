@@ -323,7 +323,8 @@ function onFlowItemSelected(item: any) {
 
       const version = item.version ?? payload?.data?.version ?? payload?.version ?? '1';
       const serviceName =
-        item.service ?? payload?.data?.service_name ?? payload?.service ?? payload?.parentNode ?? service;
+        // prefer the explicit service name attached to the node data
+        payload?.data?.service_name ?? item.service ?? payload?.service ?? payload?.parentNode ?? service;
 
       router.push({
         path: `/${base}/tasks/${encodeURIComponent(String(taskName))}`,

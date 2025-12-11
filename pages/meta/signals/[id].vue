@@ -1,7 +1,7 @@
 <template>
   <NuxtLayout name="dashboard-layout">
     <NuxtLayout name="dashboard-main-layout">
-      <template #title>Signal Details</template>
+      <template #title>{{ signalDetails?.name ?? '—' }}</template>
         <div>
           <FlowMap :items="flowItems" @item-selected="onItemSelected" />
         <InfoCard>
@@ -10,7 +10,6 @@
             <div>
               <div><strong>Name:</strong> {{ signalDetails?.name ?? '—' }}</div>
               <div><strong>Domain:</strong> {{ signalDetails?.domain ?? 'N/A' }}</div>
-              <div><strong>Action:</strong> {{ signalDetails?.action ?? '—' }}</div>
               <div><strong>Service:</strong> {{ signalDetails?.service_name ?? '—' }}</div>
               <div><strong>Created At:</strong> {{ formattedCreatedAt || '—' }}</div>
             </div>

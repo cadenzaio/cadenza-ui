@@ -25,16 +25,16 @@
                             <div
                 class="q-mx-md q-my-sm"
                 @click="
-                  navigateToItem(`/system/services/${selectedItem?.service}`)
+                  navigateToItem(`/meta/services/${selectedItem?.service}`)
                 "
                 @contextmenu.prevent="
                   openLinkInNewTab(
-                    `/services/${selectedItem?.service}`
+                    `/meta/services/${selectedItem?.service}`
                   )
                 "
               >
               Service:
-                <span class="text-primary cursor-pointer">{{
+                <span class="text-accent cursor-pointer">{{
                   selectedItem?.service
                 }}</span>
               </div>
