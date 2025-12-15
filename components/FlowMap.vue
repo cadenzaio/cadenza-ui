@@ -1,6 +1,6 @@
 <template>
   <div ref="containerRef" :class="['vue-flow-container q-mb-md', { 'full-width': props.fullWidth }]">
-    <div class="zoom-slider" aria-hidden="false">
+    <div class="zoom-slider" aria-hidden="false" v-if="showZoomSlider">
       <label class="zoom-label">Zoom</label>
       <input
         type="range"
@@ -37,19 +37,27 @@
         <CustomNode :data="props.data" />
       </template>
     </VueFlow>
+
+    <q-linear-progress
+      v-if="progressBarVisible"
+      class="bottom-progress"
+      :color="sectionColor"
+      size="10px"
+      :value="progress"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import CustomNode from '~/components/CustomNode.vue';
-import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, watch, nextTick, onMounted, onUnmounted, computed } from 'vue';
 import { VueFlow, type Node, type Edge, type Position } from '@vue-flow/core';
 import ELK from 'elkjs/lib/elk.bundled.js';
+import { useAppStore } from '~/stores/app';
 
 interface FlowItem {
   id?: string;
   label?: string;
-  name?: string;
   description?: string;
   errored?: boolean;
   failed?: boolean;
@@ -69,6 +77,9 @@ const props = defineProps<{
   labelField?: string;
   previousField?: string;
   fullWidth?: boolean;
+  // Optional loading progress (0..1) and visibility
+  progress?: number;
+  progressVisible?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -172,19 +183,19 @@ onMounted(async () => {
 
 const getId = (item: FlowItem): string => {
   const idField = props.idField || 'name';
-  return (
-    ((item as any)[idField] as string) || (item['uuid'] as string) || item.id || ''
+  return String(
+    ((item as any)[idField] as string) || (item as any)['uuid'] || item.id || ''
   );
 };
 
 const getLabel = (item: FlowItem): string => {
   const labelField = props.labelField || 'label';
-  return (
-    (item[labelField] as string) ||
-    item.label ||
-    item.name ||
+  return String(
+    (item as any)[labelField] ||
+    (item as any).label ||
+    (item as any).name ||
     item.id ||
-    (item['uuid'] as string) ||
+    (item as any)['uuid'] ||
     getId(item)
   );
 };
@@ -380,6 +391,7 @@ async function processFlowItems(items: FlowItem[]) {
     if (vueFlowInstance.value && typeof (vueFlowInstance.value as any).fitView === 'function') {
       try {
         (vueFlowInstance.value as any).fitView({ padding: 0.05 });
+        await syncZoomFromViewport();
       } catch (err) {
         console.warn('fitView failed:', err);
       }
@@ -395,6 +407,58 @@ function onNodeClick(event: NodeMouseEvent) {
     emit('item-selected', clickedNode.data.item as FlowItem);
   }
 }
+
+const progress = computed(() => {
+  const v = props.progress;
+  if (typeof v !== 'number') return 0;
+  if (!Number.isFinite(v)) return 0;
+  return Math.max(0, Math.min(1, v));
+});
+const progressBarVisible = computed(() => {
+  return Boolean(props.progressVisible) && progress.value > 0 && progress.value < 1;
+});
+
+// Show zoom slider only when not loading
+const showZoomSlider = computed(() => !progressBarVisible.value);
+
+async function syncZoomFromViewport() {
+  try {
+    await nextTick();
+    const api = vueFlowInstance.value as any;
+    if (api && typeof api.getViewport === 'function') {
+      const vp = await api.getViewport();
+      if (vp && typeof vp.zoom === 'number') {
+        zoom.value = vp.zoom;
+      }
+    }
+  } catch {}
+}
+
+// When loading completes (progress bar hides), align slider with actual viewport
+watch(progressBarVisible, async (isVisible) => {
+  if (!isVisible) {
+    await syncZoomFromViewport();
+  }
+});
+
+// Color tied to current section
+const appStore = useAppStore();
+const sectionColor = computed(() => {
+  switch (appStore.currentSection) {
+    case 'system':
+      return 'primary';
+    case 'serviceActivity':
+      return 'warning';
+    case 'traces':
+      return 'secondary';
+    case 'meta':
+      return 'accent';
+    case 'help':
+      return 'grey-8';
+    default:
+      return 'secondary';
+  }
+});
 
 watch(
   () => props.items,
@@ -465,5 +529,14 @@ watch(
   pointer-events: none;
   transform: translateY(-6px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.bottom-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
 }
 </style>

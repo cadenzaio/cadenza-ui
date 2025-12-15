@@ -9,6 +9,8 @@
         <FlowMap
           v-if="flowItems.length > 0"
           :items="flowItems"
+          :progress-visible="progressVisible"
+          :progress="progress"
           @item-selected="handleFlowItemSelected"
         />
         <!-- <div class="q-pa-sm text-center">
@@ -99,6 +101,33 @@ const error = ref<string | null>(null);
 const selectedItem = ref<Item | null>(null);
 const loadMoreSentinel = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
+
+// Progress state
+const progress = ref(0);
+const progressVisible = ref(false);
+const totalTasks = ref<number | null>(null);
+const preStepsCompleted = ref(0); // 0..2 (server details, active executions)
+
+const loadedTasksCount = computed(() =>
+  nodes.value.filter((n: any) => n.nodeType === 'task').length
+);
+
+function recomputeProgress() {
+  const preWeight = 0.3;
+  const tasksWeight = 0.7;
+  const pre = Math.min(preStepsCompleted.value, 2) / 2; // 0..1
+  let tasksProg = 0;
+  if (totalTasks.value && totalTasks.value > 0) {
+    tasksProg = Math.min(1, loadedTasksCount.value / totalTasks.value);
+  } else {
+    // Fallback approximation when total is unknown
+    const approxLoaded = Math.max(loadedTasksCount.value, currentPage.value * pageSize);
+    tasksProg = Math.min(0.95, approxLoaded / (approxLoaded + pageSize * 2));
+  }
+  const value = pre * preWeight + tasksProg * tasksWeight;
+  // Clamp and expose
+  progress.value = Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0));
+}
 
 const columns = [
   {
@@ -210,6 +239,7 @@ async function fetchTasksInService(page = 1, serviceNameParam: string | null = n
 
     const incomingNodes: any[] = data.nodes || [];
     const incomingEdges: any[] = data.edges || [];
+    if (typeof data.totalCount === 'number') totalTasks.value = data.totalCount;
     const existingTaskIds = new Set(nodes.value.filter((n: any) => n.nodeType === 'task').map((n: any) => n.id));
     const incomingTaskNodes = incomingNodes.filter((n: any) => n.nodeType === 'task');
     const newTaskNodes = incomingTaskNodes.filter((n: any) => !existingTaskIds.has(n.id));
@@ -247,6 +277,7 @@ async function fetchTasksInService(page = 1, serviceNameParam: string | null = n
     } else {
       hasMoreData.value = (incomingNodes.length ?? 0) >= pageSize;
     }
+    recomputeProgress();
   } catch (err) {
     const errorMessage =
       err instanceof Error ? err.message : 'Unknown error occurred';
@@ -287,6 +318,10 @@ async function fetchServerDetails() {
     error.value = `Error fetching server details: ${errorMessage}`;
     console.error('Error fetching server details:', err);
   }
+  finally {
+    preStepsCompleted.value = Math.min(2, preStepsCompleted.value + 1);
+    recomputeProgress();
+  }
 }
 
 async function fetchActiveExecutions() {
@@ -309,6 +344,10 @@ async function fetchActiveExecutions() {
     error.value = `Error fetching active executions: ${errorMessage}`;
     console.error('Error fetching active executions:', err);
   }
+  finally {
+    preStepsCompleted.value = Math.min(2, preStepsCompleted.value + 1);
+    recomputeProgress();
+  }
 }
 
 onMounted(async () => {
@@ -317,6 +356,10 @@ onMounted(async () => {
 
   try {
     isLoading.value = true;
+    progressVisible.value = true;
+    progress.value = 0;
+    preStepsCompleted.value = 0;
+    totalTasks.value = null;
     currentPage.value = 1;
     nodes.value = [];
     edges.value = [];
@@ -349,6 +392,8 @@ onMounted(async () => {
     console.error('Error in onMounted:', err);
   } finally {
     isLoading.value = false;
+    progressVisible.value = false;
+    progress.value = 1;
   }
 });
 
@@ -356,6 +401,10 @@ watch(
   () => route.params.id,
   async (newId, oldId) => {
     if (newId !== oldId) {
+      progressVisible.value = true;
+      progress.value = 0;
+      preStepsCompleted.value = 0;
+      totalTasks.value = null;
       currentPage.value = 1;
       nodes.value = [];
       edges.value = [];
@@ -378,6 +427,8 @@ watch(
       if (hasMoreData.value) {
         await loadAllPages();
       }
+      progressVisible.value = false;
+      progress.value = 1;
     }
   }
 );
@@ -409,6 +460,7 @@ async function loadAllPages() {
     }
   } finally {
     loadingMoreData.value = false;
+    recomputeProgress();
   }
 }
 
