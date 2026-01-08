@@ -26,10 +26,10 @@ async function generateNodesAndEdges(traceUuid: string) {
   const query = `
     SELECT 
       et.uuid AS trace_uuid,
-      et.context_id,
+      et.context AS trace_context,
+      et.meta_context AS trace_meta_context,
       et.created AS trace_created,
       et.issued_at AS issued_at,
-      ctx.context AS trace_context,
       et.service_name,
       re.name AS routine_name,
       re.uuid AS routine_uuid,
@@ -38,25 +38,28 @@ async function generateNodesAndEdges(traceUuid: string) {
       te.created AS task_created,
       te.started AS task_started,
       te.ended AS task_ended,
+      te.errored AS task_errored,
+      te.failed AS task_failed,
+      te.is_complete AS task_is_complete,
+      te.progress AS task_progress,
       tem.previous_task_execution_id,
-      se.uuid AS signal_emission_uuid,
-      se.signal_name AS signal_emission_name,
-      se.emitted_at AS signal_emitted_at,
-      sc.signal_emission_id AS signal_consumption_uuid,
-      sc.signal_name AS signal_consumption_name,
-      sc.consumed_at AS signal_consumed_at
+      se_emit.uuid AS signal_emission_uuid,
+      se_emit.signal_name AS signal_emission_name,
+      se_emit.emitted_at AS signal_emitted_at,
+      se_consume.uuid AS signal_consumption_uuid,
+      se_consume.signal_name AS signal_consumption_name,
+      se_consume.emitted_at AS signal_consumed_at
     FROM execution_trace et
-    LEFT JOIN context ctx ON et.context_id = ctx.uuid
     LEFT JOIN routine_execution re
       ON et.uuid = re.execution_trace_id
     LEFT JOIN task_execution te
       ON re.uuid = te.routine_execution_id
     LEFT JOIN task_execution_map tem
       ON te.uuid = tem.task_execution_id
-    LEFT JOIN signal_emission se
-      ON te.uuid = se.task_execution_id AND se.is_meta = false
-    LEFT JOIN signal_consumption sc
-      ON te.uuid = sc.task_execution_id AND sc.is_meta = false
+    LEFT JOIN signal_emission se_emit
+      ON te.uuid = se_emit.task_execution_id AND se_emit.is_meta = false
+    LEFT JOIN signal_emission se_consume
+      ON te.signal_emission_id = se_consume.uuid AND se_consume.is_meta = false
     WHERE et.uuid = $1;
   `;
 
@@ -101,9 +104,10 @@ async function generateNodesAndEdges(traceUuid: string) {
         type: 'custom',
         nodeType: 'task',
         parentNode: row.routine_uuid,
-        errored: row.errored || false,
-				failed: row.failed || false,
-				isComplete: row.is_complete || true, 
+        errored: row.task_errored || false,
+        failed: row.task_failed || false,
+        isComplete: row.task_is_complete ?? true,
+        progress: row.task_progress ?? 0,
         data: {
           label: row.task_name || row.task_uuid,
           created: row.task_created ? new Date(row.task_created).toISOString() : null,

@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { initializeClient, formatDate, getDuration } from '~/server/api/utils';
+import { getQuery } from 'h3';
 
 let client: pg.Client | null = null;
 
@@ -21,34 +22,33 @@ async function getTaskExecution(
 
   const query = `
     SELECT
-        te.uuid,
-        te.routine_execution_id,
-        te.task_name,
-        te.is_running,
-        te.is_complete,
-        te.errored,
-        te.failed,
-        te.progress,
-        te.created AS scheduled,
-        te.started,
-        te.ended,
-        re.service_name,
-        r.description AS routine_name,
-        ctx.uuid AS context_id,
-        ctx2.uuid AS result_context_id,
-        ctx.context AS input_context,
-        ctx2.context AS output_context,
-        t.name,
-        t.description,
-        t.is_unique,
-        t.function_string
+      te.uuid,
+      te.routine_execution_id,
+      te.task_name,
+      te.task_version,
+      te.service_name,
+      te.context,
+      te.meta_context,
+      te.result_context,
+      te.meta_result_context,
+      te.is_running,
+      te.is_complete,
+      te.errored,
+      te.failed,
+      te.progress,
+      te.created AS scheduled,
+      te.started,
+      te.ended,
+      re.service_instance_id,
+      r.description AS routine_name,
+      t.name,
+      t.description,
+      t.is_unique,
+      t.function_string
     FROM task_execution te
     LEFT JOIN routine_execution re ON te.routine_execution_id = re.uuid
-    LEFT JOIN routine r ON re.name = r.name
-    LEFT JOIN context ctx ON te.context_id = ctx.uuid
-    LEFT JOIN context ctx2 ON te.result_context_id = ctx2.uuid
-    LEFT JOIN task t ON te.task_name = t.name
-    LEFT JOIN service s ON re.service_name = s.name
+    LEFT JOIN routine r ON re.name = r.name AND re.service_name = r.service_name
+    LEFT JOIN task t ON te.task_name = t.name AND te.service_name = t.service_name
     ${whereClause}
     ORDER BY te.created DESC
     LIMIT $${name ? '2' : '1'} OFFSET $${name ? '3' : '2'}
@@ -58,47 +58,44 @@ async function getTaskExecution(
   
 
   // Map the results to match the expected frontend format
-  const mappedRows = result.rows.map((row) => ({
-    uuid: row.uuid,
-    id: row.uuid,
-    type: 'task',
-    routineExecutionId: row.routine_execution_id,
-    taskId: row.task_name,
-    isRunning: row.is_running,
-    isComplete: row.is_complete,
-    errored: row.errored,
-    failed: row.failed,
-    progress: parseFloat((row.progress * 100).toFixed(2)) + '%',
-    scheduled: row.scheduled,
-    started: formatDate(row.started),
-    ended: formatDate(row.ended),
-    duration: getDuration(row.started, row.ended),
-    previousTaskExecutionIds: row.previous_task_execution_ids,
-    previousTaskNames: row.previous_task_names,
-    serviceDbName: row.service_name,
-    routineName: row.routine_name,
-    contextId: row.context_id,
-    resultContextId: row.result_context_id,
-    inputContext: row.input_context,
-    outputContext: row.output_context,
-    name: row.name,
-    description: row.description,
-    isUnique: row.is_unique,
-    functionString: row.function_string,
-    serviceName: row.service + '@' + row.address + ':' + row.port,
-    service: row.service + '@' + row.address + ':' + row.port,
-    layerIndex: row.layer_index,
-    previousTaskName: row.previous_task_name,
-    processingGraph: row.service,
-    referer: row.errored ? 'Errored' : null,
-    status: row.is_complete
-      ? 'check'
-      : row.is_running
-      ? 'play_arrow'
-      : row.errored
-      ? 'close'
-      : 'schedule',
-  }));
+  const mappedRows = result.rows.map((row) => {
+    const progressVal = typeof row.progress === 'number' ? Math.round(row.progress * 100) : 0;
+    return {
+      uuid: row.uuid,
+      id: row.uuid,
+      type: 'task',
+      routineExecutionId: row.routine_execution_id,
+      taskId: row.task_name,
+      taskVersion: row.task_version,
+      isRunning: row.is_running,
+      isComplete: row.is_complete,
+      errored: row.errored,
+      failed: row.failed,
+      progress: progressVal,
+      scheduled: row.scheduled,
+      started: formatDate(row.started),
+      ended: formatDate(row.ended),
+      duration: getDuration(row.started, row.ended),
+      serviceDbName: row.service_name,
+      routineName: row.routine_name,
+      inputContext: row.context,
+      outputContext: row.result_context,
+      name: row.name,
+      description: row.description,
+      isUnique: row.is_unique,
+      functionString: row.function_string,
+      serviceName: row.service_name,
+      layerIndex: row.layer_index,
+      referer: row.errored ? 'Errored' : null,
+      status: row.is_complete
+        ? 'check'
+        : row.is_running
+        ? 'play_arrow'
+        : row.errored
+        ? 'close'
+        : 'schedule',
+    };
+  });
 
   return {
     tasks: mappedRows,

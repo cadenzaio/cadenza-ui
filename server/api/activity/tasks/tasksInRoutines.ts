@@ -22,8 +22,10 @@ async function getTaskDetailsByExecutionId(executionId: string) {
 			task_version AS version,
 			uuid,
 			routine_execution_id,
-			context_id,
-			result_context_id,
+			context,
+			meta_context,
+			result_context,
+			meta_result_context,
 			service_instance_id,
 			execution_trace_id,
 			is_scheduled,
@@ -59,9 +61,10 @@ async function getLatestExecutionIdForTaskName(taskName: string) {
 
 async function getSignalsConsumedByExecutionId(taskExecutionId: string) {
 	const q = `
-		SELECT DISTINCT signal_name, service_name
-		FROM signal_consumption
-		WHERE task_execution_id = $1
+		SELECT DISTINCT se.signal_name, se.service_name
+		FROM task_execution te
+		LEFT JOIN signal_emission se ON te.signal_emission_id = se.uuid
+		WHERE te.uuid = $1 AND se.signal_name IS NOT NULL
 	`;
 	const r = await client!.query(q, [taskExecutionId]);
 	return r.rows; 
@@ -69,9 +72,10 @@ async function getSignalsConsumedByExecutionId(taskExecutionId: string) {
 
 async function getEmittersForSignal(signalName: string) {
 	const q = `
-		SELECT DISTINCT task_execution_id, task_name, service_name
-		FROM signal_emission
-		WHERE signal_name = $1
+		SELECT DISTINCT te.uuid AS task_execution_id, te.task_name, te.service_name
+		FROM task_execution te
+		JOIN task t ON te.task_name = t.task_name AND te.service_name = t.service_name
+		WHERE t.signals->'emits' ? $1 OR t.signals->'signalsToEmitAfter' ? $1 OR t.signals->'signalsToEmitOnFail' ? $1
 	`;
 	const r = await client!.query(q, [signalName]);
 	return r.rows; 
@@ -79,19 +83,31 @@ async function getEmittersForSignal(signalName: string) {
 
 async function getSignalsEmittedByExecutionId(taskExecutionId: string) {
 	const q = `
-		SELECT DISTINCT signal_name
-		FROM signal_emission
-		WHERE task_execution_id = $1
+		SELECT jsonb_array_elements(COALESCE(t.signals->'emits', '[]'::jsonb)) ->> 0 as signal_name
+		FROM task_execution te
+		JOIN task t ON te.task_name = t.task_name AND te.service_name = t.service_name
+		WHERE te.uuid = $1
+		UNION
+		SELECT jsonb_array_elements(COALESCE(t.signals->'signalsToEmitAfter', '[]'::jsonb)) ->> 0 as signal_name
+		FROM task_execution te
+		JOIN task t ON te.task_name = t.task_name AND te.service_name = t.service_name
+		WHERE te.uuid = $1
+		UNION
+		SELECT jsonb_array_elements(COALESCE(t.signals->'signalsToEmitOnFail', '[]'::jsonb)) ->> 0 as signal_name
+		FROM task_execution te
+		JOIN task t ON te.task_name = t.task_name AND te.service_name = t.service_name
+		WHERE te.uuid = $1
 	`;
 	const r = await client!.query(q, [taskExecutionId]);
-	return r.rows.map((r: any) => r.signal_name);
+	return r.rows.map((r: any) => r.signal_name).filter(Boolean);
 }
 
 async function getConsumersForSignal(signalName: string) {
 	const q = `
-		SELECT DISTINCT task_execution_id, task_name, service_name
-		FROM signal_consumption
-		WHERE signal_name = $1
+		SELECT DISTINCT te.uuid AS task_execution_id, te.task_name, te.service_name
+		FROM task_execution te
+		LEFT JOIN signal_emission se ON te.signal_emission_id = se.uuid
+		WHERE se.signal_name = $1 AND se.signal_name IS NOT NULL
 	`;
 	const r = await client!.query(q, [signalName]);
 	return r.rows; 

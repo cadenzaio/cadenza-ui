@@ -12,8 +12,6 @@ interface RoutineTask {
   description: string;
   is_unique: boolean;
   concurrency: number;
-  signalToTaskSignalName: string | null;
-  taskToSignalSignalName: string | null;
 }
 
 interface Node {
@@ -33,26 +31,6 @@ interface Node {
   [key: string]: any;
 }
 
-async function getSignalsEmittedByTask(taskName: string) {
-  const q = `
-    SELECT DISTINCT signal_name, service_name
-    FROM task_to_signal_map
-    WHERE task_name = $1
-  `;
-  const res = await client!.query(q, [taskName]);
-  return res.rows;
-}
-
-async function getSignalsConsumedByTask(taskName: string) {
-  const q = `
-    SELECT DISTINCT signal_name, signal_service_name AS service_name
-    FROM signal_to_task_map
-    WHERE task_name = $1
-  `;
-  const res = await client!.query(q, [taskName]);
-  return res.rows;
-}
-
 async function getRoutineMap(routineName: string): Promise<Node[]> {
   const query = `
 SELECT
@@ -65,6 +43,7 @@ SELECT
     t.description,
     t.is_unique,
     t.concurrency,
+    t.signals,
     dtm.task_name,
     dtm.predecessor_task_name AS previous_task_execution_name
 FROM task_to_routine_map ttrm
@@ -81,45 +60,40 @@ WHERE routine_name = $1;
   const taskNames: string[] = tasks.map((t: any) => t.name).filter(Boolean);
   if (taskNames.length === 0) return nodes;
 
-  const emitQ = `
-    SELECT DISTINCT task_name, signal_name, service_name
-    FROM task_to_signal_map
-    WHERE task_name = ANY($1)
-  `;
-  const emitRes = await client!.query(emitQ, [taskNames]);
-
   const emittersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
-  (emitRes.rows || []).forEach((r: any) => {
-    if (!emittersMap[r.signal_name]) emittersMap[r.signal_name] = [];
-    emittersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
-  });
-
-  const consQ = `
-    SELECT DISTINCT task_name, signal_name, signal_service_name AS service_name
-    FROM signal_to_task_map
-    WHERE task_name = ANY($1)
-  `;
-  const consRes = await client!.query(consQ, [taskNames]);
-
   const consumersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
-  (consRes.rows || []).forEach((r: any) => {
-    if (!consumersMap[r.signal_name]) consumersMap[r.signal_name] = [];
-    consumersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
+
+  tasks.forEach((t: any) => {
+    const signals = t.signals || {};
+    const emittedSignals = (signals.emits || []).filter((s: string) => !s.startsWith('meta.'));
+    const observedSignals = (signals.observed || []).filter((s: string) => !s.startsWith('meta.'));
+
+    emittedSignals.forEach((sigName: string) => {
+      if (!emittersMap[sigName]) emittersMap[sigName] = [];
+      emittersMap[sigName].push({ task_name: t.name, service_name: t.service_name });
+    });
+
+    observedSignals.forEach((sigName: string) => {
+      if (!consumersMap[sigName]) consumersMap[sigName] = [];
+      consumersMap[sigName].push({ task_name: t.name, service_name: t.service_name });
+    });
   });
 
   const consumedSignals = Object.keys(consumersMap);
   if (consumedSignals.length > 0) {
-    const externalEmitQ = `
-      SELECT DISTINCT task_name, signal_name, service_name
-      FROM task_to_signal_map
-      WHERE signal_name = ANY($1)
-    `;
+    const externalEmitQ = `SELECT name, service_name, signals FROM task WHERE signals->'emits' ?| $1::text[]`;
     const externalEmitRes = await client!.query(externalEmitQ, [consumedSignals]);
-    (externalEmitRes.rows || []).forEach((r: any) => {
-      if (!emittersMap[r.signal_name]) emittersMap[r.signal_name] = [];
-      if (!emittersMap[r.signal_name].some((e) => e.task_name === r.task_name)) {
-        emittersMap[r.signal_name].push({ task_name: r.task_name, service_name: r.service_name });
-      }
+    (externalEmitRes.rows || []).forEach((t: any) => {
+      const signals = t.signals || {};
+      const emittedSignals = (signals.emits || []).filter((s: string) => !s.startsWith('meta.'));
+      emittedSignals.forEach((sigName: string) => {
+        if (consumedSignals.includes(sigName)) {
+          if (!emittersMap[sigName]) emittersMap[sigName] = [];
+          if (!emittersMap[sigName].some((e) => e.task_name === t.name)) {
+            emittersMap[sigName].push({ task_name: t.name, service_name: t.service_name });
+          }
+        }
+      });
     });
   }
 

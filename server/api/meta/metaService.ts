@@ -38,17 +38,29 @@ SELECT
   t.service_name,
   t.version,
   dtm.predecessor_task_name AS previous_task_execution_name,
-  stm.signal_name AS signal_to_task_signal_name,
-  tsm.signal_name AS task_to_signal_signal_name
+  dtm.predecessor_service_name AS previous_task_service_name,
+  dtm.predecessor_task_version AS previous_task_version,
+  (
+    SELECT array_agg(x)
+    FROM jsonb_array_elements_text(COALESCE(t.signals->'emits', '[]'::jsonb)) AS x
+  ) AS emits,
+  (
+    SELECT array_agg(x)
+    FROM jsonb_array_elements_text(COALESCE(t.signals->'signalsToEmitAfter', '[]'::jsonb)) AS x
+  ) AS signals_to_emit_after,
+  (
+    SELECT array_agg(x)
+    FROM jsonb_array_elements_text(COALESCE(t.signals->'signalsToEmitOnFail', '[]'::jsonb)) AS x
+  ) AS signals_to_emit_on_fail,
+  (
+    SELECT array_agg(x)
+    FROM jsonb_array_elements_text(COALESCE(t.signals->'observed', '[]'::jsonb)) AS x
+  ) AS observed
 FROM task t
 LEFT JOIN directional_task_graph_map dtm
   ON t.name = dtm.task_name
   AND t.version = dtm.task_version
   AND t.service_name = dtm.service_name
-LEFT JOIN signal_to_task_map stm
-  ON stm.task_name = t.name
-LEFT JOIN task_to_signal_map tsm
-  ON tsm.task_name = t.name
 WHERE t.service_name = $1 AND t.is_meta = true
   AND (t.deleted IS FALSE OR t.deleted IS NULL)
   ${limit > 0 ? 'LIMIT $2 OFFSET $3' : ''};
@@ -96,52 +108,37 @@ WHERE t.service_name = $1 AND t.is_meta = true
       }
     }
 
-    if (row.signal_to_task_signal_name) {
-      const sig = row.signal_to_task_signal_name;
-      let signalNodeId = signalNodes[sig];
-      if (!signalNodeId) {
-        signalNodeId = `signal::${sig}`;
-        signalNodes[sig] = signalNodeId;
-        const signalNode: Node = {
-          id: signalNodeId,
-          type: 'custom',
-          nodeType: 'signal',
-          data: { label: sig, signal: true },
-        };
-        nodes.push(signalNode);
-      }
+    const emittedSignals: string[] = [];
+    if (Array.isArray(row.emits)) emittedSignals.push(...row.emits.filter(Boolean));
+    if (Array.isArray(row.signals_to_emit_after)) emittedSignals.push(...row.signals_to_emit_after.filter(Boolean));
+    if (Array.isArray(row.signals_to_emit_on_fail)) emittedSignals.push(...row.signals_to_emit_on_fail.filter(Boolean));
 
-      {
-        const edgeId = `e${row.task_name}-${signalNodeId}`;
+    emittedSignals.forEach((sig) => {
+      const signalId = signalNodes[sig] ?? `signal::${sig}`;
+      if (!signalNodes[sig]) {
+        signalNodes[sig] = signalId;
+        nodes.push({ id: signalId, type: 'custom', nodeType: 'signal', data: { label: sig, signal: true } });
+      }
+      const edgeId = `e${row.task_name}-${signalId}`;
+      if (!addedEdges.has(edgeId)) {
+        edges.push({ id: edgeId, source: row.task_name, target: signalId });
+        addedEdges.add(edgeId);
+      }
+    });
+
+    if (Array.isArray(row.observed)) {
+      row.observed.filter(Boolean).forEach((sig: string) => {
+        const signalId = signalNodes[sig] ?? `signal::${sig}`;
+        if (!signalNodes[sig]) {
+          signalNodes[sig] = signalId;
+          nodes.push({ id: signalId, type: 'custom', nodeType: 'signal', data: { label: sig, signal: true } });
+        }
+        const edgeId = `e${signalId}-${row.task_name}`;
         if (!addedEdges.has(edgeId)) {
-          edges.push({ id: edgeId, source: row.task_name, target: signalNodeId });
+          edges.push({ id: edgeId, source: signalId, target: row.task_name });
           addedEdges.add(edgeId);
         }
-      }
-    }
-
-    if (row.task_to_signal_signal_name) {
-      const sig = row.task_to_signal_signal_name;
-      let signalNodeId = signalNodes[sig];
-      if (!signalNodeId) {
-        signalNodeId = `signal::${sig}`;
-        signalNodes[sig] = signalNodeId;
-        const signalNode: Node = {
-          id: signalNodeId,
-          type: 'custom',
-          nodeType: 'signal',
-          data: { label: sig, signal: true },
-        };
-        nodes.push(signalNode);
-      }
-
-      {
-        const edgeId = `e${signalNodeId}-${row.task_name}`;
-        if (!addedEdges.has(edgeId)) {
-          edges.push({ id: edgeId, source: signalNodeId, target: row.task_name });
-          addedEdges.add(edgeId);
-        }
-      }
+      });
     }
   });
 
@@ -171,9 +168,29 @@ WHERE t.service_name = $1 AND t.is_meta = true
       `;
       const countResult = await client!.query(countQuery, [serviceName]);
       const totalCount: number = countResult.rows[0]?.cnt ?? 0;
+      const totalPages = Math.ceil(totalCount / pageSize);
 
       const data = await generateNodesAndEdges(serviceName, pageSize, offset);
-      return { ...data, totalCount, page, pageSize };
+      
+      // Count total nodes and edges for entire service
+      const totalEdgesQuery = `
+SELECT COUNT(*) as edge_count
+FROM directional_task_graph_map dtm
+JOIN task t ON dtm.task_name = t.name AND dtm.service_name = t.service_name AND dtm.task_version = t.version
+WHERE t.service_name = $1 AND t.is_meta = true
+  AND (t.deleted IS FALSE OR t.deleted IS NULL);
+      `;
+      const edgesResult = await client!.query(totalEdgesQuery, [serviceName]);
+      const totalEdgeCount = edgesResult.rows[0]?.edge_count ?? 0;
+      
+      return { 
+        ...data, 
+        totalPages, 
+        page, 
+        pageSize,
+        nodeCount: totalCount,
+        edgeCount: totalEdgeCount,
+      };
     } catch (error) {
       console.error('Error generating nodes and edges:', error);
       throw error;

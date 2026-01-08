@@ -15,7 +15,7 @@
 
               <div v-if="signalPayload && signalPayload.emission" style="margin-top:8px;">
                 <strong>Emission Data</strong>
-                <pre :style="jsonPreStyle">{{ JSON.stringify(signalPayload.emission.data ?? signalPayload.emission, null, 2) }}</pre>
+                <pre :style="jsonPreStyle">{{ JSON.stringify(signalPayload.emission.context ?? signalPayload.emission, null, 2) }}</pre>
               </div>
               <div v-else style="margin-top:8px;color:#666">No emission data available.</div>
             </div>
@@ -173,7 +173,7 @@ async function loadSignalFlow() {
 
   if (emission) {
     const sigId = `signal::${emission.uuid}`;
-    pushNode({ id: sigId, label: emission.signal_name || 'signal', description: emission.data || '', signal: true, previousId: previousTasks.length > 0 ? (previousTasks[0].task_execution?.uuid ?? previousTasks[0].task_execution ?? previousTasks[0].task_name) : undefined });
+    pushNode({ id: sigId, label: emission.signal_name || 'signal', description: emission.context || '', signal: true, previousId: previousTasks.length > 0 ? (previousTasks[0].task_execution?.uuid ?? previousTasks[0].task_execution ?? previousTasks[0].task_name) : undefined });
 
     const consumptions = payload.consumptions ?? [];
     for (const c of consumptions) {

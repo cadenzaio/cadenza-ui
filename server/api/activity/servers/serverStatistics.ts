@@ -45,15 +45,6 @@ async function getSignalCount(serviceInstanceId?: string) {
       SELECT uuid, DATE_TRUNC('hour', emitted_at) as started
       FROM signal_emission se
       WHERE is_meta = false AND se.service_instance_id = $1
-
-      UNION ALL
-
-      SELECT sc.uuid, DATE_TRUNC('hour', consumed_at) as started
-      FROM signal_consumption sc
-      WHERE sc.is_meta = false AND sc.service_instance_id = $1
-        AND NOT EXISTS (
-          SELECT 1 FROM signal_emission se2 WHERE se2.uuid = sc.signal_emission_id AND se2.service_instance_id = $1
-        )
     ) t
     GROUP BY started
     ORDER BY started

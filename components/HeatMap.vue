@@ -44,6 +44,12 @@
             color="primary"
             @click="incrementYear"
           />
+          <q-btn
+            v-if="selectedYear !== currentYear"
+            label="This Year"
+            color="primary"
+            @click="goToCurrentYear"
+          />
         </div>
       </div>
       <div v-show="showMonthView">
@@ -86,6 +92,17 @@
             icon="chevron_right"
             color="primary"
             @click="incrementMonth"
+          />
+          <q-btn
+            v-if="
+              !(
+                selectedMonth === monthNames[currentMonth] &&
+                selectedYear === currentYear
+              )
+            "
+            label="This Month"
+            color="primary"
+            @click="goToCurrentMonth"
           />
           <div class="text-h6 q-ml-md">
             Month: {{ selectedMonth }} Year: {{ selectedYear }}
@@ -173,7 +190,6 @@
 
 <script setup lang="ts">
 // Types
-import { defineProps, defineEmits } from 'vue';
 interface RangeSection {
   from: number;
   to: number;
@@ -346,7 +362,6 @@ function onCellClick(
     const month = props.monthNames[monthIdx];
     selectedMonth.value = month;
     selectedMonthIndex.value = monthIdx;
-    selectedYear.value = currentYear;
     buildMonthChartSeries(monthIdx, selectedYear.value);
     const scrollY = window.scrollY;
     showMonthView.value = true;
@@ -844,6 +859,15 @@ function handleBackToYearView() {
       window.scrollTo({ top: scrollY });
     }, 10);
   });
+}
+
+function goToCurrentYear() {
+  selectedYear.value = currentYear;
+}
+
+function goToCurrentMonth() {
+  selectedYear.value = currentYear;
+  selectedMonth.value = props.monthNames[currentMonth];
 }
 </script>
 

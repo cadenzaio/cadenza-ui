@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { initializeClient } from '~/server/api/utils';
+import { getQuery } from 'h3';
 
 let client: pg.Client | null = null;
 
@@ -11,7 +12,7 @@ async function getSignals(page: number = 1, limit: number = 100) {
     domain, 
     action, 
     is_meta, 
-    service_name, 
+    is_global, 
     created, 
     deleted
     FROM signal_registry

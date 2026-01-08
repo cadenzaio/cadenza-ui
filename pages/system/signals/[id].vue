@@ -10,7 +10,6 @@
             <div>
               <div><strong>Name:</strong> {{ signalDetails?.name ?? '—' }}</div>
               <div><strong>Domain:</strong> {{ signalDetails?.domain ?? 'N/A' }}</div>
-              <div><strong>Service:</strong> {{ signalDetails?.service_name ?? '—' }}</div>
               <div><strong>Created At:</strong> {{ formattedCreatedAt || '—' }}</div>
             </div>
           </template>

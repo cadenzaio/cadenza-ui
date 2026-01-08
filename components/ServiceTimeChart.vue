@@ -4,11 +4,21 @@
     <template #info>
       <div v-if="hasData">
         <apexchart
+          ref="mainChart"
           type="area"
-          height="350"
-          width="700"
+          height="300"
+          width="100%"
           :options="chartOptions"
-          :series="series"
+          :series="chartSeries"
+          style="color: black"
+        ></apexchart>
+        <!-- Brush chart for scrollbar/range selection -->
+        <apexchart
+          type="area"
+          height="100"
+          width="100%"
+          :options="brushChartOptions"
+          :series="brushSeries"
           style="color: black"
         ></apexchart>
       </div>
@@ -22,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 import InfoCard from './InfoCard.vue';
 import { useQuasar } from 'quasar';
@@ -41,61 +51,265 @@ const hasData = computed(() => {
   return props.series.some((s) => Array.isArray((s as any).data) && (s as any).data.length > 0);
 });
 
-const chartOptions = computed(() => ({
-  chart: {
-    type: 'area',
-    height: 350,
-    width: '100%',
-    stacked: false,
-    events: {
-      selection: function () {},
-    },
-  },
-  colors: ['#008FFB', '#00E396', '#EDF101', '#F30F0F', '#0814B1', '#4A09BB', '#26A69A'],
-  dataLabels: {
-    enabled: false,
-  },
-  stroke: {
-    curve: 'straight',
-  },
-  fill: {
-    type: 'gradient',
-    gradient: {
-      opacityFrom: 0.6,
-      opacityTo: 0.2,
-    },
-  },
-  legend: {
-    position: 'right',
-  },
-  xaxis: {
-    type: 'datetime',
-    title: {
-      text: 'Date',
-    },
-  },
-  yaxis: [
-    {
-      title: {
-        text: '# of Executions',
+// Calculate the default zoom range (last 12 hours)
+const getDefaultZoomRange = computed(() => {
+  const now = Date.now();
+  const twelveHoursAgo = now - 12 * 60 * 60 * 1000;
+  return { min: twelveHoursAgo, max: now };
+});
+
+// Reference to the main chart
+const mainChart = ref<any>(null);
+
+// Current zoom range (controlled by brush chart)
+const currentZoom = ref({
+  min: getDefaultZoomRange.value.min,
+  max: getDefaultZoomRange.value.max,
+});
+
+// Handle brush selection change
+const onBrushSelection = (chartContext: any, { xaxis }: any) => {
+  if (xaxis && mainChart.value) {
+    currentZoom.value = { min: xaxis.min, max: xaxis.max };
+    mainChart.value.zoomX(xaxis.min, xaxis.max);
+  }
+};
+
+// Server metric names that should use the percentage axis (0-100%)
+const serverMetricNames = ['CPU (%)', 'Disk (%)', 'Network (%)', 'RAM (%)'];
+
+// Fixed color map for each series name
+const seriesColorMap: Record<string, string> = {
+  'Task Count': '#096FD5',
+  'Signal Count': '#02A192',
+  'CPU (%)': '#F1D178',
+  'Disk (%)': '#ED7A7A',
+  'Network (%)': '#AF57BF',
+  'RAM (%)': '#6BCF67',
+};
+
+// Assign each series to the correct Y-axis
+const chartSeries = computed(() => {
+  return props.series.map((s) => {
+    return {
+      ...s,
+    };
+  });
+});
+
+// Get colors array based on current series order
+const chartColors = computed(() => {
+  return props.series.map((s) => seriesColorMap[s.name] || '#999999');
+});
+
+const chartOptions = computed(() => {
+  // Build yaxis array dynamically based on series
+  const yaxisConfig: any[] = [];
+  
+  props.series.forEach((s, index) => {
+    const isServerMetric = serverMetricNames.includes(s.name);
+    
+    if (isServerMetric) {
+      yaxisConfig.push({
+        seriesName: s.name,
+        opposite: true,
+        min: 0,
+        max: 100,
+        show: index === props.series.findIndex(ser => serverMetricNames.includes(ser.name)), // only show first server metric axis
+        title: {
+          text: index === props.series.findIndex(ser => serverMetricNames.includes(ser.name)) ? 'Server Metrics (%)' : '',
+        },
+        labels: {
+          formatter: function (value: number) {
+            return Math.round(value).toString() + '%';
+          },
+        },
+      });
+    } else {
+      yaxisConfig.push({
+        seriesName: s.name,
+        opposite: false,
+        show: index === props.series.findIndex(ser => !serverMetricNames.includes(ser.name)), // only show first count axis
+        title: {
+          text: index === props.series.findIndex(ser => !serverMetricNames.includes(ser.name)) ? '# of Executions' : '',
+        },
+        labels: {
+          formatter: function (value: number) {
+            return Math.round(value).toString();
+          },
+        },
+      });
+    }
+  });
+
+  return {
+    chart: {
+      id: 'serviceTimeChart',
+      type: 'area',
+      height: 300,
+      width: '100%',
+      stacked: false,
+      zoom: {
+        type: 'x',
+        enabled: true,
+        autoScaleYaxis: true,
       },
-      labels: {
+      toolbar: {
+        autoSelected: 'zoom',
+        tools: {
+          download: true,
+          selection: true,
+          zoom: true,
+          zoomin: true,
+          zoomout: true,
+          pan: true,
+          reset: true,
+        },
+      },
+      events: {
+        selection: function () {},
+      },
+    },
+    colors: chartColors.value,
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      curve: 'smooth',
+      width: 2,
+    },
+    fill: {
+      type: 'gradient',
+      gradient: {
+        opacityFrom: 0.5,
+        opacityTo: 0.01,
+      },
+    },
+    legend: {
+      position: 'right',
+    },
+    xaxis: {
+      type: 'datetime',
+      title: {
+        text: 'Date',
+      },
+    },
+    yaxis: yaxisConfig.length > 0 ? yaxisConfig : [
+      {
+        title: { text: '# of Executions' },
+        labels: {
+          formatter: function (value: number) {
+            return Math.round(value).toString();
+          },
+        },
+      },
+    ],
+    tooltip: {
+      x: {
         formatter: function (value: number) {
-          return Math.round(value).toString();
+          const endDate = new Date(value);
+          const startDate = new Date(value - 60 * 60 * 1000); // Subtract 1 hour
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const month = months[startDate.getMonth()];
+          const day = startDate.getDate();
+          const year = startDate.getFullYear();
+          const startHour = startDate.getHours().toString().padStart(2, '0');
+          const startMin = startDate.getMinutes().toString().padStart(2, '0');
+          const endHour = endDate.getHours().toString().padStart(2, '0');
+          const endMin = endDate.getMinutes().toString().padStart(2, '0');
+          return `${month} ${day} ${year} ${startHour}:${startMin}-${endHour}:${endMin}`;
         },
       },
     },
-    {
-      opposite: true,
-      title: {
-        text: 'Server Metrics',
+  };
+});
+
+// Brush chart series - include Task Count and Signal Count
+const brushSeries = computed(() => {
+  if (props.series.length === 0) return [];
+  const result: AreaSeries[] = [];
+  
+  // Find Task Count series
+  const taskSeries = props.series.find(s => s.name === 'Task Count');
+  if (taskSeries) {
+    result.push({ name: 'Task Count', data: taskSeries.data });
+  }
+  
+  // Find Signal Count series
+  const signalSeries = props.series.find(s => s.name === 'Signal Count');
+  if (signalSeries) {
+    result.push({ name: 'Signal Count', data: signalSeries.data });
+  }
+  
+  // Fallback to first series if neither found
+  if (result.length === 0 && props.series[0]) {
+    result.push({ name: 'Timeline', data: props.series[0].data });
+  }
+  
+  return result;
+});
+
+// Brush chart options (scrollbar at the bottom)
+const brushChartOptions = computed(() => {
+  return {
+    chart: {
+      id: 'brushChart',
+      height: 100,
+      type: 'area',
+      toolbar: {
+        show: false,
+        autoSelected: 'selection',
       },
-      labels: {
-        formatter: function (value: number) {
-          return Math.round(value).toString();
+      selection: {
+        enabled: true,
+        type: 'x',
+        xaxis: {
+          min: getDefaultZoomRange.value.min,
+          max: getDefaultZoomRange.value.max,
+        },
+        fill: {
+          color: '#008FFB',
+          opacity: 0.2,
+        },
+        stroke: {
+          color: '#008FFB',
+          width: 1,
         },
       },
+      events: {
+        selection: onBrushSelection,
+      },
     },
-  ],
-}));
+    colors: ['#096FD5', '#02A192'], // Task Count blue, Signal Count teal
+    fill: {
+      type: 'gradient',
+      gradient: {
+        opacityFrom: 0.91,
+        opacityTo: 0.1,
+      },
+    },
+    tooltip: {
+      enabled: false,
+    },
+    xaxis: {
+      type: 'datetime',
+      tooltip: {
+        enabled: false,
+      },
+    },
+    yaxis: {
+      tickAmount: 2,
+      show: false,
+    },
+    legend: {
+      show: false,
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      width: 1,
+    },
+  };
+});
 </script>

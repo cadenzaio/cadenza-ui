@@ -1,5 +1,5 @@
 <template>
-  <div class="vue-flow-container q-mb-md">
+  <div ref="containerRef" :class="['vue-flow-container q-mb-md', { 'fullscreen-mode': isFullscreen }, fullscreenPolkaClass]">
     <div v-if="filtered" class="back-btn-container">
       <q-btn
         round
@@ -44,6 +44,24 @@
         aria-label="Zoom slider"
       />
       <span class="zoom-value">{{ Math.round(zoom * 100) }}%</span>
+      <q-btn
+        flat
+        dense
+        round
+        icon="fit_screen"
+        @click="fitToWindow"
+        class="q-ml-md"
+        title="Fit to Window"
+      />
+      <q-btn
+        flat
+        dense
+        round
+        :icon="isFullscreen ? 'fullscreen_exit' : 'fullscreen'"
+        @click="toggleFullscreen"
+        class="q-ml-xs"
+        title="Toggle Fullscreen"
+      />
     </div>
     <VueFlow
       ref="vueFlowInstance"
@@ -66,6 +84,15 @@
 </template>
 
 <script setup>
+import { ref, watch, computed, onMounted, nextTick } from 'vue';
+import { VueFlow } from '@vue-flow/core';
+import { MiniMap } from '@vue-flow/minimap';
+import ELK from 'elkjs/lib/elk.bundled.js';
+import CustomNode from '~/components/CustomNode.vue';
+import { useAppStore } from '~/stores/app';
+import { colors, useQuasar } from 'quasar';
+import { useRouter } from 'vue-router';
+
 const resetFilter = () => {
   loading.value = true;
   displayedNodes.value = [];
@@ -73,11 +100,6 @@ const resetFilter = () => {
   updateLayout(props.nodes, props.edges);
   filtered.value = false;
 };
-import { ref, watch, computed, onMounted, nextTick } from 'vue';
-import { VueFlow } from '@vue-flow/core';
-import { MiniMap } from '@vue-flow/minimap';
-import ELK from 'elkjs/lib/elk.bundled.js';
-import CustomNode from '~/components/CustomNode.vue';
 
 const getChainAfterNode = (nodeId) => {
   const chain = [];
@@ -159,6 +181,35 @@ const onNodeClick = (...args) => {
 };
 
 const vueFlowInstance = ref(null);
+const containerRef = ref(null);
+const isFullscreen = ref(false);
+const $q = useQuasar();
+
+const fullscreenPolkaClass = computed(() => {
+  if (!isFullscreen.value) return '';
+  return $q && $q.dark.isActive ? 'polka-dark' : 'polka-light';
+});
+
+function fitToWindow() {
+  if (!vueFlowInstance.value) return;
+  const api = vueFlowInstance.value;
+  if (typeof api.fitView === 'function') {
+    try {
+      api.fitView({ padding: 0.1, maxZoom: 1 });
+    } catch (err) {
+      console.error('Error fitting view:', err);
+    }
+  }
+}
+
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value;
+  if (isFullscreen.value) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+}
 
 const minZoom = 0.05;
 const maxZoom = 5;
@@ -193,11 +244,6 @@ onMounted(async () => {
   }
 });
 
-import { defineProps } from 'vue';
-import { useAppStore } from '~/stores/app';
-import { colors } from 'quasar';
-import { useRouter } from 'vue-router';
-
 const props = defineProps({
   nodes: {
     type: Array,
@@ -209,6 +255,42 @@ const props = defineProps({
     required: true,
     default: () => [],
   },
+});
+
+const appStore = useAppStore();
+const currentSection = computed(() => appStore.currentSection);
+const router = useRouter();
+const sectionColor = computed(() => {
+  switch (currentSection.value) {
+    case 'system':
+      return 'primary';
+    case 'serviceActivity':
+      return 'warning';
+    case 'traces':
+      return 'secondary';
+    case 'meta':
+      return 'accent';
+    case 'help':
+      return 'grey-8';
+    default:
+      return 'secondary';
+  }
+});
+const sectionNodeBg = computed(() => {
+  switch (currentSection.value) {
+    case 'system':
+      return colors.changeAlpha(colors.getPaletteColor('primary'), 0.6);
+    case 'serviceActivity':
+      return colors.changeAlpha(colors.getPaletteColor('warning'), 0.6);
+    case 'traces':
+      return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.6);
+    case 'meta':
+      return colors.changeAlpha(colors.getPaletteColor('accent'), 0.6);
+    case 'help':
+      return colors.changeAlpha(colors.getPaletteColor('grey-8'), 0.6);
+    default:
+      return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.6);
+  }
 });
 
 const elk = new ELK();
@@ -320,9 +402,9 @@ async function layoutNodes(nodesArr, edgesArr) {
         sources: [edge.source],
         targets: [edge.target],
         type: edge.type || 'default',
-        style: edge.style || { strokeWidth: 2 },
+        style: isSignalEdge ? { strokeWidth: 2, stroke: sectionNodeBg.value } : (edge.style || { strokeWidth: 2 }),
         data: { ...(edge.data || {}), signal: isSignalEdge },
-        animated: isSignalEdge,
+        animated: false,
         ...edge,
       };
     })
@@ -406,9 +488,9 @@ async function updateLayout(newNodes, newEdges) {
         source: edge.source,
         target: edge.target,
         type: edge.type || 'default',
-        style: edge.style || {  strokeWidth: 2 },
+        style: isSignal ? { strokeWidth: 2, stroke: sectionNodeBg.value } : (edge.style || { strokeWidth: 2 }),
         data: { ...(edge.data || {}), signal: isSignal },
-        animated: isSignal,
+        animated: false,
         ...edge,
       };
     }).filter(Boolean);
@@ -443,42 +525,6 @@ watch(
   },
   { immediate: true, deep: true }
 );
-
-const appStore = useAppStore();
-const currentSection = computed(() => appStore.currentSection);
-const router = useRouter();
-const sectionColor = computed(() => {
-  switch (currentSection.value) {
-    case 'system':
-      return 'primary';
-    case 'serviceActivity':
-      return 'warning';
-    case 'traces':
-      return 'secondary';
-    case 'meta':
-      return 'accent';
-    case 'help':
-      return 'grey-8';
-    default:
-      return 'secondary';
-  }
-});
-const sectionNodeBg = computed(() => {
-  switch (currentSection.value) {
-    case 'system':
-      return colors.changeAlpha(colors.getPaletteColor('primary'), 0.6);
-    case 'serviceActivity':
-      return colors.changeAlpha(colors.getPaletteColor('warning'), 0.6);
-    case 'traces':
-      return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.6);
-    case 'meta':
-      return colors.changeAlpha(colors.getPaletteColor('accent'), 0.6);
-    case 'help':
-      return colors.changeAlpha(colors.getPaletteColor('grey-8'), 0.6);
-    default:
-      return colors.changeAlpha(colors.getPaletteColor('secondary'), 0.6);
-  }
-});
 
 const showMiniMap = ref(false);
 
@@ -588,5 +634,41 @@ onMounted(() => {
   color: #333;
   min-width: 36px;
   text-align: right;
+}
+:deep(.zoom-slider .q-btn) {
+  color: #444;
+}
+
+.vue-flow-container.fullscreen-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-width: 100vw !important;
+  max-width: 100vw !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
+  margin: 0;
+  border-radius: 0;
+  z-index: 9999;
+  background-attachment: fixed;
+  background-position: center;
+}
+
+.vue-flow-container.polka-light {
+  background-image: radial-gradient(rgb(168, 167, 167) 5%, transparent 5%);
+  background-position: 4px 4px;
+  background-size: 19px 19px;
+  background-color: rgb(255, 255, 255);
+}
+
+.vue-flow-container.polka-dark {
+  background-image: radial-gradient(rgb(87, 87, 87) 5%, transparent 5%);
+  background-position: 4px 4px;
+  background-size: 19px 19px;
+  background-color: rgb(0, 0, 0);
 }
 </style>

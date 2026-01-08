@@ -31,10 +31,7 @@
             </div>
           </q-card-section>
           <q-card-section class="q-pt-none">
-            <ServerStats
-              v-if="selectedServer"
-              :selectedServer="selectedServer"
-            />
+            <ServiceTimeChart :series="timeChartSeries" />
             <InfoCard>
               <template #title> Server Info </template>
               <template #info>
@@ -63,6 +60,7 @@ import { useAppStore } from '~/stores/app';
 import { useRouter } from '#vue-router';
 import ELK from 'elkjs/lib/elk.bundled.js';
 import ServerMap from '~/components/serverMap.vue';
+import ServiceTimeChart from '~/components/ServiceTimeChart.vue';
 import type { Node, Edge, Position } from '@vue-flow/core';
 
 // Table and dialog state
@@ -76,6 +74,22 @@ const currentPage = ref(1);
 const pageSize = 50;
 const loading = ref(false);
 const error = ref<string | null>(null);
+const timeChartSeries = ref<any[]>([]);
+
+async function fetchTaskSeries(serviceInstanceId: string | null) {
+  if (!serviceInstanceId) return [];
+  try {
+    const qs = `?serviceInstanceId=${encodeURIComponent(serviceInstanceId)}`;
+    const res: any = await $fetch(`/api/activity/servers/serverStatistics${qs}`);
+    if (res && Array.isArray(res.series)) {
+      return res.series;
+    }
+    return [];
+  } catch (e) {
+    console.error('Failed to fetch task series:', e);
+    return [];
+  }
+}
 
 interface TableColumn {
   name: string;
@@ -136,6 +150,11 @@ const onServerSelected = (serverUuid: string) => {
     (server: Server) => server.uuid === serverUuid
   );
   dialogVisible.value = true;
+  if (selectedServer.value) {
+    fetchTaskSeries(serverUuid).then((taskSeries) => {
+      timeChartSeries.value = Array.isArray(taskSeries) ? taskSeries : [];
+    });
+  }
 };
 
 const fetchServerStats = async (isLoadMore = false) => {

@@ -20,8 +20,6 @@ interface RoutineRow {
   created: string | Date;
   ended: string | Date;
   contract_id: string;
-  context_id: string;
-  result_context_id: string;
   input_context: Record<string, unknown>;
   output_context: Record<string, unknown>;
   processing_graph: string;
@@ -88,15 +86,13 @@ async function getRoutines({
       re.created,
       re.started,
       re.ended,
-      ctx.context AS input_context,
-      ctx2.context AS output_context,
+      re.context AS input_context,
+      re.result_context AS output_context,
       r.name AS routine_type,
       r.description AS routine_description,
       re.previous_routine_execution,
       s.name AS service_name
   FROM routine_execution AS re
-  LEFT JOIN context ctx ON re.context_id = ctx.uuid
-  LEFT JOIN context ctx2 ON re.result_context_id = ctx2.uuid
   LEFT JOIN routine r ON re.name = r.name AND re.service_name = r.service_name
   LEFT JOIN service s ON re.service_name = s.name
   WHERE re.uuid = $1

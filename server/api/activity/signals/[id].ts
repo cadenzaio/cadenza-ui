@@ -3,18 +3,6 @@ import { initializeClient } from '~/server/api/utils';
 
 let client: pg.Client | null = null;
 
-async function getConsumerTasksForSignal(signalName: string) {
-  const query = `
-    SELECT DISTINCT sc.task_name, sc.task_version, t.description AS task_description
-    FROM signal_consumption sc
-    LEFT JOIN task t ON sc.task_name = t.name
-    WHERE sc.signal_name = $1
-    ORDER BY sc.task_name ASC
-  `;
-  const res = await client!.query(query, [signalName]);
-  return res.rows;
-}
-
 async function getEmissionByUuid(uuid: string) {
   const query = `
     SELECT *
@@ -28,10 +16,11 @@ async function getEmissionByUuid(uuid: string) {
 
 async function getConsumptionsForEmissionId(signalEmissionId: string) {
   const query = `
-    SELECT *
-    FROM signal_consumption
-    WHERE signal_emission_id = $1
-    ORDER BY consumed_at DESC
+    SELECT DISTINCT te.uuid AS task_execution_id, te.task_name, te.service_name, se.signal_name, te.created
+    FROM task_execution te
+    LEFT JOIN signal_emission se ON te.signal_emission_id = se.uuid
+    WHERE te.signal_emission_id = $1 AND se.signal_name IS NOT NULL
+    ORDER BY te.created DESC
     LIMIT 200
   `;
   const res = await client!.query(query, [signalEmissionId]);
@@ -46,7 +35,7 @@ async function getTaskExecutionsByIds(ids: string[]) {
 }
 
 async function getTaskByName(name: string) {
-  const query = `SELECT name, description, version FROM task WHERE name = $1 LIMIT 1`;
+  const query = `SELECT task_name, service_name, description, task_version as version FROM task WHERE task_name = $1 LIMIT 1`;
   const res = await client!.query(query, [name]);
   return res.rows[0] || null;
 }
@@ -85,14 +74,26 @@ export default defineEventHandler(async (event) => {
 
       const taskExecutionIds = Array.from(execIds);
       const taskExecutions = await getTaskExecutionsByIds(taskExecutionIds);
+      
       const previousTasks: any[] = [];
-      if (emission.task_name) {
-        const taskMeta = await getTaskByName(emission.task_name);
+      if (emission.task_execution_id) {
         const emissionExecution = taskExecutions.find((te: any) => te.uuid === emission.task_execution_id) || null;
-        previousTasks.push({ task_name: emission.task_name, task_version: emission.task_version, task_meta: taskMeta, task_execution: emissionExecution });
+        if (emissionExecution) {
+          previousTasks.push({
+            task_name: emission.task_name || emissionExecution.task_name,
+            task_version: emission.task_version || emissionExecution.task_version,
+            task_execution: emissionExecution,
+            service_name: emissionExecution.service_name
+          });
+        }
       }
 
-      const nextTasks = await getConsumerTasksForSignal(emission.signal_name);
+      const nextTasks = consumptions.map((c: any) => ({
+        task_name: c.task_name,
+        task_version: c.task_version,
+        service_name: c.service_name,
+        task_execution_id: c.task_execution_id
+      }));
 
       return {
         emission,

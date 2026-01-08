@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { initializeClient, formatDate, getDuration } from '~/server/api/utils';
+import { getQuery } from 'h3';
 
 let client: pg.Client | null = null;
 
@@ -13,8 +14,14 @@ async function getSingleTaskExecution(id: string) {
     SELECT
         te.uuid,
         te.routine_execution_id,
-      te.execution_trace_id,
+        te.execution_trace_id,
         te.task_name,
+        te.task_version,
+        te.service_name,
+        te.context,
+        te.meta_context,
+        te.result_context,
+        te.meta_result_context,
         te.is_running,
         te.is_complete,
         te.errored,
@@ -23,22 +30,15 @@ async function getSingleTaskExecution(id: string) {
         te.created AS scheduled,
         te.started,
         te.ended,
-        re.service_name,
         r.description AS routine_name,
-        ctx.uuid AS context_id,
-        ctx2.uuid AS result_context_id,
-        ctx.context AS input_context,
-        ctx2.context AS output_context,
         t.name,
         t.description,
         t.is_unique,
         t.function_string
     FROM task_execution te
     LEFT JOIN routine_execution re ON te.routine_execution_id = re.uuid
-    LEFT JOIN routine r ON re.name = r.name
-    LEFT JOIN context ctx ON te.context_id = ctx.uuid
-    LEFT JOIN context ctx2 ON te.result_context_id = ctx2.uuid
-    LEFT JOIN task t ON te.task_name = t.name
+    LEFT JOIN routine r ON re.name = r.name AND re.service_name = r.service_name
+    LEFT JOIN task t ON te.task_name = t.name AND te.service_name = t.service_name
     WHERE te.uuid = $1 AND te.is_meta = false
   `;
 
@@ -58,6 +58,7 @@ async function getSingleTaskExecution(id: string) {
     execution_trace_id: row.execution_trace_id,
     executionTraceId: row.execution_trace_id,
     taskId: row.task_name,
+    taskVersion: row.task_version,
     isRunning: row.is_running,
     isComplete: row.is_complete,
     errored: row.errored,
@@ -67,10 +68,8 @@ async function getSingleTaskExecution(id: string) {
     started: formatDate(row.started),
     ended: formatDate(row.ended),
     duration: getDuration(row.started, row.ended),
-    contextId: row.context_id,
-    resultContextId: row.result_context_id,
-    inputContext: row.input_context,
-    outputContext: row.output_context,
+    inputContext: row.context,
+    outputContext: row.result_context,
     name: row.name,
     description: row.description,
     isUnique: row.is_unique,

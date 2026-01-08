@@ -1,64 +1,61 @@
 import pg from 'pg';
 import { initializeClient } from '~/server/api/utils';
+import { getQuery } from 'h3';
 
 let client: pg.Client | null = null;
 
-async function getSignal(name: string, serviceName: string) {
+async function getSignal(name: string) {
   const query = `
     SELECT 
     name, 
     domain, 
     action, 
     is_meta, 
-    service_name, 
+    is_global, 
     created, 
     deleted
     FROM signal_registry
-    WHERE name = $1 AND service_name = $2 AND is_meta = false
+    WHERE name = $1 AND is_meta = false
     ORDER BY name ASC
   `;
 
-  console.log('Executing query:', query, 'with parameters:', [name, serviceName]);
+  console.log('Executing query:', query, 'with parameters:', [name]);
 
-  const res = await client!.query(query, [name, serviceName]);
+  const res = await client!.query(query, [name]);
   return res.rows;
 }
 
-async function getPreviousTasksForSignal(signalName: string, serviceName: string) {
+async function getPreviousTasksForSignal(signalName: string) {
   const query = `
     SELECT DISTINCT 
-      t.name AS task_name, 
-      t.description AS task_description,
-      tsm.signal_name,
-      tsm.service_name
-    FROM task_to_signal_map tsm
-    JOIN task t ON tsm.task_name = t.name
-    WHERE tsm.signal_name = $1 AND tsm.service_name = $2 AND is_meta = false
-    ORDER BY t.name ASC
+      name AS task_name, 
+      description AS task_description,
+      service_name
+    FROM task
+    WHERE signals->'emits' ? $1 AND is_meta = false
+    ORDER BY name ASC
   `;
 
-  console.log('Executing query:', query, 'with parameters:', [signalName, serviceName]);
+  console.log('Executing query:', query, 'with parameters:', [signalName]);
 
-  const res = await client!.query(query, [signalName, serviceName]);
+  const res = await client!.query(query, [signalName]);
   return res.rows;
 }
 
-async function getNextTasksForSignal(signalName: string, serviceName: string) {
+async function getNextTasksForSignal(signalName: string) {
   const query = `
-    SELECT 
-      tsm.task_name, 
-      t.description AS task_description,
-      tsm.signal_name,
-      tsm.task_service_name AS service_name
-    FROM signal_to_task_map tsm
-    JOIN task t ON tsm.task_name = t.name
-    WHERE tsm.signal_name = $1 AND tsm.signal_service_name = $2 AND is_meta = false
-    ORDER BY t.name ASC
+    SELECT DISTINCT
+      name AS task_name, 
+      description AS task_description,
+      service_name
+    FROM task
+    WHERE signals->'observed' ? $1 AND is_meta = false
+    ORDER BY name ASC
   `;
 
-  console.log('Executing query:', query, 'with parameters:', [signalName, serviceName]);
+  console.log('Executing query:', query, 'with parameters:', [signalName]);
 
-  const res = await client!.query(query, [signalName, serviceName]);
+  const res = await client!.query(query, [signalName]);
   return res.rows;
 }
 
@@ -73,19 +70,18 @@ export default defineEventHandler(async (event) => {
     try {
       const query = getQuery(event);
       const signal = event.context.params?.id; 
-      const serviceName = query.serviceName as string; 
 
-      if (!signal || !serviceName) {
-        throw new Error('Both signal and serviceName must be provided');
+      if (!signal) {
+        throw new Error('Signal parameter must be provided');
       }
 
-      console.log('Received signal parameter:', signal, 'and serviceName parameter:', serviceName);
+      console.log('Received signal parameter:', signal);
 
-      const signals = await getSignal(signal, serviceName);
+      const signals = await getSignal(signal);
 
       const signalsWithTasks = await Promise.all(signals.map(async (signal) => {
-        const previousTasks = await getPreviousTasksForSignal(signal.name, serviceName);
-        const nextTasks = await getNextTasksForSignal(signal.name, serviceName);
+        const previousTasks = await getPreviousTasksForSignal(signal.name);
+        const nextTasks = await getNextTasksForSignal(signal.name);
         return { ...signal, previousTasks, nextTasks };
       }));
 

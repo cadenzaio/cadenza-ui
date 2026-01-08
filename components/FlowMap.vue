@@ -1,5 +1,5 @@
 <template>
-  <div ref="containerRef" :class="['vue-flow-container q-mb-md', { 'full-width': props.fullWidth }]">
+  <div ref="containerRef" :class="['vue-flow-container q-mb-md', { 'full-width': props.fullWidth, 'fullscreen-mode': isFullscreen }, fullscreenPolkaClass]">
     <div class="zoom-slider" aria-hidden="false" v-if="showZoomSlider">
       <label class="zoom-label">Zoom</label>
       <input
@@ -11,6 +11,24 @@
         aria-label="Zoom slider"
       />
       <span class="zoom-value">{{ Math.round(zoom * 100) }}%</span>
+      <q-btn
+        flat
+        dense
+        round
+        icon="fit_screen"
+        @click="fitToWindow"
+        class="q-ml-md"
+        title="Fit to Window"
+      />
+      <q-btn
+        flat
+        dense
+        round
+        :icon="isFullscreen ? 'fullscreen_exit' : 'fullscreen'"
+        @click="toggleFullscreen"
+        class="q-ml-xs"
+        title="Toggle Fullscreen"
+      />
     </div>
     <div
       v-if="tooltipVisible"
@@ -54,6 +72,7 @@ import { ref, watch, nextTick, onMounted, onUnmounted, computed } from 'vue';
 import { VueFlow, type Node, type Edge, type Position } from '@vue-flow/core';
 import ELK from 'elkjs/lib/elk.bundled.js';
 import { useAppStore } from '~/stores/app';
+import { useQuasar } from 'quasar';
 
 interface FlowItem {
   id?: string;
@@ -95,7 +114,35 @@ const containerRef = ref<HTMLElement | null>(null);
 const tooltipVisible = ref(false);
 const tooltipX = ref(0);
 const tooltipY = ref(0);
+const isFullscreen = ref(false);
 let tooltipTimer: ReturnType<typeof setTimeout> | null = null;
+const $q = useQuasar();
+
+const fullscreenPolkaClass = computed(() => {
+  if (!isFullscreen.value) return '';
+  return $q && $q.dark.isActive ? 'polka-dark' : 'polka-light';
+});
+
+function fitToWindow() {
+  if (!vueFlowInstance.value) return;
+  const api = vueFlowInstance.value as any;
+  if (typeof api.fitView === 'function') {
+    try {
+      api.fitView({ padding: 0.1, maxZoom: 1 });
+    } catch (err) {
+      console.error('Error fitting view:', err);
+    }
+  }
+}
+
+function toggleFullscreen() {
+  isFullscreen.value = !isFullscreen.value;
+  if (isFullscreen.value) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+}
 
 function showTooltipAt(clientX: number, clientY: number) {
   const el = containerRef.value;
@@ -491,6 +538,38 @@ watch(
   max-width: none;
   width: 100%;
 }
+
+.vue-flow-container.fullscreen-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border-radius: 0;
+  z-index: 9999;
+  background-attachment: fixed;
+  background-position: center;
+}
+
+.vue-flow-container.polka-light {
+  background-image: radial-gradient(rgb(168, 167, 167) 5%, transparent 5%);
+  background-position: 4px 4px;
+  background-size: 19px 19px;
+  background-color: rgb(255, 255, 255);
+}
+
+.vue-flow-container.polka-dark {
+  background-image: radial-gradient(rgb(87, 87, 87) 5%, transparent 5%);
+  background-position: 4px 4px;
+  background-size: 19px 19px;
+  background-color: rgb(0, 0, 0);
+}
+
 .zoom-slider {
   position: absolute;
   top: 10px;
@@ -516,6 +595,9 @@ watch(
   color: #333;
   min-width: 36px;
   text-align: right;
+}
+:deep(.zoom-slider .q-btn) {
+  color: #444;
 }
 
 .wheel-tooltip {

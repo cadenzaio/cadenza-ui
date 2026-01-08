@@ -231,9 +231,11 @@ async function fetchTasksInService(page = 1, serviceNameParam: string | null = n
     error.value = null;
     loadingMoreData.value = true;
     const svc = serviceNameParam ?? service;
-    const response = await fetch(
-      `/api/meta/metaService?serviceName=${encodeURIComponent(svc)}&page=${page}&pageSize=${pageSize}`
-    );
+    const url = new URL('/api/meta/metaService', window.location.origin);
+    url.searchParams.append('serviceName', svc);
+    url.searchParams.append('page', String(page));
+    url.searchParams.append('pageSize', String(pageSize));
+    const response = await fetch(url.toString());
     if (!response.ok) throw new Error('Failed to fetch tasks in service');
     const data = await response.json();
 

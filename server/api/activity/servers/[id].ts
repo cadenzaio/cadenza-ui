@@ -24,16 +24,18 @@ async function getService(serviceId: string) {
     RIGHT JOIN service_instance si ON re.service_instance_id = si.uuid
   `;
 
+  let result;
   if (isUuid(serviceId)) {
-    const query = baseSelect + ` WHERE si.uuid = $1;`;
-    const result = await client!.query(query, [serviceId]);
-    return result.rows;
+    const query = baseSelect + ` WHERE si.uuid = $1 LIMIT 1;`;
+    result = await client!.query(query, [serviceId]);
+  } else {
+    // Fallback: try matching by service_name when the provided id is not a UUID.
+    const queryByName = baseSelect + ` WHERE si.service_name = $1 LIMIT 1;`;
+    result = await client!.query(queryByName, [serviceId]);
   }
-
-  // Fallback: try matching by service_name when the provided id is not a UUID.
-  const queryByName = baseSelect + ` WHERE si.service_name = $1;`;
-  const result = await client!.query(queryByName, [serviceId]);
-  return result.rows;
+  // ...existing code...
+  // Return only the first row or null
+  return result.rows && result.rows.length > 0 ? result.rows[0] : null;
 }
 
 export default defineEventHandler(async (event) => {
@@ -46,7 +48,8 @@ export default defineEventHandler(async (event) => {
 
   if (method === 'GET') {
     try {
-      return await getService(serviceId);
+      const service = await getService(serviceId);
+      return service;
     } catch (error: any) {
       console.error('Error fetching routine:', error);
       if (error && error.code === '22P02') {

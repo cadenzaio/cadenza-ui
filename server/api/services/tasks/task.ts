@@ -51,45 +51,38 @@ LIMIT 1
 }
 
 async function getSignalsConsumedByTaskName(taskName: string) {
-		const q = `
-SELECT DISTINCT
-	signal_name,
-	signal_service_name AS service_name
-FROM signal_to_task_map
-WHERE task_name = $1
-`;
-	return queryRows(q, [taskName]);
+	const q = `SELECT signals FROM task WHERE name = $1`;
+	const rows = await queryRows(q, [taskName]);
+	if (!rows || rows.length === 0) return [];
+	const signals = rows[0].signals || {};
+	const observed = (signals.observed || []).filter((s: string) => !s.startsWith('meta.'));
+	return observed.map((s: string) => ({ signal_name: s }));
 }
 
 async function getEmittersForSignal(signalName: string) {
-		const q = `
-SELECT DISTINCT
-	task_name,
-	service_name
-FROM task_to_signal_map
-WHERE signal_name = $1
-`;
+	const q = `
+		SELECT DISTINCT name as task_name, service_name 
+		FROM task 
+		WHERE signals->'emits' ? $1
+	`;
 	return queryRows(q, [signalName]);
 }
 
 async function getSignalsEmittedByTaskName(taskName: string) {
-		const q = `
-SELECT DISTINCT
-	signal_name
-FROM task_to_signal_map
-WHERE task_name = $1
-`;
-	return (await queryRows(q, [taskName])).map((r: any) => r.signal_name);
+	const q = `SELECT signals FROM task WHERE name = $1`;
+	const rows = await queryRows(q, [taskName]);
+	if (!rows || rows.length === 0) return [];
+	const signals = rows[0].signals || {};
+	const emits = (signals.emits || []).filter((s: string) => !s.startsWith('meta.'));
+	return emits;
 }
 
 async function getConsumersForSignal(signalName: string) {
-		const q = `
-SELECT DISTINCT
-	task_name,
-	signal_service_name AS service_name
-FROM signal_to_task_map
-WHERE signal_name = $1
-`;
+	const q = `
+		SELECT DISTINCT name as task_name, service_name 
+		FROM task 
+		WHERE signals->'observed' ? $1
+	`;
 	return queryRows(q, [signalName]);
 }
 

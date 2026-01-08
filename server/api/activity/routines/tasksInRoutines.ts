@@ -48,11 +48,14 @@ export default defineEventHandler(async (event) => {
 				task_name AS name,
 				task_version,
 				service_name,
-				context_id,
-				result_context_id,
+				context,
+				meta_context,
+				result_context,
+				meta_result_context,
 				split_group_id,
 				service_instance_id,
 				execution_trace_id,
+				signal_emission_id,
 				is_scheduled,
 				is_running,
 				is_complete,
@@ -96,34 +99,12 @@ export default defineEventHandler(async (event) => {
 		let consumedMap: Record<string, string[]> = {};
 		const emissionNameMap: Record<string, string> = {};
 		if (ids.length > 0) {
-			try {
-				const qc = `
-				SELECT
-					task_execution_id,
-					signal_emission_id,
-					signal_name,
-					consumed_at 
-				FROM signal_consumption 
-				WHERE task_execution_id = ANY($1)`;
-				const rc = await client!.query(qc, [ids]);
-				for (const row of rc.rows) {
-					const tid = String(row.task_execution_id);
-					consumedMap[tid] = consumedMap[tid] || [];
-					const eid = row.signal_emission_id || row.uuid || null;
-					if (eid) {
-						if (!consumedMap[tid].includes(eid)) consumedMap[tid].push(eid);
-						if (row.signal_name) emissionNameMap[eid] = row.signal_name;
-							if (row.consumed_at) {
-								const ts = new Date(row.consumed_at).toISOString();
-								if (!emissionNameMap.__consumedAt) emissionNameMap.__consumedAt = {} as any;
-								const caMap: Record<string, string> = (emissionNameMap.__consumedAt as any);
-								if (!caMap[eid] || caMap[eid] > ts) caMap[eid] = ts;
-							}
-					}
-				}
-			} catch (e) {
-				console.error('Error fetching signal_consumption for tasks:', e);
-				consumedMap = {};
+			for (const row of res.rows) {
+				const tid = String(row.uuid);
+				if (!row.signal_emission_id) continue;
+				consumedMap[tid] = consumedMap[tid] || [];
+				const eid = row.signal_emission_id;
+				if (!consumedMap[tid].includes(eid)) consumedMap[tid].push(eid);
 			}
 		}
 
@@ -182,7 +163,7 @@ export default defineEventHandler(async (event) => {
 					created
 				FROM signal_emission
 				WHERE routine_execution_id = $1
-				ORDER BY created ASC
+				ORDER BY emitted_at ASC NULLS LAST, created ASC
 			`;
 			const r3 = await client!.query(q3, [routineExecutionId]);
 			emissionRows = r3.rows;
@@ -202,16 +183,11 @@ export default defineEventHandler(async (event) => {
 			}
 		}
 
-		if ((emissionNameMap as any).__consumedAt) {
-			const caMap: Record<string, string> = (emissionNameMap as any).__consumedAt;
-			for (const [k, v] of Object.entries(caMap)) consumedAtByEmission[k] = v;
-			delete (emissionNameMap as any).__consumedAt;
-		}
-
 		for (const row of emissionRows) {
 			const emissionId = row.uuid || row.id || null;
 			const sig = row.signal_name || null;
 			if (!emissionId || !sig) continue;
+			emissionNameMap[emissionId] = sig;
 			if (!signalMap[emissionId]) {
 				const emitterTaskExecutionId = row.task_execution_id || null;
 				const consumedAt = consumedAtByEmission[emissionId] || null;

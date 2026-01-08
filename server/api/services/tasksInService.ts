@@ -35,10 +35,9 @@ SELECT
   t.concurrency,
   t.service_name,
   t.version,
+  t.signals,
   dtm.predecessor_task_name AS previous_task_execution_name,
-  r.name AS routine_name,
-  stm.signal_name AS signal_to_task_signal_name,
-  tsm.signal_name AS task_to_signal_signal_name
+  r.name AS routine_name
 FROM task t
 LEFT JOIN directional_task_graph_map dtm
   ON t.name = dtm.task_name
@@ -49,10 +48,6 @@ LEFT JOIN task_to_routine_map trm
   AND t.service_name = trm.service_name
 LEFT JOIN routine r
   ON trm.routine_name = r.name
-LEFT JOIN signal_to_task_map stm
-  ON stm.task_name = t.name
-LEFT JOIN task_to_signal_map tsm
-  ON tsm.task_name = t.name
 WHERE t.service_name = $1 AND t.is_meta = false
   AND (t.deleted IS FALSE OR t.deleted IS NULL);
   `;
@@ -72,7 +67,16 @@ WHERE t.service_name = $1 AND t.is_meta = false
   nodes.push(serviceNode);
 
   const routineMap: Record<string, Node> = {};
+  const taskMap: Record<string, any> = {};
 
+  // First pass: create all task nodes and track tasks
+  result.rows.forEach((row) => {
+    if (!taskMap[row.task_name]) {
+      taskMap[row.task_name] = row;
+    }
+  });
+
+  // Process each task
   result.rows.forEach((row) => {
     const routineName = row.routine_name || 'UnknownRoutine';
 
@@ -114,45 +118,27 @@ WHERE t.service_name = $1 AND t.is_meta = false
       });
     }
 
-    if (row.signal_to_task_signal_name) {
+    // Process signals from the signals JSON field
+    const signals = row.signals || {};
+    const observedSignals = (signals.observed || []).filter((s: string) => !s.startsWith('meta.'));
+    const emittedSignals = (signals.emits || []).filter((s: string) => !s.startsWith('meta.'));
+
+    // Process observed signals (signal -> task)
+    observedSignals.forEach((signalName: string) => {
       let signalNodeId;
-      if (!signalNodes[row.signal_to_task_signal_name]) {
-        signalNodeId = `${row.task_name}-to-${row.signal_to_task_signal_name}`;
-        signalNodes[row.signal_to_task_signal_name] = signalNodeId;
+      if (!signalNodes[signalName]) {
+        signalNodeId = `signal-${signalName}`;
+        signalNodes[signalName] = signalNodeId;
         const signalNode: Node = {
           id: signalNodeId,
           type: 'custom',
           nodeType: 'signal',
           parentNode: serviceName,
-          data: { label: row.signal_to_task_signal_name, signal: true },
+          data: { label: signalName, signal: true },
         };
         nodes.push(signalNode);
       } else {
-        signalNodeId = signalNodes[row.signal_to_task_signal_name];
-      }
-
-      edges.push({
-        id: `e${row.task_name}-${signalNodeId}`,
-        source: row.task_name,
-        target: signalNodeId,
-      });
-    }
-
-    if (row.task_to_signal_signal_name) {
-      let signalNodeId;
-      if (!signalNodes[row.task_to_signal_signal_name]) {
-        signalNodeId = `${row.task_name}-from-${row.task_to_signal_signal_name}`;
-        signalNodes[row.task_to_signal_signal_name] = signalNodeId;
-        const signalNode: Node = {
-          id: signalNodeId,
-          type: 'custom',
-          nodeType: 'signal',
-          parentNode: serviceName,
-          data: { label: row.task_to_signal_signal_name, signal: true },
-        };
-        nodes.push(signalNode);
-      } else {
-        signalNodeId = signalNodes[row.task_to_signal_signal_name];
+        signalNodeId = signalNodes[signalName];
       }
 
       edges.push({
@@ -160,7 +146,32 @@ WHERE t.service_name = $1 AND t.is_meta = false
         source: signalNodeId,
         target: row.task_name,
       });
-    }
+    });
+
+    // Process emitted signals (task -> signal)
+    emittedSignals.forEach((signalName: string) => {
+      let signalNodeId;
+      if (!signalNodes[signalName]) {
+        signalNodeId = `signal-${signalName}`;
+        signalNodes[signalName] = signalNodeId;
+        const signalNode: Node = {
+          id: signalNodeId,
+          type: 'custom',
+          nodeType: 'signal',
+          parentNode: serviceName,
+          data: { label: signalName, signal: true },
+        };
+        nodes.push(signalNode);
+      } else {
+        signalNodeId = signalNodes[signalName];
+      }
+
+      edges.push({
+        id: `e${row.task_name}-${signalNodeId}`,
+        source: row.task_name,
+        target: signalNodeId,
+      });
+    });
   });
 
   return { nodes, edges };
