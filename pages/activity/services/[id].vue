@@ -26,6 +26,7 @@
                 :monthNames="heatmapMonthNames"
                 :editableRanges="heatmapEditableRanges"
                 :rawHeatmapData="heatmapRawData"
+                :serviceName="serverData?.service_name"
                 @update:editableRanges="onUpdateEditableRanges"
               />
             </div>

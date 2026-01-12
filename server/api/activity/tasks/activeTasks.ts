@@ -8,7 +8,10 @@ let client: pg.Client | null = null;
 async function getTaskExecution(
   name?: string,
   page: number = 1,
-  limit: number = 100
+  limit: number = 100,
+  startedAfter?: string,
+  startedBefore?: string,
+  service?: string
 ) {
   if (!client) {
     client = await initializeClient();
@@ -16,9 +19,33 @@ async function getTaskExecution(
 
   const offset = (page - 1) * limit;
 
-  const whereClause = name
-    ? "WHERE te.is_meta = false AND te.task_name = $1"
-    : 'WHERE te.is_meta = false';
+  let whereClause = 'WHERE te.is_meta = false';
+  const params: any[] = [];
+  let paramIndex = 1;
+
+  if (name) {
+    whereClause += ` AND te.task_name = $${paramIndex}`;
+    params.push(name);
+    paramIndex++;
+  }
+
+  if (startedAfter) {
+    whereClause += ` AND te.started >= $${paramIndex}`;
+    params.push(startedAfter);
+    paramIndex++;
+  }
+
+  if (startedBefore) {
+    whereClause += ` AND te.started < $${paramIndex}`;
+    params.push(startedBefore);
+    paramIndex++;
+  }
+
+  if (service) {
+    whereClause += ` AND te.service_name = $${paramIndex}`;
+    params.push(service);
+    paramIndex++;
+  }
 
   const query = `
     SELECT
@@ -51,9 +78,9 @@ async function getTaskExecution(
     LEFT JOIN task t ON te.task_name = t.name AND te.service_name = t.service_name
     ${whereClause}
     ORDER BY te.created DESC
-    LIMIT $${name ? '2' : '1'} OFFSET $${name ? '3' : '2'}
+    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
-  const params = name ? [name, limit, offset] : [limit, offset];
+  params.push(limit, offset);
   const result = await client.query(query, params);
   
 
@@ -116,8 +143,11 @@ export default defineEventHandler(async (event) => {
       const name = query.name as string | undefined;
       const page = parseInt(query.page as string) || 1;
       const limit = parseInt(query.limit as string) || 100;
+      const startedAfter = query.started_after as string | undefined;
+      const startedBefore = query.started_before as string | undefined;
+      const service = query.service as string | undefined;
 
-      return await getTaskExecution(name, page, limit);
+      return await getTaskExecution(name, page, limit, startedAfter, startedBefore, service);
     } catch (error) {
       console.error('Error fetching TaskExecutions:', error);
       throw error;

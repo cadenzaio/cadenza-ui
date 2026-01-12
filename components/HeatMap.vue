@@ -58,6 +58,7 @@
           height="500"
           :options="monthChartOptions"
           :series="monthChartSeries"
+          @dataPointSelection="onHourCellClick"
         />
         <div class="heatmap-header-bottom">
           <q-btn
@@ -186,6 +187,14 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <q-dialog v-model="showHourDialog" full-width>
+    <q-card>
+      <Table :columns="hourTableColumns" :rows="selectedHourData" :title="hourTableTitle" row-key="uuid" @inspect-row="inspectTask" @inspect-row-in-new-tab="inspectInNewTab" />
+      <q-card-actions align="right">
+        <q-btn color="primary" label="Close" @click="showHourDialog = false" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
@@ -207,6 +216,15 @@ interface HeatmapSeriesData {
 interface HeatmapSeries {
   name: string;
   data: HeatmapSeriesData[];
+}
+interface HourTableRow {
+  uuid: string;
+  name: string;
+  status: string;
+  progress: number;
+  started: string;
+  ended: string;
+  duration: number;
 }
 const props = defineProps({
   loading: {
@@ -238,6 +256,10 @@ const props = defineProps({
     type: Array as () => Array<HeatmapRow>,
     required: false,
     default: () => [],
+  },
+  serviceName: {
+    type: String,
+    default: undefined,
   },
 });
 
@@ -372,11 +394,58 @@ function onCellClick(
     });
   }
 }
+
+function onHourCellClick(
+  event: MouseEvent,
+  chartContext: unknown,
+  config: ApexDataPointSelectionConfig
+) {
+  if (
+    config &&
+    typeof config.seriesIndex === 'number' &&
+    typeof config.dataPointIndex === 'number'
+  ) {
+    const dayIdx = config.seriesIndex;
+    const hour = config.dataPointIndex;
+    const day = 31 - dayIdx; // since y is reversed
+    const monthIdx = props.monthNames.indexOf(selectedMonth.value);
+    // Calculate date range
+    const startDate = new Date(selectedYear.value, monthIdx, day, hour, 0, 0);
+    const endDate = new Date(selectedYear.value, monthIdx, day, hour + 1, 0, 0);
+    // Determine if on service page
+    let service: string | undefined;
+    if (props.serviceName) {
+      service = props.serviceName;
+    }
+    // Fetch tasks
+    const query: any = {
+      started_after: startDate.toISOString().slice(0, 19).replace('T', ' '),
+      started_before: endDate.toISOString().slice(0, 19).replace('T', ' '),
+      limit: 1000,
+    };
+    if (service) query.service = service;
+    (async () => {
+      try {
+        const data = await $fetch('/api/activity/tasks/activeTasks', { query });
+        selectedHourData.value = (data?.tasks || []) as unknown as HourTableRow[];
+        hourTableTitle.value = `Tasks for ${selectedMonth.value} ${day}, ${selectedYear.value} at ${hour}:00${service ? ` (Service: ${service})` : ''}`;
+        showHourDialog.value = true;
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        selectedHourData.value = [];
+        hourTableTitle.value = 'Error loading tasks';
+        showHourDialog.value = true;
+      }
+    })();
+  }
+}
 import VueApexCharts from 'vue3-apexcharts';
 import { ref, computed, watch, nextTick } from 'vue';
 import { useAppStore } from '@/stores/app';
 import { storeToRefs } from 'pinia';
 import { ref as qRef } from 'vue';
+import Table from '@/components/Table.vue';
+import { useRoute, useRouter } from 'vue-router';
 
 function generateData(
   count: number,
@@ -420,6 +489,9 @@ function handleMaxChange(val: number, idx: number) {
 const appStore = useAppStore();
 const { isDarkMode } = storeToRefs(appStore);
 
+const route = useRoute();
+const router = useRouter();
+
 const getLabelColor = () => (isDarkMode.value ? '#e0e0e0' : '#20242c');
 
 const labelStyle = {
@@ -427,6 +499,54 @@ const labelStyle = {
 };
 
 const showDialog = qRef(false);
+
+const showHourDialog = ref(false);
+const selectedHourData = ref<HourTableRow[]>([]);
+const hourTableColumns = [
+  {
+    name: 'name',
+    label: 'Name',
+    field: 'name',
+    required: true,
+    sortable: true,
+  },
+  {
+    name: 'status',
+    label: 'Status',
+    field: 'status',
+    required: true,
+    sortable: true,
+  },
+  {
+    name: 'progress',
+    label: 'Progress',
+    field: 'progress',
+    required: true,
+    sortable: false,
+  },
+  {
+    name: 'started',
+    label: 'Started',
+    field: 'started',
+    required: true,
+    sortable: true,
+  },
+  {
+    name: 'ended',
+    label: 'Ended',
+    field: 'ended',
+    required: true,
+    sortable: true,
+  },
+  {
+    name: 'duration',
+    label: 'Duration (sec)',
+    field: 'duration',
+    required: true,
+    sortable: true,
+  },
+];
+const hourTableTitle = ref('Hour Details');
 
 const editableRanges = computed({
   get: () => localEditableRanges.value,
@@ -868,6 +988,15 @@ function goToCurrentYear() {
 function goToCurrentMonth() {
   selectedYear.value = currentYear;
   selectedMonth.value = props.monthNames[currentMonth];
+}
+
+function inspectTask(task: HourTableRow) {
+  router.push(`/activity/tasks/${task.uuid}`);
+}
+
+function inspectInNewTab(task: HourTableRow) {
+  const url = `/activity/tasks/${task.uuid}`;
+  window.open(url, '_blank');
 }
 </script>
 
