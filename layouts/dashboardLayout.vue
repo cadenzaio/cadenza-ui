@@ -1,8 +1,8 @@
 <template>
   <q-layout view="hHh LpR lFf" class="overflow-auto">
     <q-header elevated>
-      <q-toolbar :class="['navContainer', toolbarClass, 'flex']">
-        <q-img src="/local_1.svg" class="logo" style="z-index: 500" />
+      <q-toolbar :class="['navContainer', toolbarClass, 'flex']" style="height: 100px;">
+        <q-img src="/CadenzaLogo.png" class="logo" style="z-index: 500" />
         <div v-if="appStore.isLoggedIn" class="flex items-center">
           <q-tooltip
             v-if="showTooltip"
@@ -697,9 +697,7 @@ onBeforeUnmount(() => {
 }
 
 .logo {
-  max-height: 60px;
-  max-width: 300px;
-  margin: 10px;
-  padding: 10px;
+  width: 5dvh;
+
 }
 </style>

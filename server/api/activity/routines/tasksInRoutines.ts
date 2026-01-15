@@ -245,6 +245,18 @@ export default defineEventHandler(async (event) => {
 
 		const signalNodes = Object.values(signalMap);
 
+		// Set timestamps for consumed signals based on consuming task
+		for (const sig of signalNodes) {
+			if (sig.relation === 'consumed_by' && sig.consumedBy && sig.consumedBy.length > 0) {
+				const consumerId = sig.consumedBy[0];
+				const consumer = taskNodes.find(t => t.uuid === consumerId);
+				if (consumer && consumer.started) {
+					sig.started = consumer.started;
+					sig.ended = new Date(new Date(sig.started).getTime() + 500).toISOString();
+				}
+			}
+		}
+
 		return [...taskNodes, ...signalNodes];
 	} catch (err) {
 		console.error('Error fetching task executions for routine:', err);

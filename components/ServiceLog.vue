@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <q-card class="custom-card q-mb-md overflow-auto q-ma-sm">
     <div class="row items-center justify-between full-width">
       <h4 class="q-pa-sm q-ma-none">Service Log</h4>
       <div class="row items-center q-gutter-sm q-pr-sm">
@@ -116,7 +116,7 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-  </div>
+  </q-card>
 </template>
 
 <script setup lang="ts">
@@ -134,7 +134,7 @@ const logDialogOpen = ref(false);
 const selectedLog = ref<any>(null);
 const logTableRef = ref<any>(null);
 const logPage = ref(1);
-const logLimit = 20;
+const logLimit = 100;
 const logHasMore = ref(true);
 const logLoadingMore = ref(false);
 const logLevelFilters = ref({

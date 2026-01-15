@@ -349,7 +349,7 @@
 import { useOpenLinkInNewTab } from '~/composables/useOpenLinkInNewTab';
 const { openLinkInNewTab } = useOpenLinkInNewTab();
 import { useRoute } from '#app';
-import { ref, onMounted, watchEffect, defineAsyncComponent } from 'vue';
+import { ref, onMounted, watchEffect, defineAsyncComponent, onBeforeUnmount } from 'vue';
 import { useRouter } from '#vue-router';
 import { useAppStore } from '~/stores/app';
 
@@ -491,10 +491,7 @@ async function onItemSelected(item: any) {
   router.push(`/activity/tasks/${execId}`);
 }
 
-onMounted(async () => {
-  const appStore = useAppStore();
-  appStore.setCurrentSection('serviceActivity');
-
+async function fetchSelectedItem() {
   const itemId = route.params.id as string;
   try {
     const response = await fetch(
@@ -507,26 +504,47 @@ onMounted(async () => {
     error.value = err instanceof Error ? err.message : 'Unknown error';
     selectedItem.value = null;
   }
+}
 
-  if (selectedItem.value) {
-    try {
-      routineMapLoading.value = true;
-      const encodedId = encodeURIComponent(selectedItem.value.uuid);
-      const tasks = await fetch(
-        `/api/activity/routines/tasksInRoutines?routine_execution_id=${encodedId}`
-      );
-      if (!tasks.ok) throw new Error('Failed to fetch routine map');
-      const tasksData = await tasks.json();
-      routineMap.value = tasksData || [];
-    } catch (error) {
-      routineMap.value = [];
-    } finally {
-      routineMapLoading.value = false;
-    }
-  } else {
+async function fetchRoutineMap() {
+  if (!selectedItem.value) return;
+  try {
+    routineMapLoading.value = true;
+    const encodedId = encodeURIComponent(selectedItem.value.uuid);
+    const tasks = await fetch(
+      `/api/activity/routines/tasksInRoutines?routine_execution_id=${encodedId}`
+    );
+    if (!tasks.ok) throw new Error('Failed to fetch routine map');
+    const tasksData = await tasks.json();
+    routineMap.value = tasksData || [];
+  } catch (error) {
     routineMap.value = [];
+  } finally {
     routineMapLoading.value = false;
   }
+}
+
+onMounted(async () => {
+  const appStore = useAppStore();
+  appStore.setCurrentSection('serviceActivity');
+
+  await fetchSelectedItem();
+  await fetchRoutineMap();
+
+  // Poll for updates every 5 seconds
+  const pollInterval = setInterval(async () => {
+    await fetchSelectedItem();
+    await fetchRoutineMap();
+    // Stop polling if the routine is completed
+    if (selectedItem.value && selectedItem.value.status === 'check') {
+      clearInterval(pollInterval);
+    }
+  }, 5000);
+
+  // Clear interval on unmount
+  onBeforeUnmount(() => {
+    clearInterval(pollInterval);
+  });
 });
 
 const showStopDialog = ref(false);

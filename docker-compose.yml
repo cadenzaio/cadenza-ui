@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_USER=iot_user
+      - DATABASE_PASSWORD=iot_pass
+      - DATABASE_ADDRESS=host.docker.internal
+      - DATABASE_PORT=5433
+      - DATABASE_NAME=cadenza_db
+      - AUTH_ORIGIN=http://localhost:3000

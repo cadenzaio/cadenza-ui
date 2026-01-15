@@ -224,26 +224,39 @@ const chartOptions = computed(() => {
   };
 });
 
-// Brush chart series - include Task Count and Signal Count
+// Brush chart series - include Task Count and Signal Count, filtered to exclude future dates
 const brushSeries = computed(() => {
   if (props.series.length === 0) return [];
   const result: AreaSeries[] = [];
+  const now = Date.now();
   
   // Find Task Count series
   const taskSeries = props.series.find(s => s.name === 'Task Count');
   if (taskSeries) {
-    result.push({ name: 'Task Count', data: taskSeries.data });
+    const filteredData = taskSeries.data.filter((point) => {
+      const x = Array.isArray(point) ? point[0] : point.x;
+      return new Date(x).getTime() <= now;
+    });
+    result.push({ name: 'Task Count', data: filteredData as AreaSeries['data'] });
   }
   
   // Find Signal Count series
   const signalSeries = props.series.find(s => s.name === 'Signal Count');
   if (signalSeries) {
-    result.push({ name: 'Signal Count', data: signalSeries.data });
+    const filteredData = signalSeries.data.filter((point) => {
+      const x = Array.isArray(point) ? point[0] : point.x;
+      return new Date(x).getTime() <= now;
+    });
+    result.push({ name: 'Signal Count', data: filteredData as AreaSeries['data'] });
   }
   
   // Fallback to first series if neither found
   if (result.length === 0 && props.series[0]) {
-    result.push({ name: 'Timeline', data: props.series[0].data });
+    const filteredData = props.series[0].data.filter((point) => {
+      const x = Array.isArray(point) ? point[0] : point.x;
+      return new Date(x).getTime() <= now;
+    });
+    result.push({ name: 'Timeline', data: filteredData as AreaSeries['data'] });
   }
   
   return result;
@@ -259,6 +272,9 @@ const brushChartOptions = computed(() => {
       toolbar: {
         show: false,
         autoSelected: 'selection',
+      },
+      pan: {
+        enabled: true,
       },
       selection: {
         enabled: true,
@@ -293,6 +309,8 @@ const brushChartOptions = computed(() => {
     },
     xaxis: {
       type: 'datetime',
+      min: Date.now() - 7 * 24 * 60 * 60 * 1000,
+      max: Date.now(),
       tooltip: {
         enabled: false,
       },

@@ -126,7 +126,8 @@ export default defineEventHandler(async (event) => {
           SELECT 
             name, 
             service_name, 
-          signals FROM task WHERE name = ANY($1)`;
+            signals 
+          FROM task WHERE name = ANY($1) AND is_meta = false`;
           const tasksRes = await client!.query(tasksQ, [taskNames]);
 
           const emittersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
@@ -189,8 +190,10 @@ export default defineEventHandler(async (event) => {
             (regRes.rows || []).forEach((r: any) => (registryByName[r.name] = r));
 
             for (const sig of allSignals) {
-              const sigNodeId = `signal::${sig}`;
               const registry = registryByName[sig];
+              if (!registry) continue; // Skip meta signals
+
+              const sigNodeId = `signal::${sig}`;
               const parentServiceName = registry?.service_name ?? null;
               let parentNodeId = sId;
               if (parentServiceName) {
