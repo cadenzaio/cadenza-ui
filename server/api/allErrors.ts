@@ -1,29 +1,15 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
-
-async function getClient() {
-  if (!client) {
-    client = await initializeClient();
-  }
-  return client;
-}
+import { supabaseAdmin } from '~/utils/supabase';
 
 async function getRoutineMap() {
-  const query = `
-SELECT
-    COUNT(*) as executions,
-    SUM(CASE WHEN errored THEN 1 ELSE 0 END) as errored,
-    SUM(CASE WHEN failed THEN 1 ELSE 0 END) as failed,
-    SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as reached_timeout,
-    SUM(CASE WHEN is_complete THEN 1 ELSE 0 END) as is_complete
-FROM
-    routine_execution
-  `;
-  const client = await getClient();
-  const result = await client.query(query);
-  return result.rows;
+  // Using Supabase RPC for complex queries
+  // You could also create a stored procedure in Postgres and call it via RPC
+  const { data, error } = await supabaseAdmin.rpc('get_routine_execution_stats');
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
 
 export default defineEventHandler(async (event) => {

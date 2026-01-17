@@ -1,8 +1,6 @@
-import pg from 'pg';
-import { initializeClient, formatDate, getDuration } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
+import { formatDate, getDuration } from '~/server/api/utils';
 import { removeMetaData } from '~/src/util';
-
-let client: pg.Client | null = null;
 
 // Types for routine row and mapped object
 interface RoutineRow {
@@ -29,7 +27,7 @@ interface RoutineRow {
   previous_routine_id: string;
   routine_name: string;
   routine_description: string;
-  service_name: string; 
+  service_name: string;
 }
 
 interface RoutineMapped {
@@ -48,7 +46,7 @@ interface RoutineMapped {
   ended: string;
   duration: number;
   uuid: string;
-  serviceName: string; 
+  serviceName: string;
   previousRoutineName: string;
   contract_id: string;
   processingGraph: string;
@@ -68,115 +66,109 @@ async function getRoutines({
   page?: number;
   limit?: number;
 }): Promise<RoutineMapped[]> {
-  if (!client) {
-    client = await initializeClient();
-  }
+  const offset = (page - 1) * limit;
 
-  let query = `
-  SELECT
-      re.uuid,
-      re.name AS routine_name,
-      re.service_instance_id AS service_id,
-      re.is_running,
-      re.is_complete,
-      re.errored,
-      re.failed,
-      re.progress,
-      re.created,
-      re.started,
-      re.ended,
-      r.name AS routine_type,
-      r.description AS routine_description,
-      re.previous_routine_execution,
-      s.name AS service_name
-  FROM routine_execution AS re
-  LEFT JOIN routine r ON re.name = r.name AND re.service_name = r.service_name
-  LEFT JOIN service s ON re.service_name = s.name
-  WHERE re.is_meta = false
-  `; 
+  let query = supabaseAdmin
+    .from('routine_execution')
+    .select(`
+      uuid,
+      name,
+      service_instance_id,
+      is_running,
+      is_complete,
+      errored,
+      failed,
+      progress,
+      created,
+      started,
+      ended,
+      previous_routine_execution,
+      contract_id,
+      input_context,
+      output_context,
+      processing_graph,
+      routine!inner(
+        name,
+        description
+      ),
+      service!inner(
+        name
+      )
+    `)
+    .eq('is_meta', false);
 
-  let params: any[] = []; 
   if (uuid) {
-    query += ` AND re.uuid = $1`;
-    params.push(uuid);
+    query = query.eq('uuid', uuid);
   }
 
-  const orderQuery = `ORDER BY re.created DESC`;
-  const limitQuery = uuid ? '' : `LIMIT ${limit} OFFSET ${(page - 1) * limit}`;
+  query = query
+    .order('created', { ascending: false })
+    .range(offset, offset + limit - 1);
 
-  const fullQuery = [query, orderQuery, limitQuery]
-    .filter(Boolean)
-    .join(' ');
+  const { data, error } = await query;
 
-  try {
-    const res = await client.query(fullQuery, params);
-    return res.rows.map(
-      (row: RoutineRow): RoutineMapped => ({
-        id: row.uuid,
-        name: row.routine_name,
-        type: 'routine',
-        label: row.routine_name,
-        description: row.routine_description,
-        routineDescription: row.routine_description,
-        serviceId: row.service_id,
-        routineId: row.uuid,
-        status: row.is_complete
-          ? 'check'
-          : row.is_running
-          ? 'play_arrow'
-          : row.errored
-          ? 'close'
-          : 'schedule',
-        previousRoutineExecution: row.previous_routine_execution,
-        progress: row.progress,
-        started: row.created
-          ? formatDate(
-              typeof row.created === 'string'
-                ? row.created
-                : row.created.toISOString()
-            )
-          : '',
-        ended: row.ended
-          ? formatDate(
-              typeof row.ended === 'string'
-                ? row.ended
-                : row.ended.toISOString()
-            )
-          : '',
-        duration: getDuration(
-          row.created
-            ? typeof row.created === 'string'
-              ? new Date(row.created).getTime()
-              : row.created.getTime()
-            : 0,
-          row.ended
-            ? typeof row.ended === 'string'
-              ? new Date(row.ended).getTime()
-              : row.ended.getTime()
-            : 0
-        ),
-        uuid: row.uuid,
-        serviceName: row.service_name,
-        previousRoutineName: row.routine_name,
-        contract_id: row.contract_id,
-        processingGraph: row.processing_graph,
-        inputContext: removeMetaData(row.input_context),
-        outputContext: removeMetaData(row.output_context),
-        isRunning: row.is_running,
-        referer: row.errored ? 'Errored' : null,
-      })
-    );
-  } catch (error) {
-    console.error('Error executing query:', error);
+  if (error) {
     throw error;
   }
+
+  return data.map((row): RoutineMapped => ({
+    id: row.uuid,
+    name: row.name,
+    type: 'routine',
+    label: row.name,
+    description: row.routine?.[0]?.description,
+    routineDescription: row.routine?.[0]?.description,
+    serviceId: row.service_instance_id,
+    routineId: row.uuid,
+    status: row.is_complete
+      ? 'check'
+      : row.is_running
+      ? 'play_arrow'
+      : row.errored
+      ? 'close'
+      : 'schedule',
+    previousRoutineExecution: row.previous_routine_execution,
+    progress: row.progress,
+    started: row.created
+      ? formatDate(
+          typeof row.created === 'string'
+            ? row.created
+            : row.created.toISOString()
+        )
+      : '',
+    ended: row.ended
+      ? formatDate(
+          typeof row.ended === 'string'
+            ? row.ended
+            : row.ended.toISOString()
+        )
+      : '',
+    duration: getDuration(
+      row.created
+        ? typeof row.created === 'string'
+          ? new Date(row.created).getTime()
+          : row.created.getTime()
+        : 0,
+      row.ended
+        ? typeof row.ended === 'string'
+          ? new Date(row.ended).getTime()
+          : row.ended.getTime()
+        : 0
+    ),
+    uuid: row.uuid,
+    serviceName: row.service?.[0]?.name,
+    previousRoutineName: row.name,
+    contract_id: row.contract_id,
+    processingGraph: row.processing_graph,
+    inputContext: removeMetaData(row.input_context),
+    outputContext: removeMetaData(row.output_context),
+    isRunning: row.is_running,
+    referer: row.errored ? 'Errored' : null,
+  }));
 }
 
 // Event handler
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
   const { method, url } = event.node.req || {};
 
   if (method === 'GET') {

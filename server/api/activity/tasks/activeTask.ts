@@ -1,89 +1,77 @@
-import pg from 'pg';
-import { initializeClient, formatDate, getDuration } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
+import { formatDate, getDuration } from '~/server/api/utils';
 import { getQuery } from 'h3';
-
-let client: pg.Client | null = null;
 
 // Get a single TaskExecution by ID
 async function getSingleTaskExecution(id: string) {
-  if (!client) {
-    client = await initializeClient();
+  const { data, error } = await supabaseAdmin
+    .from('task_execution')
+    .select(`
+      uuid,
+      routine_execution_id,
+      execution_trace_id,
+      task_name,
+      task_version,
+      service_name,
+      context,
+      meta_context,
+      result_context,
+      meta_result_context,
+      is_running,
+      is_complete,
+      errored,
+      failed,
+      progress,
+      created,
+      started,
+      ended,
+      routine_execution!left(
+        routine!left(name, description)
+      ),
+      task!left(name, description, is_unique, function_string)
+    `)
+    .eq('uuid', id)
+    .eq('is_meta', false)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      throw new Error(`TaskExecution with ID ${id} not found`);
+    }
+    throw error;
   }
-
-  const query = `
-    SELECT
-        te.uuid,
-        te.routine_execution_id,
-        te.execution_trace_id,
-        te.task_name,
-        te.task_version,
-        te.service_name,
-        te.context,
-        te.meta_context,
-        te.result_context,
-        te.meta_result_context,
-        te.is_running,
-        te.is_complete,
-        te.errored,
-        te.failed,
-        te.progress,
-        te.created AS scheduled,
-        te.started,
-        te.ended,
-        r.description AS routine_name,
-        t.name,
-        t.description,
-        t.is_unique,
-        t.function_string
-    FROM task_execution te
-    LEFT JOIN routine_execution re ON te.routine_execution_id = re.uuid
-    LEFT JOIN routine r ON re.name = r.name AND re.service_name = r.service_name
-    LEFT JOIN task t ON te.task_name = t.name AND te.service_name = t.service_name
-    WHERE te.uuid = $1 AND te.is_meta = false
-  `;
-
-  const result = await client.query(query, [id]);
-
-  if (result.rows.length === 0) {
-    throw new Error(`TaskExecution with ID ${id} not found`);
-  }
-
-  const row = result.rows[0];
 
   return {
-    uuid: row.uuid,
-    id: row.uuid,
+    uuid: data.uuid,
+    id: data.uuid,
     type: 'task',
-    routineExecutionId: row.routine_execution_id,
-    execution_trace_id: row.execution_trace_id,
-    executionTraceId: row.execution_trace_id,
-    taskId: row.task_name,
-    taskVersion: row.task_version,
-    isRunning: row.is_running,
-    isComplete: row.is_complete,
-    errored: row.errored,
-    failed: row.failed,
-    progress: row.progress,
-    scheduled: row.scheduled,
-    started: formatDate(row.started),
-    ended: formatDate(row.ended),
-    duration: getDuration(row.started, row.ended),
-    inputContext: row.context,
-    outputContext: row.result_context,
-    name: row.name,
-    description: row.description,
-    isUnique: row.is_unique,
-    functionString: row.function_string,
-    serviceName: row.service_name,
-    routineName: row.routine_name,
+    routineExecutionId: data.routine_execution_id,
+    execution_trace_id: data.execution_trace_id,
+    executionTraceId: data.execution_trace_id,
+    taskId: data.task_name,
+    taskVersion: data.task_version,
+    isRunning: data.is_running,
+    isComplete: data.is_complete,
+    errored: data.errored,
+    failed: data.failed,
+    progress: data.progress,
+    scheduled: data.created,
+    started: formatDate(data.started),
+    ended: formatDate(data.ended),
+    duration: getDuration(data.started, data.ended),
+    inputContext: data.context,
+    outputContext: data.result_context,
+    name: data.task?.[0]?.name,
+    description: data.task?.[0]?.description,
+    isUnique: data.task?.[0]?.is_unique,
+    functionString: data.task?.[0]?.function_string,
+    serviceName: data.service_name,
+    routineName: data.routine_execution?.[0]?.routine?.[0]?.description,
   };
 }
 
 // Event handler
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
   const { method } = event.node.req;
 
   if (method === 'GET') {

@@ -1,40 +1,12 @@
-import { initializeClient } from '~/server/api/utils';
-import { Client } from 'pg';
-
-let client: Client | null = null;
-
-async function getClient() {
-  if (!client) {
-    client = await initializeClient();
-  }
-  return client;
-}
+import { supabaseAdmin } from '~/utils/supabase';
 
 async function getRoutineMap() {
-  let query = `
-    SELECT
-      DATE_TRUNC('day', created) as date,
-      EXTRACT(hour FROM created) as hour,
-      COUNT(*) as executions,
-      SUM(CASE WHEN errored THEN 1 ELSE 0 END) +
-      SUM(CASE WHEN failed THEN 1 ELSE 0 END) +
-      SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as errors
-    FROM "routine_execution"
-    WHERE is_meta = false
-  `;
-  query += `
-    GROUP BY date, hour
-    ORDER BY date, hour
-  `;
-
-  const client = await getClient();
-  try {
-    const result = await client.query(query);
-    return result.rows;
-  } catch (error) {
+  const { data, error } = await supabaseAdmin.rpc('get_routine_heatmap_data');
+  if (error) {
     console.error('Error executing query:', error);
     throw error;
   }
+  return data;
 }
 
 // Types for heatmap data

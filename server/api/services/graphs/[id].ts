@@ -1,39 +1,33 @@
-import { initializeClient, formatDateLocale } from '~/server/api/utils';
-import pg from 'pg';
-
-let client: pg.Client | null = null;
+import { supabaseAdmin } from '~/utils/supabase';
+import { formatDateLocale } from '~/server/api/utils';
 
 async function getGraph(serviceInstanceId: string) {
-  const query = `
-    SELECT *
-    FROM service s
-    WHERE s.name = $1
-    LIMIT 1;
-  `;
+  const { data, error } = await supabaseAdmin
+    .from('service')
+    .select('*')
+    .eq('name', serviceInstanceId)
+    .limit(1)
+    .single();
 
-  const result = await client!.query(query, [serviceInstanceId]);
-
-  if (result.rows && result.rows.length > 0) {
-    const row = result.rows[0];
-    return {
-      name: row.name,
-      description: row.description,
-      modified: formatDateLocale(row.modified),
-      deleted: row.deleted,
-      created: formatDateLocale(row.created),
-      deletedStatus: row.deleted ? 'Yes' : 'No',
-      displayName: row.display_name || row.name,
-    };
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null;
+    }
+    throw error;
   }
 
-  return null;
+  return {
+    name: data.name,
+    description: data.description,
+    modified: formatDateLocale(data.modified),
+    deleted: data.deleted,
+    created: formatDateLocale(data.created),
+    deletedStatus: data.deleted ? 'Yes' : 'No',
+    displayName: data.display_name || data.name,
+  };
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
   const serviceInstanceId = decodeURIComponent(event.context.params?.id ?? '');
 

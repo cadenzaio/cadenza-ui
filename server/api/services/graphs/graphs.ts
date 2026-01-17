@@ -1,21 +1,23 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
+import { supabaseAdmin } from '~/utils/supabase';
+import { getQuery } from 'h3';
 
 // Get all graphs with pagination support
 async function getgraphs(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
-  const query = `
-    SELECT * FROM service
-    WHERE is_meta = false
-    ORDER BY name ASC
-    LIMIT $1 OFFSET $2
-  `;
-  const res = await client!.query(query, [limit, offset]);
-  // Map the results to match the ListItem interface
 
-  return res.rows.map((row) => ({
+  const { data, error } = await supabaseAdmin
+    .from('service')
+    .select('*')
+    .eq('is_meta', false)
+    .order('name', { ascending: true })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    throw error;
+  }
+
+  // Map the results to match the ListItem interface
+  return data.map((row) => ({
     type: 'service',
     label: row.display_name || row.name,
     uuid: row.uuid,
@@ -24,14 +26,10 @@ async function getgraphs(page: number = 1, limit: number = 100) {
     // include canonical name for routing/navigation
     name: row.name,
   }));
-
 }
 
 // Event handler
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
   const { method } = event.node.req;
 
   if (method === 'GET') {

@@ -1,38 +1,42 @@
-import { initializeClient } from '~/server/api/utils';
-import pg from 'pg';
+import { supabaseAdmin } from '~/utils/supabase';
 import { getQuery } from 'h3';
 
-let client: pg.Client | null = null;
-
 async function getRoutine(routineName: string, version?: string | null, service?: string | null) {
-  const params: any[] = [routineName];
-  let q = `
-    SELECT *
-    FROM routine
-    WHERE name = $1 AND is_meta = false
-  `;
+  let query = supabaseAdmin
+    .from('routine')
+    .select(`
+      *,
+      task_to_routine_map!inner(
+        task!inner(name, version, service_name)
+      )
+    `)
+    .eq('name', routineName)
+    .eq('is_meta', false);
 
-  if (version || service) {
-    q += ` AND EXISTS (
-      SELECT 1 FROM task_to_routine_map trm
-      JOIN task t ON trm.task_name = t.name
-      WHERE trm.routine_name = routine.name`;
-    if (version) {
-      params.push(version);
-      q += ` AND t.version = $${params.length}`;
-    }
-    if (service) {
-      params.push(service);
-      q += ` AND t.service_name = $${params.length}`;
-    }
-    q += ` )`;
+  // For version and service filtering, we need to filter on the joined data
+  // This is complex in Supabase, so we'll fetch and filter client-side for now
+  const { data, error } = await query;
+
+  if (error) {
+    throw error;
   }
 
-  q += `;`;
+  let filteredData = data;
 
-  const result = await client!.query(q, params);
+  if (version || service) {
+    filteredData = data.filter(routine => {
+      const tasks = routine.task_to_routine_map || [];
+      return tasks.some((taskMap: any) => {
+        const task = taskMap.task;
+        if (!task) return false;
+        if (version && task.version !== version) return false;
+        if (service && task.service_name !== service) return false;
+        return true;
+      });
+    });
+  }
 
-  return result.rows.map((routine: any) => ({
+  return filteredData.map((routine: any) => ({
     type: routine.type,
     name: routine.name,
     description: routine.description,
@@ -46,10 +50,6 @@ async function getRoutine(routineName: string, version?: string | null, service?
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
   const routineName = event.context.params?.id ?? '';
 

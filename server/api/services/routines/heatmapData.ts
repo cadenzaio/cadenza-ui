@@ -1,37 +1,14 @@
-import { initializeClient } from '~/server/api/utils';
-import { Client } from 'pg';
-
-let client: Client | null = null;
-
-async function getClient() {
-  if (!client) {
-    client = await initializeClient();
-  }
-  return client;
-}
+import { supabaseAdmin } from '~/utils/supabase';
 
 async function getRoutineMap(routineName: string) {
-  const query = `
-    SELECT
-      DATE_TRUNC('day', created) as date,
-      EXTRACT(hour FROM created) as hour,
-      COUNT(*) as executions,
-      SUM(CASE WHEN errored THEN 1 ELSE 0 END) +
-      SUM(CASE WHEN failed THEN 1 ELSE 0 END) +
-      SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as errors
-    FROM routine_execution
-    WHERE name = $1 AND is_meta = false
-    GROUP BY DATE_TRUNC('day', created), EXTRACT(hour FROM created)
-    ORDER BY DATE_TRUNC('day', created), EXTRACT(hour FROM created)
-  `;
-  const client = await getClient();
-  try {
-    const result = await client.query(query, [routineName]);
-    return result.rows;
-  } catch (error) {
+  const { data, error } = await supabaseAdmin.rpc('get_routine_heatmap_data_by_name', {
+    routine_name: routineName
+  });
+  if (error) {
     console.error('Error executing query:', error);
     throw error;
   }
+  return data;
 }
 
 export default defineEventHandler(async (event) => {

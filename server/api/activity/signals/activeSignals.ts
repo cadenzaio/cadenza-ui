@@ -1,37 +1,24 @@
-import { initializeClient } from '~/server/api/utils';
-import pg from 'pg';
-
-let client: pg.Client | null = null;
+import { supabaseAdmin } from '~/utils/supabase';
 
 async function getAllSignalEmissions() {
-  if (!client) {
-    client = await initializeClient();
+  const { data, error } = await supabaseAdmin
+    .from('signal_emission')
+    .select(`
+      uuid,
+      signal_name,
+      emitted_at,
+      created,
+      service_name,
+      service_instance_id
+    `)
+    .eq('is_meta', false);
+
+  if (error) {
+    console.error('Error fetching signal emissions:', error.message, error);
+    throw new Error(`Failed to fetch signal emissions: ${error.message}`);
   }
 
-  const query = `
-    SELECT 
-        se.uuid,
-        se.signal_name AS name,
-        se.emitted_at,
-        se.created,
-        se.service_name AS service,
-        se.service_instance_id AS service_instance_id
-    FROM signal_emission se
-    WHERE is_meta = false;
-  `;
-
-  try {
-    const result = await client.query(query);
-    return result.rows;
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error('Error fetching signal emissions:', error.message, error.stack);
-      throw new Error(`Failed to fetch signal emissions: ${error.message}`);
-    } else {
-      console.error('Unknown error fetching signal emissions:', error);
-      throw new Error('Failed to fetch signal emissions due to an unknown error');
-    }
-  }
+  return data;
 }
 
 export default getAllSignalEmissions;

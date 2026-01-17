@@ -1,8 +1,6 @@
-import pg from 'pg';
-import { initializeClient, formatDate, getDuration } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
+import { formatDate, getDuration } from '~/server/api/utils';
 import { getQuery } from 'h3';
-
-let client: pg.Client | null = null;
 
 // Get all TaskExecutions with pagination support
 async function getTaskExecution(
@@ -13,79 +11,62 @@ async function getTaskExecution(
   startedBefore?: string,
   service?: string
 ) {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const offset = (page - 1) * limit;
 
-  let whereClause = 'WHERE te.is_meta = false';
-  const params: any[] = [];
-  let paramIndex = 1;
+  let query = supabaseAdmin
+    .from('task_execution')
+    .select(`
+      uuid,
+      routine_execution_id,
+      task_name,
+      task_version,
+      service_name,
+      context,
+      meta_context,
+      result_context,
+      meta_result_context,
+      is_running,
+      is_complete,
+      errored,
+      failed,
+      progress,
+      created,
+      started,
+      ended,
+      routine_execution!left(
+        service_instance_id,
+        routine!left(name, description)
+      ),
+      task!left(name, description, is_unique, function_string, layer_index)
+    `)
+    .eq('is_meta', false)
+    .order('created', { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (name) {
-    whereClause += ` AND te.task_name = $${paramIndex}`;
-    params.push(name);
-    paramIndex++;
+    query = query.eq('task_name', name);
   }
 
   if (startedAfter) {
-    whereClause += ` AND te.started >= $${paramIndex}`;
-    params.push(startedAfter);
-    paramIndex++;
+    query = query.gte('started', startedAfter);
   }
 
   if (startedBefore) {
-    whereClause += ` AND te.started < $${paramIndex}`;
-    params.push(startedBefore);
-    paramIndex++;
+    query = query.lt('started', startedBefore);
   }
 
   if (service) {
-    whereClause += ` AND te.service_name = $${paramIndex}`;
-    params.push(service);
-    paramIndex++;
+    query = query.eq('service_name', service);
   }
 
-  const query = `
-    SELECT
-      te.uuid,
-      te.routine_execution_id,
-      te.task_name,
-      te.task_version,
-      te.service_name,
-      te.context,
-      te.meta_context,
-      te.result_context,
-      te.meta_result_context,
-      te.is_running,
-      te.is_complete,
-      te.errored,
-      te.failed,
-      te.progress,
-      te.created AS scheduled,
-      te.started,
-      te.ended,
-      re.service_instance_id,
-      r.description AS routine_name,
-      t.name,
-      t.description,
-      t.is_unique,
-      t.function_string
-    FROM task_execution te
-    LEFT JOIN routine_execution re ON te.routine_execution_id = re.uuid
-    LEFT JOIN routine r ON re.name = r.name AND re.service_name = r.service_name
-    LEFT JOIN task t ON te.task_name = t.name AND te.service_name = t.service_name
-    ${whereClause}
-    ORDER BY te.created DESC
-    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
-  params.push(limit, offset);
-  const result = await client.query(query, params);
-  
+  const { data, error } = await query;
+
+  if (error) {
+    throw error;
+  }
 
   // Map the results to match the expected frontend format
-  const mappedRows = result.rows.map((row) => {
+  const mappedRows = data.map((row) => {
     const progressVal = typeof row.progress === 'number' ? Math.round(row.progress * 100) : 0;
     return {
       uuid: row.uuid,
@@ -99,20 +80,20 @@ async function getTaskExecution(
       errored: row.errored,
       failed: row.failed,
       progress: progressVal,
-      scheduled: row.scheduled,
+      scheduled: row.created,
       started: formatDate(row.started),
       ended: formatDate(row.ended),
       duration: getDuration(row.started, row.ended),
       serviceDbName: row.service_name,
-      routineName: row.routine_name,
+      routineName: row.routine_execution?.[0]?.routine?.[0]?.description,
       inputContext: row.context,
       outputContext: row.result_context,
-      name: row.name,
-      description: row.description,
-      isUnique: row.is_unique,
-      functionString: row.function_string,
+      name: row.task?.[0]?.name,
+      description: row.task?.[0]?.description,
+      isUnique: row.task?.[0]?.is_unique,
+      functionString: row.task?.[0]?.function_string,
       serviceName: row.service_name,
-      layerIndex: row.layer_index,
+      layerIndex: row.task?.[0]?.layer_index,
       referer: row.errored ? 'Errored' : null,
       status: row.is_complete
         ? 'check'
@@ -132,9 +113,6 @@ async function getTaskExecution(
 
 // Event handler
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
   const { method } = event.node.req;
 
   if (method === 'GET') {

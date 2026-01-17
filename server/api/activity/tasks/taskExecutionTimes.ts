@@ -1,14 +1,4 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
-
-async function getClient() {
-  if (!client) {
-    client = await initializeClient();
-  }
-  return client;
-}
+import { supabaseAdmin } from '~/utils/supabase';
 
 // Type for task execution time row
 interface TaskExecutionTimeRow {
@@ -22,27 +12,15 @@ interface TaskExecutionTimeRow {
 
 // Get TaskExecutions by task_name
 async function getTaskMap(taskName: string): Promise<TaskExecutionTimeRow[]> {
-  const query = `
- SELECT
-      MIN(te.started) as started,
-      EXTRACT(hour FROM started) as hour,
-      DATE_TRUNC('day', started) as date,
-      MAX(EXTRACT(EPOCH FROM (ended - started))) as slowest_time,
-      MIN(EXTRACT(EPOCH FROM (ended - started))) as fastest_time,
-      AVG(EXTRACT(EPOCH FROM (ended - started))) as average_time
-    FROM task_execution as te
-    WHERE task_name = $1
-    GROUP BY date, hour
-    ORDER BY started
-  `;
-  const client = await getClient();
-  try {
-    const result = await client.query(query, [taskName]);
-    return result.rows as TaskExecutionTimeRow[];
-  } catch (error) {
-    console.error('Error executing query:', error);
+  const { data, error } = await supabaseAdmin.rpc('get_activity_task_execution_times', {
+    task_name: taskName
+  });
+
+  if (error) {
     throw error;
   }
+
+  return data as TaskExecutionTimeRow[];
 }
 
 // Event handler

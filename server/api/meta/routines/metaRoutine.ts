@@ -1,39 +1,45 @@
-import { initializeClient } from '~/server/api/utils';
-import pg from 'pg';
+import { supabaseAdmin } from '~/utils/supabase';
 import { getQuery } from 'h3';
 
-let client: pg.Client | null = null;
-
 async function getRoutine(routineName: string, version?: string | null, service?: string | null) {
-  const params: any[] = [routineName];
-  let q = `
-    SELECT *
-    FROM routine
-    WHERE name = $1 AND is_meta = true
-  `;
+  let query = supabaseAdmin
+    .from('routine')
+    .select('*')
+    .eq('name', routineName)
+    .eq('is_meta', true);
 
   if (version || service) {
-    q += ` AND EXISTS (
-      SELECT 1 FROM task_to_routine_map trm
-      JOIN task t ON trm.task_name = t.name
-      WHERE trm.routine_name = routine.name`;
+    // For filtering by version or service, we need to join with task_to_routine_map and task
+    query = supabaseAdmin
+      .from('routine')
+      .select(`
+        *,
+        task_to_routine_map!inner(
+          task!inner(
+            version,
+            service_name
+          )
+        )
+      `)
+      .eq('name', routineName)
+      .eq('is_meta', true);
+
     if (version) {
-      params.push(version);
-      q += ` AND t.version = $${params.length}`;
+      query = query.eq('task_to_routine_map.task.version', version);
     }
     if (service) {
-      params.push(service);
-      q += ` AND t.service_name = $${params.length}`;
+      query = query.eq('task_to_routine_map.task.service_name', service);
     }
-    q += ` )`;
   }
 
-  q += `;`;
+  const { data, error } = await query;
 
-  const result = await client!.query(q, params);
+  if (error) {
+    throw error;
+  }
 
   // Format the routine data
-  return result.rows.map((routine: any) => ({
+  return data.map((routine: any) => ({
     type: routine.type,
     name: routine.name,
     description: routine.description,
@@ -47,10 +53,6 @@ async function getRoutine(routineName: string, version?: string | null, service?
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
   const routineName = event.context.params?.id ?? '';
 

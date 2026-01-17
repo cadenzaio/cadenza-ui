@@ -1,75 +1,52 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
 import { getQuery } from 'h3';
 
-let client: pg.Client | null = null;
-
 async function getSignal(name: string) {
-  const query = `
-    SELECT 
-    name, 
-    domain, 
-    action, 
-    is_meta, 
-    is_global, 
-    created, 
-    deleted
-    FROM signal_registry
-    WHERE name = $1 AND is_meta = true
-    ORDER BY name ASC
-  `;
+  const { data, error } = await supabaseAdmin
+    .from('signal_registry')
+    .select('name, domain, action, is_meta, is_global, created, deleted')
+    .eq('name', name)
+    .eq('is_meta', true)
+    .order('name', { ascending: true });
 
-  console.log('Executing query:', query, 'with parameters:', [name]);
+  if (error) {
+    throw error;
+  }
 
-  const res = await client!.query(query, [name]);
-  return res.rows;
+  return data;
 }
 
 async function getPreviousTasksForSignal(signalName: string) {
-  const query = `
-    SELECT DISTINCT 
-      name AS task_name, 
-      description AS task_description,
-      service_name
-    FROM task
-    WHERE signals->'emits' ? $1 AND is_meta = true
-    ORDER BY name ASC
-  `;
+  const { data, error } = await supabaseAdmin.rpc('get_tasks_emitting_signal', {
+    signal_name: signalName
+  });
 
-  console.log('Executing query:', query, 'with parameters:', [signalName]);
+  if (error) {
+    throw error;
+  }
 
-  const res = await client!.query(query, [signalName]);
-  return res.rows;
+  return data;
 }
 
 async function getNextTasksForSignal(signalName: string) {
-  const query = `
-    SELECT DISTINCT
-      name AS task_name, 
-      description AS task_description,
-      service_name
-    FROM task
-    WHERE signals->'observed' ? $1 AND is_meta = true
-    ORDER BY name ASC
-  `;
+  const { data, error } = await supabaseAdmin.rpc('get_tasks_observing_signal', {
+    signal_name: signalName
+  });
 
-  console.log('Executing query:', query, 'with parameters:', [signalName]);
+  if (error) {
+    throw error;
+  }
 
-  const res = await client!.query(query, [signalName]);
-  return res.rows;
+  return data;
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
 
   if (method === 'GET') {
     try {
       const query = getQuery(event);
-      const signal = event.context.params?.id; 
+      const signal = event.context.params?.id;
 
       if (!signal) {
         throw new Error('Signal parameter must be provided');

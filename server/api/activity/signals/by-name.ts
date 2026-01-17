@@ -1,25 +1,25 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
+import { supabaseAdmin } from '~/utils/supabase';
 
 async function getLatestEmissionByName(signalName: string) {
-  const query = `
-    SELECT *
-    FROM signal_emission
-    WHERE signal_name = $1
-    ORDER BY emitted_at DESC
-    LIMIT 1
-  `;
-  const res = await client!.query(query, [signalName]);
-  return res.rows[0] || null;
+  const { data, error } = await supabaseAdmin
+    .from('signal_emission')
+    .select('*')
+    .eq('signal_name', signalName)
+    .order('emitted_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null;
+    }
+    throw error;
+  }
+
+  return data;
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
   if (method !== 'GET') {
     return { error: 'Method not allowed' };

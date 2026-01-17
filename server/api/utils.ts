@@ -1,25 +1,11 @@
-import pg from 'pg';
+import { supabaseAdmin } from '~/utils/supabase';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 export async function initializeClient() {
-  const client = new pg.Client({
-    user: process.env.DATABASE_USER || '',
-    host: process.env.DATABASE_ADDRESS || 'localhost',
-    database: process.env.DATABASE_NAME || '',
-    password: process.env.DATABASE_PASSWORD || '',
-    port: parseInt(process.env.DATABASE_PORT || '5433', 10),
-  });
-
-  try {
-    await client.connect();
-    console.log('Connected to the database successfully');
-    return client;
-  } catch (error) {
-    console.error('Error connecting to the database:', error);
-    throw error;
-  }
+  // Return the Supabase admin client instead of creating a new pg client
+  return supabaseAdmin;
 }
 
 export async function sleep(number: number) {

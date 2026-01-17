@@ -1,14 +1,4 @@
-import { initializeClient } from '~/server/api/utils';
-import { Client } from 'pg';
-
-let client: Client | null = null;
-
-async function getClient() {
-  if (!client) {
-    client = await initializeClient();
-  }
-  return client;
-}
+import { supabaseAdmin } from '~/utils/supabase';
 
 interface RoutineExecutionTimeRow {
   started: string | Date;
@@ -22,27 +12,14 @@ interface RoutineExecutionTimeRow {
 async function getRoutineExecutionTimes(
   routineName: string
 ): Promise<RoutineExecutionTimeRow[]> {
-  const query = `
- SELECT
-      MIN(re.created) as started,
-      EXTRACT(hour FROM created) as hour,
-      DATE_TRUNC('day', created, 'UTC') as date,
-      MAX(EXTRACT(EPOCH FROM (ended - created))) as slowest_time,
-      MIN(EXTRACT(EPOCH FROM (ended - created))) as fastest_time,
-      AVG(EXTRACT(EPOCH FROM (ended - created))) as average_time
-    FROM routine_execution as re
-    WHERE name = $1
-    GROUP BY date, hour
-    ORDER BY started
-  `;
-  const client = await getClient();
-  try {
-    const result = await client.query(query, [routineName]);
-    return result.rows as RoutineExecutionTimeRow[];
-  } catch (error) {
+  const { data, error } = await supabaseAdmin.rpc('get_routine_execution_times', {
+    routine_name: routineName
+  });
+  if (error) {
     console.error('Error executing query:', error);
     throw error;
   }
+  return data;
 }
 
 export default defineEventHandler(async (event) => {

@@ -10,3 +10,18 @@ services:
       - DATABASE_PORT=5433
       - DATABASE_NAME=cadenza_db
       - AUTH_ORIGIN=http://localhost:3000
+      - SUPABASE_URL=https://iivulezwdavqrjezykss.supabase.co
+      - SUPABASE_ANON_KEY=sb_publishable_EgPxg3USx7kidi68oE3J_Q_1zV23J_g
+    depends_on:
+      - postgrest
+
+  postgrest:
+    image: postgrest/postgrest:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - PGRST_DB_URI=postgresql://iot_user:iot_pass@host.docker.internal:5433/cadenza_db
+      - PGRST_DB_SCHEMA=public
+      - PGRST_DB_ANON_ROLE=anon
+      - PGRST_JWT_SECRET=dummy_jwt_secret
+      - PGRST_OPENAPI_SERVER_PROXY_URI=http://localhost:3001

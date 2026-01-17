@@ -1,32 +1,16 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
-
-async function getClient() {
-  if (!client) {
-    client = await initializeClient();
-  }
-  return client;
-}
+import { supabaseAdmin } from '~/utils/supabase';
 
 async function getTaskMap(taskName: string) {
-  const query = `
-    SELECT
-      DATE_TRUNC('day', created) as date,
-      EXTRACT(hour FROM created) as hour,
-      COUNT(*) as executions,
-      SUM(CASE WHEN errored THEN 1 ELSE 0 END) +
-      SUM(CASE WHEN failed THEN 1 ELSE 0 END) +
-      SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as errors
-    FROM task_execution
-    WHERE task_name = $1
-    GROUP BY date, hour
-    ORDER BY date, hour
-  `;
-  const client = await getClient();
-  const result = await client.query(query, [taskName]);
-  return result.rows;
+  // Using Supabase RPC for complex aggregate queries
+  const { data, error } = await supabaseAdmin.rpc('get_task_heatmap_data', {
+    task_name: taskName
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
 
 export default defineEventHandler(async (event) => {

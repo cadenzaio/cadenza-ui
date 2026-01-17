@@ -1,35 +1,31 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
+import { supabaseAdmin } from '~/utils/supabase';
 
 // Get all servers
 async function getAllServers() {
-  const query = `
-        SELECT
-    si.uuid AS server_id,
-    s2s.service_instance_client_id AS client_id,
-    si.is_active,
-    si.is_blocked,
-    si.is_non_responsive,
-    si.address,
-    si.port,
-    si.service_name
-    FROM service_instance si
-    LEFT JOIN service_to_service_communication_map s2s ON si.uuid = s2s.service_instance_id
-    LEFT JOIN service s ON si.service_name = s.name
-    WHERE s.is_meta = false
-  `;
-  const result = await client!.query(query);
-  return result.rows;
+  const { data, error } = await supabaseAdmin
+    .from('service_instance')
+    .select(`
+      uuid,
+      is_active,
+      is_blocked,
+      is_non_responsive,
+      address,
+      port,
+      service_name,
+      service_to_service_communication_map!left(service_instance_client_id),
+      service!inner(is_meta)
+    `)
+    .eq('service.is_meta', false);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
 
 // Event handler
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
   const { serverId } = event.context.params || {};
 

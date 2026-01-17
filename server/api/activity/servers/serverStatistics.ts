@@ -1,69 +1,29 @@
-import { initializeClient } from '~/server/api/utils';
-import { Client } from 'pg';
+import { supabaseAdmin } from '~/utils/supabase';
 import { getQuery } from 'h3';
 
-let client: Client | null = null;
-
-async function getClient() {
-  if (!client) {
-    client = await initializeClient();
-  }
-  return client;
-}
-
 async function getTaskCount(serviceInstanceId?: string) {
-  let query = `
-    SELECT
-      DATE_TRUNC('hour', started) as started,
-      COUNT(*) as count
-    FROM task_execution
-    WHERE is_meta = false
-  `;
-  const params: string[] = [];
-  if (serviceInstanceId) {
-    params.push(serviceInstanceId);
-    query += ` AND service_instance_id = $${params.length}`;
-  }
-  query += ` GROUP BY DATE_TRUNC('hour', started) ORDER BY DATE_TRUNC('hour', started)`;
-
-  const client = await getClient();
-  try {
-    const result = await client.query(query, params);
-    return result.rows;
-  } catch (error) {
+  const { data, error } = await supabaseAdmin.rpc('get_task_count_by_service_instance', {
+    service_instance_id: serviceInstanceId
+  });
+  if (error) {
     console.error('Error executing query:', error);
     throw error;
   }
+  return data;
 }
 
 async function getSignalCount(serviceInstanceId?: string) {
-  const params: string[] = [];
-  params.push(serviceInstanceId ?? '');
-
-  const query = `
-    SELECT started, COUNT(*) as count FROM (
-      SELECT uuid, DATE_TRUNC('hour', emitted_at) as started
-      FROM signal_emission se
-      WHERE is_meta = false AND se.service_instance_id = $1
-    ) t
-    GROUP BY started
-    ORDER BY started
-  `;
-
-  const client = await getClient();
-  try {
-    const result = await client.query(query, params);
-    return result.rows;
-  } catch (error) {
+  const { data, error } = await supabaseAdmin.rpc('get_signal_count_by_service_instance', {
+    service_instance_id: serviceInstanceId
+  });
+  if (error) {
     console.error('Error executing signal count query:', error);
     throw error;
   }
+  return data;
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await getClient();
-  }
 
   const { method } = event.node.req;
   const q = getQuery(event);

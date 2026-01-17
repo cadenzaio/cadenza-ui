@@ -1,39 +1,29 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
 import { getQuery } from 'h3';
-
-let client: pg.Client | null = null;
 
 async function getRoutineMap(
   taskName: string,
   page: number = 1,
   limit: number = 50
 ) {
-  const offset = (page - 1) * limit;
-  const query = `
-    SELECT
-    r.name,
-    r.description
-    FROM routine r
-    JOIN task_to_routine_map trm ON r.name = trm.routine_name
-    JOIN task t ON trm.task_name = t.name
-    WHERE t.name = $1
-    ORDER BY r.name ASC
-    LIMIT $2 OFFSET $3;
-  `;
-  const result = await client!.query(query, [taskName, limit, offset]);
+  const { data, error } = await supabaseAdmin.rpc('get_routines_with_task', {
+    task_name: taskName,
+    page_val: page,
+    limit_val: limit
+  });
 
-  return result.rows.map((routine) => ({
+  if (error) {
+    console.error('Error executing query:', error);
+    throw error;
+  }
+
+  return data.map((routine: any) => ({
     name: routine.name,
     description: routine.description,
   }));
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
 
   if (method === 'GET') {

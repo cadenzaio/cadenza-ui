@@ -1,31 +1,16 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
-
-async function getClient() {
-  if (!client) {
-    client = await initializeClient();
-  }
-  return client;
-}
+import { supabaseAdmin } from '~/utils/supabase';
 
 async function getRoutineMap(routineName: string) {
-  const query = `
-SELECT
-    COUNT(*) as executions,
-    SUM(CASE WHEN errored THEN 1 ELSE 0 END) as errored,
-    SUM(CASE WHEN failed THEN 1 ELSE 0 END) as failed,
-    SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as reached_timeout,
-    SUM(CASE WHEN is_complete THEN 1 ELSE 0 END)as is_complete
-FROM
-    routine_execution
-WHERE
-    name = $1
-  `;
-  const client = await getClient();
-  const result = await client.query(query, [routineName]);
-  return result.rows;
+  // Using Supabase RPC for complex queries with parameters
+  const { data, error } = await supabaseAdmin.rpc('get_routine_execution_stats_by_name', {
+    routine_name: routineName
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
 
 export default defineEventHandler(async (event) => {

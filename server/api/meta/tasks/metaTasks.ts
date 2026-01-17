@@ -1,21 +1,23 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
+import { supabaseAdmin } from '~/utils/supabase';
+import { getQuery } from 'h3';
 
 // Get all Tasks with pagination support
 async function getTasks(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
-  const query = `
-    SELECT * FROM task
-    WHERE is_meta = true
-    ORDER BY name ASC
-    LIMIT $1 OFFSET $2
-  `;
-  const res = await client!.query(query, [limit, offset]);
+
+  const { data, error } = await supabaseAdmin
+    .from('task')
+    .select('*')
+    .eq('is_meta', true)
+    .order('name', { ascending: true })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    throw error;
+  }
 
   // Map the results to match the component's expected format
-  return res.rows.map((row) => ({
+  return data.map((row) => ({
     type: 'task',
     label: row.name,
     description: row.description,
@@ -30,10 +32,6 @@ async function getTasks(page: number = 1, limit: number = 100) {
 
 // Event handler
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
 
   if (method === 'GET') {

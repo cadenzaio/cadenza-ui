@@ -1,14 +1,4 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
-import { getQuery } from 'h3';
-
-let client: pg.Client | null = null;
-
-async function ensureClient() {
-  if (!client) {
-    client = await initializeClient();
-  }
-}
+import { supabaseAdmin } from '~/utils/supabase';
 
 type Node = {
   id: string;
@@ -26,33 +16,14 @@ type Edge = {
 };
 
 async function generateNodesAndEdges(serviceName: string) {
-  const query = `
-SELECT
-  t.name AS task_name,
-  t.description AS task_description,
-  t.layer_index,
-  t.is_unique,
-  t.concurrency,
-  t.service_name,
-  t.version,
-  t.signals,
-  dtm.predecessor_task_name AS previous_task_execution_name,
-  r.name AS routine_name
-FROM task t
-LEFT JOIN directional_task_graph_map dtm
-  ON t.name = dtm.task_name
-  AND t.version = dtm.task_version
-  AND t.service_name = dtm.service_name
-LEFT JOIN task_to_routine_map trm
-  ON t.name = trm.task_name
-  AND t.service_name = trm.service_name
-LEFT JOIN routine r
-  ON trm.routine_name = r.name
-WHERE t.service_name = $1 AND t.is_meta = false
-  AND (t.deleted IS FALSE OR t.deleted IS NULL);
-  `;
+  const { data: result, error } = await supabaseAdmin.rpc('get_tasks_in_service', {
+    service_name_param: serviceName
+  });
 
-  const result = await client!.query(query, [serviceName]);
+  if (error) {
+    console.error('Error executing query:', error);
+    throw error;
+  }
 
   const nodes: Node[] = [];
   const edges: Edge[] = [];
@@ -70,15 +41,45 @@ WHERE t.service_name = $1 AND t.is_meta = false
   const taskMap: Record<string, any> = {};
 
   // First pass: create all task nodes and track tasks
-  result.rows.forEach((row) => {
+  interface TaskRow {
+    task_name: string;
+    routine_name?: string;
+    task_description?: string;
+    service_name: string;
+    version: string;
+    previous_task_execution_name?: string;
+    signals?: {
+      observed?: string[];
+      emits?: string[];
+    };
+  }
+
+  result.forEach((row: TaskRow) => {
     if (!taskMap[row.task_name]) {
       taskMap[row.task_name] = row;
     }
   });
 
   // Process each task
-  result.rows.forEach((row) => {
-    const routineName = row.routine_name || 'UnknownRoutine';
+  interface RoutineNodeData {
+    label: string;
+    isParent: boolean;
+  }
+
+  interface TaskNodeData {
+    label: string;
+    id: string;
+    service_name: string;
+    version: string;
+  }
+
+  interface SignalNodeData {
+    label: string;
+    signal: boolean;
+  }
+
+  result.forEach((row: TaskRow) => {
+    const routineName: string = row.routine_name || 'UnknownRoutine';
 
     if (!routineMap[routineName]) {
       if (!row.routine_name) {
@@ -90,7 +91,7 @@ WHERE t.service_name = $1 AND t.is_meta = false
         type: 'custom',
         nodeType: 'routine',
         parentNode: serviceName,
-        data: { label: routineName, isParent: true },
+        data: { label: routineName, isParent: true } as RoutineNodeData,
       };
       routineMap[routineName] = routineNode;
       nodes.push(routineNode);
@@ -106,7 +107,7 @@ WHERE t.service_name = $1 AND t.is_meta = false
         id: row.task_name,
         service_name: row.service_name,
         version: row.version,
-      },
+      } as TaskNodeData,
     };
     nodes.push(taskNode);
 
@@ -119,13 +120,13 @@ WHERE t.service_name = $1 AND t.is_meta = false
     }
 
     // Process signals from the signals JSON field
-    const signals = row.signals || {};
-    const observedSignals = (signals.observed || []).filter((s: string) => !s.startsWith('meta.'));
-    const emittedSignals = (signals.emits || []).filter((s: string) => !s.startsWith('meta.'));
+    const signals: { observed?: string[]; emits?: string[] } = row.signals || {};
+    const observedSignals: string[] = (signals.observed || []).filter((s: string) => !s.startsWith('meta.'));
+    const emittedSignals: string[] = (signals.emits || []).filter((s: string) => !s.startsWith('meta.'));
 
     // Process observed signals (signal -> task)
     observedSignals.forEach((signalName: string) => {
-      let signalNodeId;
+      let signalNodeId: string;
       if (!signalNodes[signalName]) {
         signalNodeId = `signal-${signalName}`;
         signalNodes[signalName] = signalNodeId;
@@ -134,7 +135,7 @@ WHERE t.service_name = $1 AND t.is_meta = false
           type: 'custom',
           nodeType: 'signal',
           parentNode: serviceName,
-          data: { label: signalName, signal: true },
+          data: { label: signalName, signal: true } as SignalNodeData,
         };
         nodes.push(signalNode);
       } else {
@@ -150,7 +151,7 @@ WHERE t.service_name = $1 AND t.is_meta = false
 
     // Process emitted signals (task -> signal)
     emittedSignals.forEach((signalName: string) => {
-      let signalNodeId;
+      let signalNodeId: string;
       if (!signalNodes[signalName]) {
         signalNodeId = `signal-${signalName}`;
         signalNodes[signalName] = signalNodeId;
@@ -159,7 +160,7 @@ WHERE t.service_name = $1 AND t.is_meta = false
           type: 'custom',
           nodeType: 'signal',
           parentNode: serviceName,
-          data: { label: signalName, signal: true },
+          data: { label: signalName, signal: true } as SignalNodeData,
         };
         nodes.push(signalNode);
       } else {
@@ -178,8 +179,6 @@ WHERE t.service_name = $1 AND t.is_meta = false
 }
 
 export default defineEventHandler(async (event) => {
-  await ensureClient();
-
   const query = getQuery(event);
   const serviceName = (query.serviceName as string) || (query.service as string);
 

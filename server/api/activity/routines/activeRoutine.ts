@@ -1,8 +1,6 @@
-import pg from 'pg';
-import { initializeClient, formatDate, getDuration } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
+import { formatDate, getDuration } from '~/server/api/utils';
 import { removeMetaData } from '~/src/util';
-
-let client: pg.Client | null = null;
 
 // Types for routine row and mapped object
 interface RoutineRow {
@@ -68,52 +66,19 @@ async function getRoutines({
   page?: number;
   limit?: number;
 }): Promise<RoutineMapped[]> {
-  if (!client) {
-    client = await initializeClient();
-  }
-
-  let query = `
-  SELECT
-      re.uuid,
-      re.execution_trace_id,
-      re.name AS routine_name,
-      re.service_instance_id AS service_id,
-      re.is_running,
-      re.is_complete,
-      re.errored,
-      re.failed,
-      re.progress,
-      re.created,
-      re.started,
-      re.ended,
-      re.context AS input_context,
-      re.result_context AS output_context,
-      r.name AS routine_type,
-      r.description AS routine_description,
-      re.previous_routine_execution,
-      s.name AS service_name
-  FROM routine_execution AS re
-  LEFT JOIN routine r ON re.name = r.name AND re.service_name = r.service_name
-  LEFT JOIN service s ON re.service_name = s.name
-  WHERE re.uuid = $1
-  `;
-
-  let params: any[] = [];
-  if (uuid) {
-    params.push(uuid);
-  }
-
-  const orderQuery = `ORDER BY re.created DESC`;
-  const limitQuery = uuid ? '' : `LIMIT ${limit} OFFSET ${(page - 1) * limit}`;
-
-  const fullQuery = [query, orderQuery, limitQuery]
-    .filter(Boolean)
-    .join(' ');
-
   try {
-    const res = await client.query(fullQuery, params);
-    return res.rows.map(
-      (row: RoutineRow): RoutineMapped => ({
+    const { data, error } = await supabaseAdmin.rpc('get_active_routines', {
+      uuid_param: uuid || null,
+      page_param: page,
+      limit_param: limit
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return data.map(
+      (row: any): RoutineMapped => ({
         id: row.uuid,
         name: row.routine_name,
         type: 'routine',
@@ -177,9 +142,6 @@ async function getRoutines({
 
 // Event handler
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
   const { method, url } = event.node.req || {};
 
   if (method === 'GET') {

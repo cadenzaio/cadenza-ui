@@ -1,13 +1,10 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
 import { removeMetaData } from '~/src/util';
 
 /**
  * Represents a generic context object for task execution.
  */
 type TaskContext = Record<string, unknown>;
-
-let client: pg.Client | null = null;
 
 /**
  * Raw database row structure for task execution query
@@ -152,16 +149,13 @@ function validateTaskExecutionId(id: string): boolean {
   return uuidRegex.test(id);
 }
 
-/**
- * Transforms raw database row to formatted response
- */
 function transformTaskExecutionData(
-  row: TaskExecutionRow
+  row: any
 ): TaskExecutionResponse {
   return {
     uuid: row.uuid,
-    routineExecutionId: row.routine_execution_id,
-    taskId: row.task_id,
+    routineExecutionName: row.routine_execution_name,
+    taskName: row.task_name,
     isRunning: row.is_running,
     isComplete: row.is_complete,
     errored: row.errored,
@@ -181,22 +175,19 @@ function transformTaskExecutionData(
     previousTaskNames: row.previous_task_names,
     nextTaskExecutionId: row.next_task_execution_ids,
     nextTaskNames: row.next_task_names,
-    serverId: row.server_id,
+    serverId: row.service_name, // Using service_name as serverId
     routineName: row.routine_name,
-    serverName: row.processing_graph,
+    serverName: row.address, // Using address as serverName
     function_string: row.function_string,
-    contract_id: row.contract_id,
+    contract_id: '', // Not available in RPC, set to empty
   };
 }
 
 /**
  * Ensures database client is initialized
  */
-async function ensureClient(): Promise<pg.Client> {
-  if (!client) {
-    client = await initializeClient();
-  }
-  return client;
+async function ensureClient() {
+  return supabaseAdmin;
 }
 
 /**
@@ -209,17 +200,20 @@ async function getTaskExecution(
   taskExecutionId: string
 ): Promise<TaskExecutionResponse | null> {
   try {
-    const dbClient = await ensureClient();
-    const result = await dbClient.query<TaskExecutionRow>(
-      TASK_EXECUTION_QUERY,
-      [taskExecutionId]
-    );
+    const { data, error } = await supabaseAdmin.rpc('get_task_execution_details', {
+      task_execution_uuid: taskExecutionId
+    });
 
-    if (result.rows.length === 0) {
+    if (error) {
+      console.error('Error executing task execution query:', error);
+      throw new Error('Failed to fetch TaskExecution from the database.');
+    }
+
+    if (!data || data.length === 0) {
       return null;
     }
 
-    return transformTaskExecutionData(result.rows[0]);
+    return transformTaskExecutionData(data[0]);
   } catch (error) {
     console.error('Error executing task execution query:', error);
     throw new Error('Failed to fetch TaskExecution from the database.');

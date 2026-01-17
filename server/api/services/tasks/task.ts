@@ -1,135 +1,112 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
 import { getQuery, readBody } from 'h3';
 
-let client: pg.Client | null = null;
-
-async function ensureClient() {
-	if (!client) client = await initializeClient();
-}
-
 async function getTaskDetails(name: string, version?: string | null, service?: string | null) {
-	const params: any[] = [name];
-		let q = `
-SELECT
-	name,
-	description,
-	layer_index,
-	is_unique,
-	concurrency,
-	service_name,
-	version
-FROM task
-WHERE name = $1
-`;
-	if (version) {
-		params.push(version);
-		q += ` AND version = $${params.length}`;
+	try {
+		const { data, error } = await supabaseAdmin.rpc('get_task_details', {
+			task_name_param: name,
+			version_param: version || null,
+			service_param: service || null
+		});
+
+		if (error) {
+			throw error;
+		}
+
+		return data && data.length > 0 ? data[0] : null;
+	} catch (error) {
+		console.error('Error getting task details:', error);
+		throw error;
 	}
-	if (service) {
-		params.push(service);
-		q += ` AND service_name = $${params.length}`;
-	}
-	q += ` LIMIT 1`;
-	const r = await client!.query(q, params as any);
-	return r.rows[0] ?? null;
 }
 
-const queryRows = async (q: string, params: any[] = []) => (await client!.query(q, params)).rows;
+const queryRows = async (rpcName: string, params: any = {}) => {
+	try {
+		const { data, error } = await supabaseAdmin.rpc(rpcName, params);
+		if (error) throw error;
+		return data || [];
+	} catch (error) {
+		console.error(`Error executing RPC ${rpcName}:`, error);
+		throw error;
+	}
+};
 
 async function getRoutineForTaskName(taskName: string) {
-	const q = `
-SELECT
-  routine_name
-FROM task_to_routine_map
-WHERE task_name = $1
-  AND deleted = false
-LIMIT 1
-`;
-	const rows = await queryRows(q, [taskName]);
-	return rows && rows.length > 0 ? rows[0].routine_name : null;
+	try {
+		const data = await queryRows('get_routine_for_task_name', { task_name_param: taskName });
+		return data && data.length > 0 ? data[0].routine_name : null;
+	} catch (error) {
+		console.error('Error getting routine for task:', error);
+		return null;
+	}
 }
 
 async function getSignalsConsumedByTaskName(taskName: string) {
-	const q = `SELECT signals FROM task WHERE name = $1`;
-	const rows = await queryRows(q, [taskName]);
-	if (!rows || rows.length === 0) return [];
-	const signals = rows[0].signals || {};
-	const observed = (signals.observed || []).filter((s: string) => !s.startsWith('meta.'));
-	return observed.map((s: string) => ({ signal_name: s }));
+	try {
+		const data = await queryRows('get_signals_consumed_by_task', { task_name_param: taskName });
+		return data || [];
+	} catch (error) {
+		console.error('Error getting signals consumed by task:', error);
+		return [];
+	}
 }
 
 async function getEmittersForSignal(signalName: string) {
-	const q = `
-		SELECT DISTINCT name as task_name, service_name 
-		FROM task 
-		WHERE signals->'emits' ? $1
-	`;
-	return queryRows(q, [signalName]);
+	try {
+		return await queryRows('get_signal_emitters', { signal_name_param: signalName });
+	} catch (error) {
+		console.error('Error getting signal emitters:', error);
+		return [];
+	}
 }
 
 async function getSignalsEmittedByTaskName(taskName: string) {
-	const q = `SELECT signals FROM task WHERE name = $1`;
-	const rows = await queryRows(q, [taskName]);
-	if (!rows || rows.length === 0) return [];
-	const signals = rows[0].signals || {};
-	const emits = (signals.emits || []).filter((s: string) => !s.startsWith('meta.'));
-	return emits;
+	try {
+		const data = await queryRows('get_signals_emitted_by_task', { task_name_param: taskName });
+		return data.map((row: any) => row.signal_name) || [];
+	} catch (error) {
+		console.error('Error getting signals emitted by task:', error);
+		return [];
+	}
 }
 
 async function getConsumersForSignal(signalName: string) {
-	const q = `
-		SELECT DISTINCT name as task_name, service_name 
-		FROM task 
-		WHERE signals->'observed' ? $1
-	`;
-	return queryRows(q, [signalName]);
+	try {
+		return await queryRows('get_signal_consumers', { signal_name_param: signalName });
+	} catch (error) {
+		console.error('Error getting signal consumers:', error);
+		return [];
+	}
 }
 
 async function getPredecessors(name: string, version?: string | null, service?: string | null) {
-	const params: any[] = [name];
-		let q = `
-SELECT
-	predecessor_task_name,
-	predecessor_task_version
-FROM directional_task_graph_map
-WHERE task_name = $1
-`;
-	if (version) {
-		params.push(version);
-		q += ` AND task_version = $${params.length}`;
+	try {
+		return await queryRows('get_task_predecessors', {
+			task_name_param: name,
+			version_param: version || null,
+			service_param: service || null
+		}) || [];
+	} catch (error) {
+		console.error('Error getting task predecessors:', error);
+		return [];
 	}
-	if (service) {
-		params.push(service);
-		q += ` AND service_name = $${params.length}`;
-	}
-	return queryRows(q, params as any) || [];
 }
 
 async function getSuccessors(name: string, version?: string | null, service?: string | null) {
-	const params: any[] = [name];
-		let q = `
-SELECT
-	task_name,
-	task_version
-FROM directional_task_graph_map
-WHERE predecessor_task_name = $1
-`;
-	if (version) {
-		params.push(version);
-		q += ` AND predecessor_task_version = $${params.length}`;
+	try {
+		return await queryRows('get_task_successors', {
+			task_name_param: name,
+			version_param: version || null,
+			service_param: service || null
+		}) || [];
+	} catch (error) {
+		console.error('Error getting task successors:', error);
+		return [];
 	}
-	if (service) {
-		params.push(service);
-		q += ` AND service_name = $${params.length}`;
-	}
-	return queryRows(q, params as any) || [];
 }
 
 export default defineEventHandler(async (event) => {
-	await ensureClient();
-
-	const query = getQuery(event) as Record<string, any>;
+    const query = getQuery(event) as Record<string, any>;
 	let taskName = query.task_name || query.taskName || query.name || null;
 	let version = query.version || query.task_version || null;
 	let service = query.service || query.serviceName || query.service_name || null;
@@ -164,7 +141,7 @@ export default defineEventHandler(async (event) => {
 
 		try {
 			const preds = await getPredecessors(cur, version, service);
-			const predNames = Array.from(new Set((preds || []).map((p: any) => p.predecessor_task_name).filter(Boolean)));
+			const predNames: string[] = Array.from(new Set((preds || []).map((p: any) => p.predecessor_task_name as string).filter(Boolean)));
 			predecessorsMap[cur] = predNames;
 			predNames.forEach((pn) => {
 				if (!itemsMap[pn]) itemsMap[pn] = { name: pn, version: null, service };
@@ -176,7 +153,7 @@ export default defineEventHandler(async (event) => {
 
 		try {
 			const succs = await getSuccessors(cur, version, service);
-			const succNames = Array.from(new Set((succs || []).map((s: any) => s.task_name).filter(Boolean)));
+			const succNames: string[] = Array.from(new Set((succs || []).map((s: any) => s.task_name).filter(Boolean)));
 			successorsMap[cur] = succNames;
 			succNames.forEach((sn) => {
 				if (!itemsMap[sn]) itemsMap[sn] = { name: sn, version: null, service };
@@ -210,13 +187,13 @@ export default defineEventHandler(async (event) => {
 	const allSignals = Array.from(new Set(Object.values(consumedSignalsMap).flat()));
 	const emittersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
 	await Promise.all(allSignals.map(async (s) => {
-		try {
-			const emitters = await getEmittersForSignal(s);
-			emittersMap[s] = Array.from(new Map((emitters || []).map((e: any) => [String(e.task_name), { task_name: e.task_name, service_name: e.service_name }])).values());
-		} catch (e) {
-			emittersMap[s] = [];
-		}
-	}));
+        try {
+            const emitters = await getEmittersForSignal(s) as Array<{ task_name: string; service_name?: string }>;
+            emittersMap[s] = Array.from(new Map(emitters.map((e) => [String(e.task_name), { task_name: e.task_name, service_name: e.service_name }])).values());
+        } catch (e) {
+            emittersMap[s] = [];
+        }
+    }));
 
 	const emittedSignalsMap: Record<string, string[]> = {};
 	await Promise.all(items.map(async (it) => {
@@ -229,10 +206,10 @@ export default defineEventHandler(async (event) => {
 
 	const allEmittedSignals = Array.from(new Set(Object.values(emittedSignalsMap).flat()));
 	const signalsToFetchConsumers = Array.from(new Set([...allEmittedSignals, ...allSignals]));
-	const consumersMap: Record<string, Array<{ task_name: string; service_name?: string }>> = {};
+	const consumersMap: Record<string, Array<{ task_name: string; service_name?: string }> > = {};
 	await Promise.all(signalsToFetchConsumers.map(async (s) => {
 		try {
-			const consumers = await getConsumersForSignal(s);
+			const consumers = await getConsumersForSignal(s) as Array<{ task_name: string; service_name?: string }>;
 			consumersMap[s] = Array.from(new Map((consumers || []).map((c: any) => [String(c.task_name), { task_name: c.task_name, service_name: c.service_name }])).values());
 		} catch (e) {
 			consumersMap[s] = [];

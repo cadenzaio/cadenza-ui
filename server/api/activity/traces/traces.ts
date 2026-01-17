@@ -1,25 +1,25 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
 import { defineEventHandler, getQuery } from 'h3';
 
 type ActivityTrace = Record<string, any>;
 
-let client: pg.Client | null = null;
-
-// Get all Activity Traces with pagination support  
-
+// Get all Activity Traces with pagination support
 async function getActivityTraces(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
-  const query = `
-    SELECT * FROM execution_trace
-    WHERE is_meta = false
-    ORDER BY created DESC
-    LIMIT $1 OFFSET $2;
-  `;
-  const res = await client!.query(query, [limit, offset]);
+
+  const { data, error } = await supabaseAdmin
+    .from('execution_trace')
+    .select('*')
+    .eq('is_meta', false)
+    .order('created', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    throw error;
+  }
 
   // Map the results to match the expected interface - all data manipulation happens here
-  return res.rows.map((row) => ({
+  return data.map((row) => ({
     type: 'trace',
     uuid: row.uuid,
     service: row.service_name,
@@ -29,9 +29,6 @@ async function getActivityTraces(page: number = 1, limit: number = 100) {
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
   const { method } = event.node.req;
 
   if (method === 'GET') {

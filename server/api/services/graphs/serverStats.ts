@@ -1,33 +1,36 @@
-import pg from 'pg';
-import { initializeClient, formatDateLocale } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
+import { supabaseAdmin } from '~/utils/supabase';
+import { formatDateLocale } from '~/server/api/utils';
+import { getQuery } from 'h3';
 
 async function getAllServersWithStats(serviceInstance?: string) {
-  let query = `
-    SELECT
-        s.uuid,
-        s.address,
-        s.port,
-        s.process_pid,
-        s.is_primary,
-        s.is_active,
-        s.is_non_responsive,
-        s.is_blocked,
-        s.modified
-    FROM service_instance s
-    WHERE s.is_active = true
-  `;
-  const values: (string | number)[] = [];
+  let query = supabaseAdmin
+    .from('service_instance')
+    .select(`
+      uuid,
+      service_instance,
+      address,
+      port,
+      process_pid,
+      is_primary,
+      is_active,
+      is_non_responsive,
+      is_blocked,
+      modified
+    `)
+    .eq('is_active', true)
+    .order('modified', { ascending: false });
+
   if (serviceInstance) {
-    query += ` AND s.service_instance = $1`;
-    values.push(serviceInstance);
+    query = query.eq('service_instance', serviceInstance);
   }
 
-  query += ` ORDER by s.modified DESC`;
+  const { data, error } = await query;
 
-  const result = await client!.query(query, values);
-  return result.rows.map((row) => ({
+  if (error) {
+    throw error;
+  }
+
+  return data.map((row) => ({
     uuid: row.uuid,
     serviceInstance: row.service_instance,
     address: row.address,
@@ -44,10 +47,6 @@ async function getAllServersWithStats(serviceInstance?: string) {
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
 
   if (method === 'GET') {

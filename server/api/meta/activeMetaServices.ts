@@ -1,8 +1,6 @@
-import pg from 'pg';
-import { initializeClient, formatDateLocale } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
+import { formatDateLocale } from '~/server/api/utils';
 import { getQuery } from 'h3';
-
-let client: pg.Client | null = null;
 
 async function getAllServersWithStats(
   serviceInstanceUuid?: string,
@@ -10,37 +8,39 @@ async function getAllServersWithStats(
   limit: number = 100
 ) {
   const offset = (page - 1) * limit;
-  let query = `
-    SELECT
-        si.uuid,
-        si.address,
-        si.port,
-        si.process_pid,
-        si.is_primary,
-        si.is_active,
-        si.is_non_responsive,
-        si.is_blocked,
-        si.service_name,
-        si.modified
-    FROM service_instance si
-    LEFT JOIN service s ON si.service_name = s.name
-    WHERE si.is_active = true AND s.is_meta = true
-  `;
-  const values: (string | number)[] = [];
+
+  let query = supabaseAdmin
+    .from('service_instance')
+    .select(`
+      uuid,
+      address,
+      port,
+      process_pid,
+      is_primary,
+      is_active,
+      is_non_responsive,
+      is_blocked,
+      service_name,
+      modified,
+      service!left(is_meta)
+    `)
+    .eq('is_active', true)
+    .eq('service.is_meta', true)
+    .order('modified', { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (serviceInstanceUuid) {
-    query += ` AND si.uuid = $${values.length + 1}`;
-    values.push(serviceInstanceUuid);
+    query = query.eq('uuid', serviceInstanceUuid);
   }
 
-  query += ` ORDER by si.modified DESC LIMIT $${values.length + 1} OFFSET $${
-    values.length + 2
-  }`;
-  values.push(limit, offset);
+  const { data, error } = await query;
 
-  const result = await client!.query(query, values);
+  if (error) {
+    throw error;
+  }
+
   return {
-    servers: result.rows.map((row) => ({
+    servers: data.map((row) => ({
       uuid: row.uuid,
       service: row.service_name,
       address: row.address,
@@ -55,10 +55,6 @@ async function getAllServersWithStats(
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
 
   if (method === 'GET') {

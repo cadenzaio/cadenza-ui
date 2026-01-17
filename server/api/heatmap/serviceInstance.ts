@@ -1,44 +1,14 @@
-import { initializeClient } from '~/server/api/utils';
-import { Client } from 'pg';
-import { getQuery } from 'h3';
-
-let client: Client | null = null;
-
-async function getClient() {
-  if (!client) {
-    client = await initializeClient();
-  }
-  return client;
-}
+import { supabaseAdmin } from '~/utils/supabase';
 
 async function getRoutineMap(serviceInstanceId?: string) {
-  let query = `
-    SELECT
-      DATE_TRUNC('day', created) as date,
-      EXTRACT(hour FROM created) as hour,
-      COUNT(*) as executions,
-      SUM(CASE WHEN errored THEN 1 ELSE 0 END) +
-      SUM(CASE WHEN failed THEN 1 ELSE 0 END) +
-      SUM(CASE WHEN reached_timeout THEN 1 ELSE 0 END) as errors
-    FROM "task_execution"
-    WHERE is_meta = false
-  `;
-  const params: any[] = [];
-  params.push(serviceInstanceId ?? null);
-  query += ` AND service_instance_id = $${params.length}`;
-  query += `
-    GROUP BY date, hour
-    ORDER BY date, hour
-  `;
-
-  const client = await getClient();
-  try {
-    const result = await client.query(query, params);
-    return result.rows;
-  } catch (error) {
+  const { data, error } = await supabaseAdmin.rpc('get_service_instance_heatmap_data', {
+    service_instance_id: serviceInstanceId
+  });
+  if (error) {
     console.error('Error executing query:', error);
     throw error;
   }
+  return data;
 }
 
 // Types for heatmap data

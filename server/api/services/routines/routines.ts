@@ -1,20 +1,21 @@
-import pg from 'pg';
-import { version } from 'vue';
-import { initializeClient } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
+import { supabaseAdmin } from '~/utils/supabase';
+import { getQuery } from 'h3';
 
 async function getRoutines(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
-  const query = `
-    SELECT * FROM routine
-    WHERE is_meta = false
-    ORDER BY created DESC
-    LIMIT $1 OFFSET $2;
-  `;
-  const res = await client!.query(query, [limit, offset]);
 
-  return res.rows.map((row) => ({
+  const { data, error } = await supabaseAdmin
+    .from('routine')
+    .select('*')
+    .eq('is_meta', false)
+    .order('created', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map((row) => ({
     type: 'routine',
     label: row.name,
     uuid: row.uuid,
@@ -25,9 +26,6 @@ async function getRoutines(page: number = 1, limit: number = 100) {
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
   const { method } = event.node.req;
 
   if (method === 'GET') {

@@ -1,50 +1,79 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
-
-let client: pg.Client | null = null;
+import { supabaseAdmin } from '~/utils/supabase';
 
 async function getEmissionByUuid(uuid: string) {
-  const query = `
-    SELECT *
-    FROM signal_emission
-    WHERE uuid = $1
-    ORDER BY emitted_at DESC
-  `;
-  const res = await client!.query(query, [uuid]);
-  return res.rows;
+  const { data, error } = await supabaseAdmin
+    .from('signal_emission')
+    .select('*')
+    .eq('uuid', uuid)
+    .order('emitted_at', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
 
 async function getConsumptionsForEmissionId(signalEmissionId: string) {
-  const query = `
-    SELECT DISTINCT te.uuid AS task_execution_id, te.task_name, te.service_name, se.signal_name, te.created
-    FROM task_execution te
-    LEFT JOIN signal_emission se ON te.signal_emission_id = se.uuid
-    WHERE te.signal_emission_id = $1 AND se.signal_name IS NOT NULL
-    ORDER BY te.created DESC
-    LIMIT 200
-  `;
-  const res = await client!.query(query, [signalEmissionId]);
-  return res.rows;
+  const { data, error } = await supabaseAdmin
+    .from('task_execution')
+    .select(`
+      uuid,
+      task_name,
+      service_name,
+      created,
+      signal_emission!inner(
+        signal_name
+      )
+    `)
+    .eq('signal_emission_id', signalEmissionId)
+    .not('signal_emission.signal_name', 'is', null)
+    .order('created', { ascending: false })
+    .limit(200);
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map(row => ({
+    task_execution_id: row.uuid,
+    task_name: row.task_name,
+    service_name: row.service_name,
+    signal_name: row.signal_emission?.[0]?.signal_name,
+    created: row.created
+  }));
 }
 
 async function getTaskExecutionsByIds(ids: string[]) {
   if (!ids || ids.length === 0) return [];
-  const query = `SELECT * FROM task_execution WHERE uuid = ANY($1::uuid[])`;
-  const res = await client!.query(query, [ids]);
-  return res.rows;
+
+  const { data, error } = await supabaseAdmin
+    .from('task_execution')
+    .select('*')
+    .in('uuid', ids);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
 
 async function getTaskByName(name: string) {
-  const query = `SELECT task_name, service_name, description, task_version as version FROM task WHERE task_name = $1 LIMIT 1`;
-  const res = await client!.query(query, [name]);
-  return res.rows[0] || null;
+  const { data, error } = await supabaseAdmin
+    .from('task')
+    .select('name, service_name, description, version')
+    .eq('name', name)
+    .limit(1);
+
+  if (error) {
+    throw error;
+  }
+
+  return data && data.length > 0 ? data[0] : null;
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
 
   if (method === 'GET') {
@@ -74,7 +103,7 @@ export default defineEventHandler(async (event) => {
 
       const taskExecutionIds = Array.from(execIds);
       const taskExecutions = await getTaskExecutionsByIds(taskExecutionIds);
-      
+
       const previousTasks: any[] = [];
       if (emission.task_execution_id) {
         const emissionExecution = taskExecutions.find((te: any) => te.uuid === emission.task_execution_id) || null;

@@ -1,5 +1,4 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
 import { defineEventHandler, getQuery } from 'h3';
 
 type Node = {
@@ -17,56 +16,44 @@ type Edge = {
   style?: { [key: string]: any };
 };
 
-
-
-let client: pg.Client | null = null;
+type TraceRow = {
+  trace_uuid: string;
+  service_name?: string;
+  routine_uuid: string;
+  routine_name?: string;
+  task_uuid?: string;
+  task_errored?: boolean;
+  task_failed?: boolean;
+  task_is_complete?: boolean;
+  task_progress?: number;
+  task_created?: string;
+  task_started?: string;
+  task_ended?: string;
+  task_name?: string;
+  previous_task_execution_id?: string;
+  signal_emission_name?: string;
+  signal_emitted_at?: string;
+  signal_emission_uuid?: string;
+  signal_consumption_name?: string;
+  signal_consumed_at?: string;
+  signal_consumption_uuid?: string;
+  trace_context?: any;
+  trace_created?: string;
+  issued_at?: string;
+};
 
 // Generate nodes and edges for NestedFlowMap
 async function generateNodesAndEdges(traceUuid: string) {
-  const query = `
-    SELECT 
-      et.uuid AS trace_uuid,
-      et.context AS trace_context,
-      et.meta_context AS trace_meta_context,
-      et.created AS trace_created,
-      et.issued_at AS issued_at,
-      et.service_name,
-      re.name AS routine_name,
-      re.uuid AS routine_uuid,
-      te.task_name,
-      te.uuid AS task_uuid,
-      te.created AS task_created,
-      te.started AS task_started,
-      te.ended AS task_ended,
-      te.errored AS task_errored,
-      te.failed AS task_failed,
-      te.is_complete AS task_is_complete,
-      te.progress AS task_progress,
-      tem.previous_task_execution_id,
-      se_emit.uuid AS signal_emission_uuid,
-      se_emit.signal_name AS signal_emission_name,
-      se_emit.emitted_at AS signal_emitted_at,
-      se_consume.uuid AS signal_consumption_uuid,
-      se_consume.signal_name AS signal_consumption_name,
-      se_consume.emitted_at AS signal_consumed_at
-    FROM execution_trace et
-    LEFT JOIN routine_execution re
-      ON et.uuid = re.execution_trace_id
-    LEFT JOIN task_execution te
-      ON re.uuid = te.routine_execution_id
-    LEFT JOIN task_execution_map tem
-      ON te.uuid = tem.task_execution_id
-    LEFT JOIN signal_emission se_emit
-      ON te.uuid = se_emit.task_execution_id AND se_emit.is_meta = false
-    LEFT JOIN signal_emission se_consume
-      ON te.signal_emission_id = se_consume.uuid AND se_consume.is_meta = false
-    WHERE et.uuid = $1;
-  `;
+  const { data: result, error } = await supabaseAdmin.rpc('get_execution_trace', {
+    trace_uuid_param: traceUuid
+  });
 
-  const params = [traceUuid];
-  const res = await client!.query(query, params);
+  if (error) {
+    console.error('Error executing query:', error);
+    throw error;
+  }
 
-  if (res.rows.length === 0) {
+  if (result.length === 0) {
     throw new Error(`No trace found with UUID: ${traceUuid}`);
   }
 
@@ -76,16 +63,16 @@ async function generateNodesAndEdges(traceUuid: string) {
 
   // Update nodes to include parentNode for services and routines
   const serviceNode = {
-    id: res.rows[0].trace_uuid,
+    id: result[0].trace_uuid,
     type: 'custom',
     nodeType: 'service',
-    data: { label: res.rows[0].service_name || res.rows[0].trace_uuid, isParent: true },    
+    data: { label: result[0].service_name || result[0].trace_uuid, isParent: true },    
   };
   nodes.push(serviceNode);
 
   const routineMap: Record<string, Node> = {};
 
-  res.rows.forEach((row) => {
+  result.forEach((row: TraceRow) => {
     if (!routineMap[row.routine_uuid]) {
       const routineNode = {
         id: row.routine_uuid,
@@ -225,7 +212,7 @@ async function generateNodesAndEdges(traceUuid: string) {
     }
   });
 
-  const rawTraceContext = res.rows[0].trace_context ?? null;
+  const rawTraceContext = result[0].trace_context ?? null;
   let parsedTraceContext: any = null;
   if (rawTraceContext) {
     try {
@@ -235,9 +222,9 @@ async function generateNodesAndEdges(traceUuid: string) {
     }
   }
 
-  const traceCreatedIso = res.rows[0].trace_created ? new Date(res.rows[0].trace_created).toISOString() : null;
-  const serviceName = res.rows[0].service_name ?? null;
-  const issuedFromDb = res.rows[0].issued_at ? new Date(res.rows[0].issued_at).toISOString() : null;
+  const traceCreatedIso = result[0].trace_created ? new Date(result[0].trace_created).toISOString() : null;
+  const serviceName = result[0].service_name ?? null;
+  const issuedFromDb = result[0].issued_at ? new Date(result[0].issued_at).toISOString() : null;
   const issuedVal = issuedFromDb ?? parsedTraceContext?.issued ?? parsedTraceContext?.issued_at ?? null;
 
   const traceContext = {
@@ -308,9 +295,6 @@ async function generateNodesAndEdges(traceUuid: string) {
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
   const { method } = event.node.req;
 
   if (method === 'GET') {

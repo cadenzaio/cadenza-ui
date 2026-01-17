@@ -1,35 +1,24 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
 import { getQuery } from 'h3';
-
-let client: pg.Client | null = null;
 
 async function getSignals(page: number = 1, limit: number = 100) {
   const offset = (page - 1) * limit;
-  const query = `
-    SELECT 
-    name, 
-    domain, 
-    action, 
-    is_meta, 
-    is_global, 
-    created, 
-    deleted
-    FROM signal_registry
-    WHERE is_meta = true
-    ORDER BY name ASC
-    LIMIT $1 OFFSET $2
-  `;
 
-  const res = await client!.query(query, [limit, offset]);
-  return res.rows;
+  const { data, error } = await supabaseAdmin
+    .from('signal_registry')
+    .select('name, domain, action, is_meta, is_global, created, deleted')
+    .eq('is_meta', true)
+    .order('name', { ascending: true })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 }
 
 export default defineEventHandler(async (event) => {
-  if (!client) {
-    client = await initializeClient();
-  }
-
   const { method } = event.node.req;
 
   if (method === 'GET') {

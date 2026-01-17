@@ -1,132 +1,143 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
 import { getQuery, readBody } from 'h3';
 
-let client: pg.Client | null = null;
+async function getTaskDetailsByExecutionId(executionId: string) {
+	try {
+		const { data, error } = await supabaseAdmin.rpc('get_task_execution_details', {
+			execution_id_param: executionId
+		});
 
-async function ensureClient() {
-	if (!client) {
-		client = await initializeClient();
+		if (error) {
+			throw error;
+		}
+
+		return data && data.length > 0 ? data[0] : null;
+	} catch (error) {
+		console.error('Error getting task execution details:', error);
+		throw error;
 	}
 }
 
-async function getTaskDetailsByExecutionId(executionId: string) {
-	const q = `
-		SELECT
-			task_name AS name,
-			NULL AS description,
-			NULL AS layer_index,
-			NULL AS is_unique,
-			NULL AS concurrency,
-			service_name,
-			task_version AS version,
-			uuid,
-			routine_execution_id,
-			context,
-			meta_context,
-			result_context,
-			meta_result_context,
-			service_instance_id,
-			execution_trace_id,
-			is_scheduled,
-			is_running,
-			is_complete,
-			is_meta,
-			errored,
-			failed,
-			reached_timeout,
-			error_message,
-			progress,
-			created,
-			started,
-			ended
-		FROM task_execution
-		WHERE uuid = $1
-		LIMIT 1
-	`;
-	const r = await client!.query(q, [executionId] as any);
-	return r.rows[0] ?? null;
-}
-
 async function getLatestExecutionIdForTaskName(taskName: string) {
-	const q = `
-		SELECT uuid FROM task_execution
-		WHERE task_name = $1
-		ORDER BY started DESC NULLS LAST
-		LIMIT 1
-	`;
-	const r = await client!.query(q, [taskName] as any);
-	return r.rows[0] ? r.rows[0].uuid : null;
+	try {
+		const { data, error } = await supabaseAdmin.rpc('get_latest_execution_id_for_task', {
+			task_name_param: taskName
+		});
+
+		if (error) {
+			throw error;
+		}
+
+		return data && data.length > 0 ? data[0].uuid : null;
+	} catch (error) {
+		console.error('Error getting latest execution ID for task:', error);
+		return null;
+	}
 }
 
 async function getSignalsConsumedByExecutionId(taskExecutionId: string) {
-	const q = `
-		SELECT DISTINCT se.signal_name, se.service_name
-		FROM task_execution te
-		LEFT JOIN signal_emission se ON te.signal_emission_id = se.uuid
-		WHERE te.uuid = $1 AND se.signal_name IS NOT NULL
-	`;
-	const r = await client!.query(q, [taskExecutionId]);
-	return r.rows; 
+    try {
+        const { data, error } = await supabaseAdmin.rpc('get_signals_consumed_by_execution', {
+            execution_id_param: taskExecutionId
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        return data || [];
+    } catch (error) {
+        console.error('Error getting signals consumed by execution:', error);
+        return [];
+    }
 }
 
-async function getEmittersForSignal(signalName: string) {
-	const q = `
-		SELECT DISTINCT te.uuid AS task_execution_id, te.task_name, te.service_name
-		FROM task_execution te
-		JOIN task t ON te.task_name = t.task_name AND te.service_name = t.service_name
-		WHERE t.signals->'emits' ? $1 OR t.signals->'signalsToEmitAfter' ? $1 OR t.signals->'signalsToEmitOnFail' ? $1
-	`;
-	const r = await client!.query(q, [signalName]);
-	return r.rows; 
+async function getEmittersForSignal(signalName: string): Promise<Array<{ task_execution_id: string; task_name?: string; service_name?: string }>> {
+    try {
+        const { data, error } = await supabaseAdmin.rpc('get_signal_emitters_by_execution', {
+            signal_name_param: signalName
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        return (data as Array<{ task_execution_id: string; task_name?: string; service_name?: string }>) || [];
+    } catch (error) {
+        console.error('Error getting signal emitters:', error);
+        return [];
+    }
 }
 
 async function getSignalsEmittedByExecutionId(taskExecutionId: string) {
-	const q = `
-		SELECT jsonb_array_elements(COALESCE(t.signals->'emits', '[]'::jsonb)) ->> 0 as signal_name
-		FROM task_execution te
-		JOIN task t ON te.task_name = t.task_name AND te.service_name = t.service_name
-		WHERE te.uuid = $1
-		UNION
-		SELECT jsonb_array_elements(COALESCE(t.signals->'signalsToEmitAfter', '[]'::jsonb)) ->> 0 as signal_name
-		FROM task_execution te
-		JOIN task t ON te.task_name = t.task_name AND te.service_name = t.service_name
-		WHERE te.uuid = $1
-		UNION
-		SELECT jsonb_array_elements(COALESCE(t.signals->'signalsToEmitOnFail', '[]'::jsonb)) ->> 0 as signal_name
-		FROM task_execution te
-		JOIN task t ON te.task_name = t.task_name AND te.service_name = t.service_name
-		WHERE te.uuid = $1
-	`;
-	const r = await client!.query(q, [taskExecutionId]);
-	return r.rows.map((r: any) => r.signal_name).filter(Boolean);
+	try {
+		const { data, error } = await supabaseAdmin.rpc('get_signals_emitted_by_execution', {
+			execution_id_param: taskExecutionId
+		});
+
+		if (error) {
+			throw error;
+		}
+
+		return data.map((row: any) => row.signal_name).filter(Boolean) || [];
+	} catch (error) {
+		console.error('Error getting signals emitted by execution:', error);
+		return [];
+	}
 }
 
-async function getConsumersForSignal(signalName: string) {
-	const q = `
-		SELECT DISTINCT te.uuid AS task_execution_id, te.task_name, te.service_name
-		FROM task_execution te
-		LEFT JOIN signal_emission se ON te.signal_emission_id = se.uuid
-		WHERE se.signal_name = $1 AND se.signal_name IS NOT NULL
-	`;
-	const r = await client!.query(q, [signalName]);
-	return r.rows; 
+async function getConsumersForSignal(signalName: string): Promise<Array<{ task_execution_id: string; task_name?: string; service_name?: string }>> {
+    try {
+        const { data, error } = await supabaseAdmin.rpc('get_signal_consumers_by_execution', {
+            signal_name_param: signalName
+        });
+
+        if (error) {
+            throw error;
+        }
+
+        return (data as Array<{ task_execution_id: string; task_name?: string; service_name?: string }>) || [];
+    } catch (error) {
+        console.error('Error getting signal consumers:', error);
+        return [];
+    }
 }
 
 async function getPredecessorsByExecutionId(executionId: string) {
-	const q = `SELECT previous_task_execution_id FROM task_execution_map WHERE task_execution_id = $1`;
-	const r = await client!.query(q, [executionId] as any);
-	return r.rows || [];
+	try {
+		const { data, error } = await supabaseAdmin.rpc('get_predecessors_by_execution', {
+			execution_id_param: executionId
+		});
+
+		if (error) {
+			throw error;
+		}
+
+		return data || [];
+	} catch (error) {
+		console.error('Error getting predecessors by execution:', error);
+		return [];
+	}
 }
 
 async function getSuccessorsByExecutionId(executionId: string) {
-	const q = `SELECT task_execution_id FROM task_execution_map WHERE previous_task_execution_id = $1`;
-	const r = await client!.query(q, [executionId] as any);
-	return r.rows || [];
+	try {
+		const { data, error } = await supabaseAdmin.rpc('get_successors_by_execution', {
+			execution_id_param: executionId
+		});
+
+		if (error) {
+			throw error;
+		}
+
+		return data || [];
+	} catch (error) {
+		console.error('Error getting successors by execution:', error);
+		return [];
+	}
 }
 
 export default defineEventHandler(async (event) => {
-	await ensureClient();
 	const query = getQuery(event) as Record<string, any>;
 	let taskExecutionId = query.task_execution_id || query.taskExecutionId || query.uuid || null;
 	let taskName = query.task_name || query.taskName || query.name || null;
@@ -167,7 +178,7 @@ export default defineEventHandler(async (event) => {
 
 		try {
 			const preds = await getPredecessorsByExecutionId(cur);
-			const predIds = Array.from(new Set((preds || []).map((p: any) => p.previous_task_execution_id).filter(Boolean)));
+			const predIds: string[] = Array.from(new Set((preds || []).map((p: any) => p.previous_task_execution_id as string).filter(Boolean)));
 			predecessorsMap[cur] = predIds;
 			predIds.forEach((pid) => {
 				if (!itemsMap[pid]) itemsMap[pid] = { name: null, version: null, service: null };
@@ -179,7 +190,7 @@ export default defineEventHandler(async (event) => {
 
 		try {
 			const succs = await getSuccessorsByExecutionId(cur);
-			const succIds = Array.from(new Set((succs || []).map((s: any) => s.task_execution_id).filter(Boolean)));
+			const succIds: string[] = Array.from(new Set((succs || []).map((s: any) => s.task_execution_id as string).filter(Boolean)));
 			successorsMap[cur] = succIds;
 			succIds.forEach((sid) => {
 				if (!itemsMap[sid]) itemsMap[sid] = { name: null, version: null, service: null };
@@ -197,14 +208,14 @@ export default defineEventHandler(async (event) => {
 	await Promise.all(items.map(async (it) => {
 		try {
 			const preds = await getPredecessorsByExecutionId(it.id);
-			predecessorIdsMap[it.id] = Array.from(new Set((preds || []).map((p: any) => p.previous_task_execution_id).filter(Boolean)));
+			predecessorIdsMap[it.id] = Array.from(new Set((preds || []).map((p: any) => p.previous_task_execution_id as string).filter(Boolean)));
 		} catch (e) {
 			predecessorIdsMap[it.id] = [];
 		}
 
 		try {
 			const consumed = await getSignalsConsumedByExecutionId(it.id);
-			consumedSignalsMap[it.id] = Array.from(new Set((consumed || []).map((c: any) => c.signal_name).filter(Boolean)));
+			consumedSignalsMap[it.id] = Array.from(new Set((consumed || []).map((c: any) => c.signal_name as string).filter(Boolean)));
 		} catch (e) {
 			consumedSignalsMap[it.id] = [];
 		}
@@ -216,7 +227,7 @@ export default defineEventHandler(async (event) => {
 	await Promise.all(allSignals.map(async (s) => {
 		try {
 			const emitters = await getEmittersForSignal(s);
-			emittersMap[s] = Array.from(new Map((emitters || []).map((e: any) => [String(e.task_execution_id), { task_execution_id: e.task_execution_id, task_name: e.task_name, service_name: e.service_name }])).values());
+			emittersMap[s] = Array.from(new Map<string, { task_execution_id: string; task_name?: string; service_name?: string }>((emitters || []).map((e: any) => [String(e.task_execution_id), { task_execution_id: e.task_execution_id, task_name: e.task_name, service_name: e.service_name }])).values());
 		} catch (e) {
 			emittersMap[s] = [];
 		}

@@ -1,8 +1,6 @@
-import pg from 'pg';
-import { initializeClient, formatDateLocale } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
+import { formatDateLocale } from '~/server/api/utils';
 import { createError, getQuery } from 'h3';
-
-let client: pg.Client | null = null;
 
 async function getInstanceLog(
     serviceInstanceId: string,
@@ -11,8 +9,10 @@ async function getInstanceLog(
     level?: string
 ) {
     const offset = (page - 1) * limit;
-    let query = `
-        SELECT
+
+    let query = supabaseAdmin
+        .from('system_log')
+        .select(`
             uuid,
             message,
             level,
@@ -22,21 +22,23 @@ async function getInstanceLog(
             subject_service_instance_id,
             data,
             created
-        FROM system_log
-        WHERE service_instance_id = $1`;
-    const values: (string | number)[] = [serviceInstanceId];
+        `)
+        .eq('service_instance_id', serviceInstanceId)
+        .order('created', { ascending: false })
+        .range(offset, offset + limit - 1);
+
     if (level) {
-        query += ' AND level = $2';
-        values.push(level);
-        query += ' ORDER BY created DESC LIMIT $3 OFFSET $4';
-        values.push(limit, offset);
-    } else {
-        query += ' ORDER BY created DESC LIMIT $2 OFFSET $3';
-        values.push(limit, offset);
+        query = query.eq('level', level);
     }
-    const result = await client!.query(query, values);
+
+    const { data, error } = await query;
+
+    if (error) {
+        throw error;
+    }
+
     return {
-        logs: result.rows.map((row) => ({
+        logs: data.map((row) => ({
             uuid: row.uuid,
             message: row.message,
             level: row.level,
@@ -51,10 +53,6 @@ async function getInstanceLog(
 }
 
 export default defineEventHandler(async (event) => {
-    if (!client) {
-        client = await initializeClient();
-    }
-
     if (event.node.req.method === 'GET') {
         const q = getQuery(event);
         const serviceInstanceId = q.serviceInstanceId as string | undefined;

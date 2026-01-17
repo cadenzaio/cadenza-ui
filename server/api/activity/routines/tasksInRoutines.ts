@@ -1,14 +1,5 @@
-import pg from 'pg';
-import { initializeClient } from '~/server/api/utils';
+import { supabaseAdmin } from '~/utils/supabase';
 import { getQuery } from 'h3';
-
-let client: pg.Client | null = null;
-
-async function ensureClient() {
-	if (!client) {
-		client = await initializeClient();
-	}
-}
 
 function isValidUuid(id: string) {
 	if (!id || typeof id !== 'string') return false;
@@ -16,8 +7,6 @@ function isValidUuid(id: string) {
 }
 
 export default defineEventHandler(async (event) => {
-	await ensureClient();
-
 	if (event.node.req.method !== 'GET') {
 		throw createError({ statusCode: 405, statusMessage: 'Method not allowed' });
 	}
@@ -41,65 +30,40 @@ export default defineEventHandler(async (event) => {
 	}
 
 	try {
-		const q = `
-			SELECT
-				uuid,
-				routine_execution_id,
-				task_name AS name,
-				task_version,
-				service_name,
-				context,
-				meta_context,
-				result_context,
-				meta_result_context,
-				split_group_id,
-				service_instance_id,
-				execution_trace_id,
-				signal_emission_id,
-				is_scheduled,
-				is_running,
-				is_complete,
-				is_meta,
-				errored,
-				failed,
-				reached_timeout,
-				error_message,
-				progress,
-				created,
-				started,
-				ended,
-				deleted
-			FROM task_execution
-			WHERE routine_execution_id = $1
-			ORDER BY created ASC
-		`;
+		const { data: taskExecutions, error: taskError } = await supabaseAdmin.rpc('get_task_executions_for_routine', {
+			routine_execution_id_param: routineExecutionId
+		});
 
-		const res = await client!.query(q, [routineExecutionId]);
-		const ids = res.rows.map((r: any) => r.uuid).filter(Boolean);
+		if (taskError) {
+			console.error('Error fetching task executions:', taskError);
+			throw createError({ statusCode: 500, statusMessage: 'Failed to fetch task executions' });
+		}
+
+		const ids = taskExecutions.map((r: any) => r.uuid).filter(Boolean);
 		let predecessorsMap: Record<string, string[]> = {};
 		if (ids.length > 0) {
-			const q2 = `
-				SELECT
-					task_execution_id,
-					previous_task_execution_id
-				FROM task_execution_map
-				WHERE task_execution_id = ANY($1)
-			`;
-			const r2 = await client!.query(q2, [ids]);
-			for (const row of r2.rows) {
-				const tid = String(row.task_execution_id);
-				predecessorsMap[tid] = predecessorsMap[tid] || [];
-				if (row.previous_task_execution_id) predecessorsMap[tid].push(row.previous_task_execution_id);
-			}
-			for (const k of Object.keys(predecessorsMap)) {
-				predecessorsMap[k] = Array.from(new Set(predecessorsMap[k]));
+			const { data: predecessors, error: predError } = await supabaseAdmin.rpc('get_task_execution_predecessors', {
+				task_execution_ids: ids
+			});
+
+			if (predError) {
+				console.error('Error fetching predecessors:', predError);
+			} else {
+				for (const row of predecessors) {
+					const tid = String(row.task_execution_id);
+					predecessorsMap[tid] = predecessorsMap[tid] || [];
+					if (row.previous_task_execution_id) predecessorsMap[tid].push(row.previous_task_execution_id);
+				}
+				for (const k of Object.keys(predecessorsMap)) {
+					predecessorsMap[k] = Array.from(new Set(predecessorsMap[k]));
+				}
 			}
 		}
 
 		let consumedMap: Record<string, string[]> = {};
 		const emissionNameMap: Record<string, string> = {};
 		if (ids.length > 0) {
-			for (const row of res.rows) {
+			for (const row of taskExecutions) {
 				const tid = String(row.uuid);
 				if (!row.signal_emission_id) continue;
 				consumedMap[tid] = consumedMap[tid] || [];
@@ -109,12 +73,12 @@ export default defineEventHandler(async (event) => {
 		}
 
 		const taskNodes: any[] = [];
-		for (const row of res.rows) {
+		for (const row of taskExecutions) {
 			const base = {
 				uuid: row.uuid,
 				type: 'task',
-				name: row.name,
-				label: row.name,
+				name: row.task_name,
+				label: row.task_name,
 				description: null,
 				layer_index: null,
 				errored: row.errored || false,
@@ -143,30 +107,16 @@ export default defineEventHandler(async (event) => {
 
 		let emissionRows: any[] = [];
 		try {
-			const q3 = `
-				SELECT
-					uuid,
-					signal_name,
-					signal_tag,
-					task_name,
-					task_version,
-					task_execution_id,
-					service_name,
-					service_instance_id,
-					execution_trace_id,
-					routine_execution_id,
-					data,
-					metadata,
-					is_meta,
-					is_metric,
-					emitted_at,
-					created
-				FROM signal_emission
-				WHERE routine_execution_id = $1
-				ORDER BY emitted_at ASC NULLS LAST, created ASC
-			`;
-			const r3 = await client!.query(q3, [routineExecutionId]);
-			emissionRows = r3.rows;
+			const { data: emissions, error: emissionError } = await supabaseAdmin.rpc('get_signal_emissions_for_routine', {
+				routine_execution_id_param: routineExecutionId
+			});
+
+			if (emissionError) {
+				console.error('Error fetching signal emissions for routine:', emissionError);
+				emissionRows = [];
+			} else {
+				emissionRows = emissions;
+			}
 		} catch (e) {
 			console.error('Error fetching signal emissions for routine:', e);
 			emissionRows = [];
