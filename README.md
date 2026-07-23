@@ -1,5 +1,8 @@
 # Nuxt Minimal Starter
 
+> [!WARNING]
+> **Legacy pre-v4 Cadenza implementation.** This repository does not define the current Cadenza architecture or contracts. No compatibility with the new major-version direction is promised. See [cadenza-workspace](https://github.com/cadenzaio/cadenza-workspace) for the current architecture and releases.
+
 Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
 ## Setup
